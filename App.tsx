@@ -9,16 +9,19 @@ import AppointmentsScreen from './screens/AppointmentsScreen';
 import RecommendationsScreen from './screens/RecommendationsScreen';
 import RecordingDetailScreen from './screens/RecordingDetailScreen';
 import AppointmentDetailScreen from './screens/AppointmentDetailScreen';
+import OnboardingScreen from './screens/OnboardingScreen';
 import Header from './components/Header';
 import CustomTabBar from './components/CustomTabBar';
 import { RecommendationsProvider } from './contexts/RecommendationsContext';
 import { SymptomLogsProvider } from './contexts/SymptomLogsContext';
+import { OnboardingProvider, useOnboarding } from './contexts/OnboardingContext';
 
 const Tab = createBottomTabNavigator();
 const Stack = createStackNavigator();
 
-export default function App() {
+function AppContent() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const { hasSeenOnboarding } = useOnboarding();
 
   const handleLoginPress = () => {
     if (isLoggedIn) {
@@ -45,32 +48,6 @@ export default function App() {
   const handleSettingsPress = () => {
     Alert.alert('Settings', 'Settings menu will be implemented here.');
   };
-
-  return (
-    <SymptomLogsProvider>
-      <RecommendationsProvider>
-        <NavigationContainer>
-          <Stack.Navigator>
-            <Stack.Screen
-              name="MainTabs"
-              component={MainTabNavigator}
-              options={{ headerShown: false }}
-            />
-            <Stack.Screen
-              name="RecordingDetail"
-              component={RecordingDetailScreen}
-              options={{ headerShown: false }}
-            />
-            <Stack.Screen
-              name="AppointmentDetail"
-              component={AppointmentDetailScreen}
-              options={{ headerShown: false }}
-            />
-          </Stack.Navigator>
-        </NavigationContainer>
-      </RecommendationsProvider>
-    </SymptomLogsProvider>
-  );
 
   function MainTabNavigator() {
     return (
@@ -105,4 +82,43 @@ export default function App() {
       </Tab.Navigator>
     );
   }
+
+  return (
+    <SymptomLogsProvider>
+      <RecommendationsProvider>
+        <NavigationContainer>
+          <Stack.Navigator initialRouteName={hasSeenOnboarding ? "MainTabs" : "Onboarding"}>
+            <Stack.Screen
+              name="Onboarding"
+              component={OnboardingScreen}
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen
+              name="MainTabs"
+              component={MainTabNavigator}
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen
+              name="RecordingDetail"
+              component={RecordingDetailScreen}
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen
+              name="AppointmentDetail"
+              component={AppointmentDetailScreen}
+              options={{ headerShown: false }}
+            />
+          </Stack.Navigator>
+        </NavigationContainer>
+      </RecommendationsProvider>
+    </SymptomLogsProvider>
+  );
+}
+
+export default function App() {
+  return (
+    <OnboardingProvider>
+      <AppContent />
+    </OnboardingProvider>
+  );
 }
