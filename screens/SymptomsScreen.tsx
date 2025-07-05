@@ -2,10 +2,12 @@ import React, { useState, useEffect, useRef } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Alert, ScrollView, Animated} from 'react-native';
 import { Audio } from 'expo-av';
 import { Ionicons } from '@expo/vector-icons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { transcribeAudio, generateSummary, generateRecommendations } from '../utils/openai';
 import { SymptomLog, MedicalRecommendation, RecommendationAlert } from '../types/recommendations';
 import { useRecommendations } from '../contexts/RecommendationsContext';
 import { useSymptomLogs } from '../contexts/SymptomLogsContext';
+import { useOnboarding } from '../contexts/OnboardingContext';
 
 export default function SymptomScreen({ navigation }: any) {
     const [logs, setLogs] = useState<SymptomLog[]>([]);
@@ -22,6 +24,17 @@ export default function SymptomScreen({ navigation }: any) {
     // Use the global recommendations context
     const { recommendations, addRecommendations } = useRecommendations();
     const { addSymptomLog } = useSymptomLogs();
+    const { markOnboardingComplete } = useOnboarding();
+
+    // Debug function to reset onboarding (for testing)
+    const resetOnboarding = async () => {
+        try {
+            await AsyncStorage.removeItem('onboardingComplete');
+            Alert.alert('Debug', 'Onboarding reset! Please restart the app to see the onboarding screen.');
+        } catch (error) {
+            console.error('Error resetting onboarding:', error);
+        }
+    };
 
     // Audio recording state
     const [recording, setRecording] = useState<Audio.Recording | null>(null);
@@ -202,6 +215,14 @@ export default function SymptomScreen({ navigation }: any) {
 
       return (
         <View style={styles.container}>
+          {/* Debug button for testing onboarding */}
+          <TouchableOpacity 
+            style={styles.debugButton} 
+            onPress={resetOnboarding}
+          >
+            <Text style={styles.debugButtonText}>Reset Onboarding</Text>
+          </TouchableOpacity>
+          
           {activeAlert && alertVisible && (
             <TouchableOpacity 
               style={[
@@ -329,6 +350,26 @@ export default function SymptomScreen({ navigation }: any) {
       alertHigh: {
         backgroundColor: '#fff5f5',
         borderColor: '#ef4444',
+      },
+      debugButton: {
+        position: 'absolute',
+        top: 50,
+        right: 20,
+        backgroundColor: '#ff6b6b',
+        paddingHorizontal: 12,
+        paddingVertical: 8,
+        borderRadius: 8,
+        zIndex: 1000,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.2,
+        shadowRadius: 4,
+        elevation: 3,
+      },
+      debugButtonText: {
+        color: '#ffffff',
+        fontSize: 12,
+        fontWeight: '600',
       },
     });
     
