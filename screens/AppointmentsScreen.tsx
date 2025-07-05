@@ -19,6 +19,8 @@ export default function AppointmentsScreen({ navigation }: any) {
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [showTimePicker, setShowTimePicker] = useState(false);
   const [pickerMode, setPickerMode] = useState<'date' | 'time'>('date');
+  const [upcomingCollapsed, setUpcomingCollapsed] = useState(false);
+  const [pastCollapsed, setPastCollapsed] = useState(false);
 
 
   const addAppointment = () => {
@@ -62,10 +64,49 @@ export default function AppointmentsScreen({ navigation }: any) {
     setShowTimePicker(true);
   };
 
-  // Organize appointments into upcoming and past
+  const CollapsibleSection = ({ 
+    title, 
+    isCollapsed, 
+    onToggle, 
+    children, 
+    count 
+  }: { 
+    title: string; 
+    isCollapsed: boolean; 
+    onToggle: () => void; 
+    children: React.ReactNode;
+    count: number;
+  }) => (
+    <View style={styles.section}>
+      <TouchableOpacity 
+        style={styles.sectionHeader} 
+        onPress={onToggle}
+        activeOpacity={0.7}
+      >
+        <View style={styles.sectionHeaderLeft}>
+          <Ionicons 
+            name={isCollapsed ? 'chevron-down' : 'chevron-up'} 
+            size={20} 
+            color="#64748b" 
+          />
+          <Text style={styles.sectionTitle}>{title}</Text>
+          <Text style={styles.sectionCount}>({count})</Text>
+        </View>
+      </TouchableOpacity>
+      {!isCollapsed && children}
+    </View>
+  );
+
+  // Organize appointments into upcoming and past (checking both date and time)
   const now = new Date();
-  const upcomingAppointments = appointments.filter(app => app.date > now);
-  const pastAppointments = appointments.filter(app => app.date <= now);
+  const upcomingAppointments = appointments.filter(app => {
+    const appointmentDateTime = new Date(app.date);
+    return appointmentDateTime > now;
+  });
+  const pastAppointments = appointments.filter(app => {
+    const appointmentDateTime = new Date(app.date);
+    return appointmentDateTime <= now;
+  });
 
   // Sort appointments
   const sortedUpcoming = upcomingAppointments.sort((a, b) => a.date.getTime() - b.date.getTime());
@@ -110,26 +151,34 @@ export default function AppointmentsScreen({ navigation }: any) {
           <View>
             {/* Upcoming Appointments */}
             {sortedUpcoming.length > 0 && (
-              <View style={styles.section}>
-                <Text style={styles.sectionTitle}>Upcoming Appointments</Text>
+              <CollapsibleSection
+                title="Upcoming Appointments"
+                isCollapsed={upcomingCollapsed}
+                onToggle={() => setUpcomingCollapsed(!upcomingCollapsed)}
+                count={sortedUpcoming.length}
+              >
                 {sortedUpcoming.map((item) => (
                   <View key={item.id}>
                     {renderItem({ item })}
                   </View>
                 ))}
-              </View>
+              </CollapsibleSection>
             )}
 
             {/* Past Appointments */}
             {sortedPast.length > 0 && (
-              <View style={styles.section}>
-                <Text style={styles.sectionTitle}>Past Appointments</Text>
+              <CollapsibleSection
+                title="Past Appointments"
+                isCollapsed={pastCollapsed}
+                onToggle={() => setPastCollapsed(!pastCollapsed)}
+                count={sortedPast.length}
+              >
                 {sortedPast.map((item) => (
                   <View key={item.id}>
                     {renderItem({ item })}
                   </View>
                 ))}
-              </View>
+              </CollapsibleSection>
             )}
 
             {/* Empty State */}
@@ -231,6 +280,24 @@ const styles = StyleSheet.create({
     color: '#1e293b',
     marginBottom: 12,
     paddingHorizontal: 4,
+  },
+  sectionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 12,
+    paddingHorizontal: 4,
+    marginBottom: 8,
+  },
+  sectionHeaderLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  sectionCount: {
+    ...fontStyles.caption,
+    color: '#64748b',
+    fontWeight: '500',
   },
   emptyState: {
     alignItems: 'center',

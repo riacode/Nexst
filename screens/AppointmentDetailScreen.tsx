@@ -60,121 +60,291 @@ export default function AppointmentDetailScreen({ route, navigation }: Appointme
   const generateImportantQuestions = (appointmentTitle: string, symptoms: any[]) => {
     const title = appointmentTitle.toLowerCase();
     
-    // Define questions to ask the DOCTOR based on appointment type
-    const questionTemplates: { [key: string]: string[] } = {
-      'headache': [
-        "What could be causing these headaches?",
-        "Are there any tests I should have to rule out serious conditions?",
-        "What treatment options are available?",
-        "How long should I wait before seeking emergency care?",
-        "Are there any lifestyle changes that could help prevent headaches?"
-      ],
-      'cardiology': [
-        "What tests do I need to determine the cause of my symptoms?",
-        "Are my symptoms serious enough to require immediate attention?",
-        "What medications might help, and what are the side effects?",
-        "Should I make any lifestyle changes to protect my heart?",
-        "How often should I follow up with you?"
-      ],
-      'gastroenterology': [
-        "What could be causing my digestive symptoms?",
-        "Do I need any imaging tests or procedures?",
-        "What diet changes should I make?",
-        "Are there medications that could help?",
-        "When should I be concerned enough to seek emergency care?"
-      ],
-      'dermatology': [
-        "What is this skin condition and what caused it?",
-        "Is it contagious or could it spread?",
-        "What treatment will be most effective?",
-        "How long will it take to improve?",
-        "Are there any complications I should watch for?"
-      ],
-      'orthopedics': [
-        "What's causing my pain and is it serious?",
-        "Do I need any imaging tests (X-ray, MRI)?",
-        "What treatment options are available?",
-        "How long will recovery take?",
-        "What activities should I avoid or modify?"
-      ],
-      'neurology': [
-        "What could be causing these neurological symptoms?",
-        "Do I need any brain imaging or other tests?",
-        "Are these symptoms serious or could they be temporary?",
-        "What treatments are available?",
-        "Should I be concerned about any warning signs?"
-      ],
-      'psychiatry': [
-        "What type of condition might I have?",
-        "What treatment options are available?",
-        "How long might it take to see improvement?",
-        "Are there any medications that could help?",
-        "What should I do if my symptoms get worse?"
-      ],
-      'gynecology': [
-        "What could be causing these symptoms?",
-        "Do I need any tests or procedures?",
-        "What treatment options are available?",
-        "Are these symptoms serious or normal?",
-        "How often should I follow up?"
-      ],
-      'endocrinology': [
-        "What could be causing my symptoms?",
-        "Do I need blood tests or other diagnostic tests?",
-        "What treatment options are available?",
-        "Are there lifestyle changes that could help?",
-        "How often should I have follow-up appointments?"
-      ],
-      'pulmonology': [
-        "What's causing my breathing problems?",
-        "Do I need any breathing tests or imaging?",
-        "What treatments are available?",
-        "Are there triggers I should avoid?",
-        "When should I seek emergency care?"
-      ]
+    // Analyze symptoms for specific patterns and details
+    const symptomAnalysis = analyzeSymptomsForQuestions(symptoms);
+    
+    // Generate highly specific questions based on actual symptoms
+    let questions: string[] = [];
+    
+    // Add symptom-specific questions based on detailed analysis
+    if (symptomAnalysis.hasPain) {
+      questions.push(...generatePainQuestions(symptomAnalysis.painDetails));
+    }
+    
+    if (symptomAnalysis.hasFever) {
+      questions.push(...generateFeverQuestions(symptomAnalysis.feverDetails));
+    }
+    
+    if (symptomAnalysis.hasFatigue) {
+      questions.push(...generateFatigueQuestions(symptomAnalysis.fatigueDetails));
+    }
+    
+    if (symptomAnalysis.hasDigestiveIssues) {
+      questions.push(...generateDigestiveQuestions(symptomAnalysis.digestiveDetails));
+    }
+    
+    if (symptomAnalysis.hasMentalHealthIssues) {
+      questions.push(...generateMentalHealthQuestions(symptomAnalysis.mentalHealthDetails));
+    }
+    
+    if (symptomAnalysis.hasRespiratoryIssues) {
+      questions.push(...generateRespiratoryQuestions(symptomAnalysis.respiratoryDetails));
+    }
+    
+    if (symptomAnalysis.hasSkinIssues) {
+      questions.push(...generateSkinQuestions(symptomAnalysis.skinDetails));
+    }
+    
+    if (symptomAnalysis.hasNeurologicalIssues) {
+      questions.push(...generateNeurologicalQuestions(symptomAnalysis.neurologicalDetails));
+    }
+    
+    // Add appointment-specific questions
+    questions.push(...generateAppointmentSpecificQuestions(title, symptomAnalysis));
+    
+    // Add follow-up and monitoring questions
+    questions.push(...generateFollowUpQuestions(symptomAnalysis));
+    
+    // Remove duplicates and limit to most important questions
+    const uniqueQuestions = [...new Set(questions)];
+    setImportantQuestions(uniqueQuestions.slice(0, 10));
+  };
+
+  const analyzeSymptomsForQuestions = (symptoms: any[]) => {
+    const allText = symptoms.map(s => `${s.summary} ${s.transcript}`).join(' ').toLowerCase();
+    const analysis = {
+      hasPain: false,
+      painDetails: { location: '', type: '', duration: '', triggers: '' },
+      hasFever: false,
+      feverDetails: { temperature: '', duration: '', associatedSymptoms: '' },
+      hasFatigue: false,
+      fatigueDetails: { severity: '', duration: '', impact: '' },
+      hasDigestiveIssues: false,
+      digestiveDetails: { symptoms: '', triggers: '', duration: '' },
+      hasMentalHealthIssues: false,
+      mentalHealthDetails: { symptoms: '', duration: '', triggers: '' },
+      hasRespiratoryIssues: false,
+      respiratoryDetails: { symptoms: '', triggers: '', severity: '' },
+      hasSkinIssues: false,
+      skinDetails: { symptoms: '', location: '', appearance: '' },
+      hasNeurologicalIssues: false,
+      neurologicalDetails: { symptoms: '', frequency: '', triggers: '' }
     };
 
-    // Find relevant questions based on appointment title
-    let questions: string[] = [];
-    for (const [specialty, specialtyQuestions] of Object.entries(questionTemplates)) {
-      if (title.includes(specialty)) {
-        questions = [...questions, ...specialtyQuestions];
-        break;
-      }
+    // Analyze pain patterns
+    if (allText.includes('pain') || allText.includes('ache') || allText.includes('hurt')) {
+      analysis.hasPain = true;
+      if (allText.includes('head')) analysis.painDetails.location = 'head';
+      if (allText.includes('chest')) analysis.painDetails.location = 'chest';
+      if (allText.includes('back')) analysis.painDetails.location = 'back';
+      if (allText.includes('joint')) analysis.painDetails.location = 'joint';
+      if (allText.includes('sharp')) analysis.painDetails.type = 'sharp';
+      if (allText.includes('dull')) analysis.painDetails.type = 'dull';
+      if (allText.includes('throbbing')) analysis.painDetails.type = 'throbbing';
     }
 
-    // If no specific questions found, use general questions to ask the doctor
-    if (questions.length === 0) {
-      questions = [
-        "What could be causing my symptoms?",
-        "Do I need any tests to diagnose the problem?",
-        "What treatment options are available?",
-        "How long will it take to see improvement?",
-        "Are there any lifestyle changes I should make?",
-        "When should I follow up with you?",
-        "Are there any warning signs I should watch for?",
-        "What should I do if my symptoms get worse?"
-      ];
+    // Analyze fever patterns
+    if (allText.includes('fever') || allText.includes('temperature')) {
+      analysis.hasFever = true;
+      if (allText.includes('high')) analysis.feverDetails.temperature = 'high';
+      if (allText.includes('low grade')) analysis.feverDetails.temperature = 'low grade';
     }
 
-    // Add symptom-specific questions based on the user's actual symptoms
-    if (symptoms.length > 0) {
-      const symptomText = symptoms.map(s => s.summary).join(' ');
-      if (symptomText.toLowerCase().includes('pain')) {
-        questions.push("What's causing my pain and how can I manage it?");
-        questions.push("Are there any pain management options available?");
-      }
-      if (symptomText.toLowerCase().includes('fever')) {
-        questions.push("What could be causing my fever?");
-        questions.push("When should I be concerned about my temperature?");
-      }
-      if (symptomText.toLowerCase().includes('fatigue')) {
-        questions.push("What could be causing my fatigue?");
-        questions.push("Are there any treatments that could help with my energy?");
-      }
+    // Analyze fatigue patterns
+    if (allText.includes('tired') || allText.includes('fatigue') || allText.includes('exhausted')) {
+      analysis.hasFatigue = true;
+      if (allText.includes('extreme')) analysis.fatigueDetails.severity = 'extreme';
+      if (allText.includes('mild')) analysis.fatigueDetails.severity = 'mild';
     }
 
-    setImportantQuestions(questions.slice(0, 8)); // Limit to 8 questions
+    // Analyze digestive issues
+    if (allText.includes('nausea') || allText.includes('vomiting') || allText.includes('diarrhea') || 
+        allText.includes('constipation') || allText.includes('stomach') || allText.includes('abdominal')) {
+      analysis.hasDigestiveIssues = true;
+    }
+
+    // Analyze mental health issues
+    if (allText.includes('anxiety') || allText.includes('depression') || allText.includes('stress') || 
+        allText.includes('mood') || allText.includes('insomnia') || allText.includes('sad')) {
+      analysis.hasMentalHealthIssues = true;
+    }
+
+    // Analyze respiratory issues
+    if (allText.includes('cough') || allText.includes('breathing') || allText.includes('shortness') || 
+        allText.includes('wheezing') || allText.includes('chest tightness')) {
+      analysis.hasRespiratoryIssues = true;
+    }
+
+    // Analyze skin issues
+    if (allText.includes('rash') || allText.includes('itching') || allText.includes('skin') || 
+        allText.includes('acne') || allText.includes('mole')) {
+      analysis.hasSkinIssues = true;
+    }
+
+    // Analyze neurological issues
+    if (allText.includes('numbness') || allText.includes('tingling') || allText.includes('dizziness') || 
+        allText.includes('seizure') || allText.includes('memory') || allText.includes('vision')) {
+      analysis.hasNeurologicalIssues = true;
+    }
+
+    return analysis;
+  };
+
+  const generatePainQuestions = (painDetails: any) => {
+    const questions = [];
+    
+    if (painDetails.location === 'head') {
+      questions.push("Could these headaches be related to my stress levels or sleep patterns?");
+      questions.push("Are there specific triggers I should be tracking in a headache diary?");
+      questions.push("Should I be concerned about any warning signs that would indicate a more serious condition?");
+      questions.push("What's the difference between tension headaches and migraines, and how does that affect treatment?");
+    }
+    
+    if (painDetails.location === 'chest') {
+      questions.push("How can I distinguish between heart-related chest pain and other causes like acid reflux or muscle strain?");
+      questions.push("Are there specific activities or positions that make the chest pain worse or better?");
+      questions.push("Should I be monitoring my blood pressure or heart rate at home?");
+      questions.push("What emergency symptoms would require immediate medical attention?");
+    }
+    
+    if (painDetails.location === 'back') {
+      questions.push("Could this be related to my posture, work environment, or recent activities?");
+      questions.push("What exercises or stretches would be safe to try, and which ones should I avoid?");
+      questions.push("Should I consider physical therapy, and if so, how do I find a qualified therapist?");
+      questions.push("Are there any red flags that would indicate nerve compression or other serious issues?");
+    }
+    
+    if (painDetails.type === 'sharp') {
+      questions.push("Sharp pain often indicates tissue damage - what specific tests would help identify the source?");
+      questions.push("Are there any immediate treatments I can try to reduce the sharp pain?");
+      questions.push("Should I be concerned about any complications if this sharp pain continues?");
+    }
+    
+    return questions;
+  };
+
+  const generateFeverQuestions = (feverDetails: any) => {
+    const questions = [];
+    
+    questions.push("What's the most accurate way to take my temperature, and how often should I monitor it?");
+    questions.push("Are there any over-the-counter medications I should avoid while having a fever?");
+    questions.push("Should I be concerned about dehydration, and what are the signs to watch for?");
+    questions.push("What's the difference between a viral and bacterial fever, and how does that affect treatment?");
+    questions.push("Are there any specific symptoms that would indicate the fever is serious enough for emergency care?");
+    
+    return questions;
+  };
+
+  const generateFatigueQuestions = (fatigueDetails: any) => {
+    const questions = [];
+    
+    questions.push("Could this fatigue be related to my sleep quality, stress levels, or underlying medical conditions?");
+    questions.push("What blood tests would help identify if this is due to anemia, thyroid issues, or other conditions?");
+    questions.push("Are there any medications I'm taking that could be contributing to my fatigue?");
+    questions.push("What lifestyle changes would be most effective for improving my energy levels?");
+    questions.push("Should I be concerned about depression or other mental health conditions that can cause fatigue?");
+    
+    return questions;
+  };
+
+  const generateDigestiveQuestions = (digestiveDetails: any) => {
+    const questions = [];
+    
+    questions.push("Could this be related to food intolerances, and how would we identify trigger foods?");
+    questions.push("What's the difference between IBS, food poisoning, and other digestive conditions?");
+    questions.push("Should I be keeping a food diary, and what specific information should I track?");
+    questions.push("Are there any over-the-counter medications that would be safe and effective?");
+    questions.push("What are the signs that would indicate I need immediate medical attention?");
+    
+    return questions;
+  };
+
+  const generateMentalHealthQuestions = (mentalHealthDetails: any) => {
+    const questions = [];
+    
+    questions.push("How do I distinguish between normal stress and clinical anxiety or depression?");
+    questions.push("What are the different treatment options available, and how do I choose the right approach?");
+    questions.push("Should I consider therapy, and how do I find a qualified mental health professional?");
+    questions.push("Are there any lifestyle changes or coping strategies that would be most effective?");
+    questions.push("What are the warning signs that would indicate I need more intensive treatment?");
+    
+    return questions;
+  };
+
+  const generateRespiratoryQuestions = (respiratoryDetails: any) => {
+    const questions = [];
+    
+    questions.push("Could this be related to allergies, asthma, or a respiratory infection?");
+    questions.push("What's the difference between a dry cough and a productive cough, and how does that affect treatment?");
+    questions.push("Should I be using a peak flow meter or other home monitoring devices?");
+    questions.push("Are there any environmental factors or triggers I should be avoiding?");
+    questions.push("What are the signs that would indicate I need emergency care for breathing difficulties?");
+    
+    return questions;
+  };
+
+  const generateSkinQuestions = (skinDetails: any) => {
+    const questions = [];
+    
+    questions.push("Could this be related to allergies, infections, or underlying medical conditions?");
+    questions.push("What's the difference between various skin conditions, and how does that affect treatment?");
+    questions.push("Should I be concerned about any skin changes that could indicate skin cancer?");
+    questions.push("Are there any specific skincare products or ingredients I should avoid?");
+    questions.push("What are the signs that would indicate I need immediate medical attention?");
+    
+    return questions;
+  };
+
+  const generateNeurologicalQuestions = (neurologicalDetails: any) => {
+    const questions = [];
+    
+    questions.push("Could these symptoms be related to stress, medication side effects, or underlying neurological conditions?");
+    questions.push("What's the difference between various neurological symptoms, and how does that affect diagnosis?");
+    questions.push("Should I be concerned about any symptoms that could indicate a stroke or other serious condition?");
+    questions.push("Are there any specific tests or imaging studies that would be helpful?");
+    questions.push("What are the warning signs that would require immediate medical attention?");
+    
+    return questions;
+  };
+
+  const generateAppointmentSpecificQuestions = (appointmentTitle: string, analysis: any) => {
+    const questions = [];
+    const title = appointmentTitle.toLowerCase();
+    
+    if (title.includes('cardiology') || analysis.hasPain && analysis.painDetails.location === 'chest') {
+      questions.push("What specific heart tests would be most appropriate for my symptoms and risk factors?");
+      questions.push("How do my symptoms compare to typical heart disease presentations?");
+      questions.push("Should I be monitoring my heart rate, blood pressure, or other vital signs at home?");
+      questions.push("What lifestyle changes would have the biggest impact on my heart health?");
+    }
+    
+    if (title.includes('dermatology') || analysis.hasSkinIssues) {
+      questions.push("What's the most effective treatment approach for my specific skin condition?");
+      questions.push("Should I be concerned about any skin changes that could indicate skin cancer?");
+      questions.push("Are there any specific skincare products or ingredients I should avoid?");
+      questions.push("What are the signs that would indicate I need immediate medical attention?");
+    }
+    
+    if (title.includes('gastroenterology') || analysis.hasDigestiveIssues) {
+      questions.push("What specific digestive tests would be most appropriate for my symptoms?");
+      questions.push("Could this be related to food intolerances, and how would we identify trigger foods?");
+      questions.push("What's the difference between various digestive conditions, and how does that affect treatment?");
+      questions.push("Should I be keeping a food diary, and what specific information should I track?");
+    }
+    
+    return questions;
+  };
+
+  const generateFollowUpQuestions = (analysis: any) => {
+    const questions = [];
+    
+    questions.push("What specific symptoms should I monitor, and when should I contact you if they change?");
+    questions.push("Are there any red flags or warning signs that would require immediate medical attention?");
+    questions.push("What's the expected timeline for improvement, and what should I do if I don't see progress?");
+    questions.push("Should I schedule a follow-up appointment, and if so, when would be most appropriate?");
+    questions.push("Are there any lifestyle changes or preventive measures I should implement to avoid future issues?");
+    
+    return questions;
   };
 
   const formatDate = (date: Date) => {

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { fontStyles } from '../utils/fonts';
@@ -9,6 +9,8 @@ export default function RecommendationsScreen({ route, navigation }: any) {
   // Get recommendations from global context
   const { recommendations, completeRecommendation, cancelRecommendation, toggleActionItem } = useRecommendations();
   const activeAlert = route?.params?.activeAlert;
+  const [completedCollapsed, setCompletedCollapsed] = useState(false);
+  const [cancelledCollapsed, setCancelledCollapsed] = useState(false);
 
   const getPriorityColor = (priority: string) => {
     switch (priority) {
@@ -101,6 +103,39 @@ export default function RecommendationsScreen({ route, navigation }: any) {
     // Otherwise, toggle the action item
     handleToggleActionItem(recommendationId, action.id);
   };
+
+  const CollapsibleSection = ({ 
+    title, 
+    isCollapsed, 
+    onToggle, 
+    children, 
+    count 
+  }: { 
+    title: string; 
+    isCollapsed: boolean; 
+    onToggle: () => void; 
+    children: React.ReactNode;
+    count: number;
+  }) => (
+    <View style={styles.section}>
+      <TouchableOpacity 
+        style={styles.sectionHeader} 
+        onPress={onToggle}
+        activeOpacity={0.7}
+      >
+        <View style={styles.sectionHeaderLeft}>
+          <Ionicons 
+            name={isCollapsed ? 'chevron-down' : 'chevron-up'} 
+            size={20} 
+            color="#64748b" 
+          />
+          <Text style={styles.sectionTitle}>{title}</Text>
+          <Text style={styles.sectionCount}>({count})</Text>
+        </View>
+      </TouchableOpacity>
+      {!isCollapsed && children}
+    </View>
+  );
 
   const renderActionItem = (action: ActionItem, recommendationId: string) => (
     <TouchableOpacity
@@ -264,17 +299,25 @@ export default function RecommendationsScreen({ route, navigation }: any) {
         )}
 
         {completedRecommendations.length > 0 && (
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Completed</Text>
+          <CollapsibleSection
+            title="Completed"
+            isCollapsed={completedCollapsed}
+            onToggle={() => setCompletedCollapsed(!completedCollapsed)}
+            count={completedRecommendations.length}
+          >
             {completedRecommendations.map(renderRecommendation)}
-          </View>
+          </CollapsibleSection>
         )}
 
         {cancelledRecommendations.length > 0 && (
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Cancelled</Text>
+          <CollapsibleSection
+            title="Cancelled"
+            isCollapsed={cancelledCollapsed}
+            onToggle={() => setCancelledCollapsed(!cancelledCollapsed)}
+            count={cancelledRecommendations.length}
+          >
             {cancelledRecommendations.map(renderRecommendation)}
-          </View>
+          </CollapsibleSection>
         )}
 
         {recommendations.length === 0 && (
@@ -308,6 +351,24 @@ const styles = StyleSheet.create({
     ...fontStyles.h3,
     color: '#1e293b',
     marginBottom: 12,
+  },
+  sectionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 12,
+    paddingHorizontal: 4,
+    marginBottom: 8,
+  },
+  sectionHeaderLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  sectionCount: {
+    ...fontStyles.caption,
+    color: '#64748b',
+    fontWeight: '500',
   },
   recommendationCard: {
     backgroundColor: '#ffffff',
