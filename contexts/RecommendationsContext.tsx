@@ -8,6 +8,7 @@ interface RecommendationsContextType {
   completeRecommendation: (id: string) => void;
   cancelRecommendation: (id: string, reason: string) => void;
   toggleActionItem: (recommendationId: string, actionId: string) => void;
+  clearAllRecommendations: () => void;
 }
 
 const RecommendationsContext = createContext<RecommendationsContextType | undefined>(undefined);
@@ -80,6 +81,10 @@ export const RecommendationsProvider: React.FC<RecommendationsProviderProps> = (
     );
   };
 
+  const clearAllRecommendations = () => {
+    setRecommendations([]);
+  };
+
   const value: RecommendationsContextType = {
     recommendations,
     addRecommendations,
@@ -87,6 +92,7 @@ export const RecommendationsProvider: React.FC<RecommendationsProviderProps> = (
     completeRecommendation,
     cancelRecommendation,
     toggleActionItem,
+    clearAllRecommendations,
   };
 
   return (

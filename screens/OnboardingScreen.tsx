@@ -10,7 +10,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useOnboarding } from '../contexts/OnboardingContext';
-import LogoV8 from '../components/LogoV8';
+
 
 const { width, height } = Dimensions.get('window');
 
@@ -46,7 +46,7 @@ export default function OnboardingScreen({ navigation }: OnboardingScreenProps) 
         {/* Header */}
         <View style={styles.header}>
           <View style={styles.logoContainer}>
-            <LogoV8 size={64} color="#00b4d8" />
+            <Text style={styles.logoText}>CLYNIC</Text>
           </View>
           <View style={styles.taglineContainer}>
             <Text style={styles.tagline}>
@@ -141,6 +141,12 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: 16,
+  },
+  logoText: {
+    fontSize: 38,
+    fontWeight: '900',
+    color: '#00b4d8',
+    letterSpacing: -1,
   },
   appName: {
     fontSize: 36,

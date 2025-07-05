@@ -3,6 +3,7 @@ import { View, Text, FlatList, StyleSheet, Platform, TouchableOpacity, TextInput
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { Ionicons } from '@expo/vector-icons';
 import { fontStyles } from '../utils/fonts';
+import { useAppointments } from '../contexts/AppointmentsContext';
 
 interface Appointment {
     id: string;
@@ -12,7 +13,7 @@ interface Appointment {
 }
 
 export default function AppointmentsScreen({ navigation }: any) {
-  const [appointments, setAppointments] = useState<Appointment[]>([]);
+  const { appointments, addAppointment: addAppointmentToContext } = useAppointments();
   const [showPicker, setShowPicker] = useState(false);
   const [titleInput, setTitleInput] = useState('');
   const [selectedDate, setSelectedDate] = useState(new Date());
@@ -30,10 +31,12 @@ export default function AppointmentsScreen({ navigation }: any) {
     }
     
     const now = new Date();
-    setAppointments([
-      { id: now.toISOString(), title: titleInput, date: selectedDate, timestamp: now },
-      ...appointments,
-    ]);
+    addAppointmentToContext({
+      id: now.toISOString(),
+      title: titleInput,
+      date: selectedDate,
+      timestamp: now
+    });
     setShowPicker(false);
     setTitleInput('');
     setSelectedDate(new Date());

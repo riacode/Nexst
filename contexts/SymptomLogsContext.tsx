@@ -6,6 +6,7 @@ interface SymptomLogsContextType {
   addSymptomLog: (log: SymptomLog) => void;
   updateSymptomLog: (id: string, updates: Partial<SymptomLog>) => void;
   deleteSymptomLog: (id: string) => void;
+  clearAllSymptomLogs: () => void;
   getRelevantSymptoms: (appointmentTitle: string) => SymptomLog[];
 }
 
@@ -30,6 +31,10 @@ export const SymptomLogsProvider: React.FC<SymptomLogsProviderProps> = ({ childr
 
   const deleteSymptomLog = (id: string) => {
     setSymptomLogs(prev => prev.filter(log => log.id !== id));
+  };
+
+  const clearAllSymptomLogs = () => {
+    setSymptomLogs([]);
   };
 
   const getRelevantSymptoms = (appointmentTitle: string): SymptomLog[] => {
@@ -77,6 +82,7 @@ export const SymptomLogsProvider: React.FC<SymptomLogsProviderProps> = ({ childr
     addSymptomLog,
     updateSymptomLog,
     deleteSymptomLog,
+    clearAllSymptomLogs,
     getRelevantSymptoms,
   };
 
