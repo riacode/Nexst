@@ -14,18 +14,16 @@ interface Appointment {
 export default function AppointmentsScreen({ navigation }: any) {
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [showPicker, setShowPicker] = useState(false);
-  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [titleInput, setTitleInput] = useState('');
+  const [selectedDate, setSelectedDate] = useState(new Date());
   const [showDatePicker, setShowDatePicker] = useState(false);
+  const [showTimePicker, setShowTimePicker] = useState(false);
+  const [pickerMode, setPickerMode] = useState<'date' | 'time'>('date');
+
 
   const addAppointment = () => {
     if (!titleInput.trim()) {
       Alert.alert('Error', 'Please enter an appointment name');
-      return;
-    }
-    
-    if (!selectedDate) {
-      Alert.alert('Error', 'Please select a date');
       return;
     }
     
@@ -36,40 +34,122 @@ export default function AppointmentsScreen({ navigation }: any) {
     ]);
     setShowPicker(false);
     setTitleInput('');
-    setSelectedDate(null);
+    setSelectedDate(new Date());
   };
 
-  const onDateChange = (_: any, date?: Date) => {
-    if (date) setSelectedDate(date);
+  const handleDateChange = (event: any, date?: Date) => {
     setShowDatePicker(false);
+    if (date) {
+      setSelectedDate(date);
+    }
   };
+
+  const handleTimeChange = (event: any, time?: Date) => {
+    setShowTimePicker(false);
+    if (time) {
+      const newDateTime = new Date(selectedDate);
+      newDateTime.setHours(time.getHours());
+      newDateTime.setMinutes(time.getMinutes());
+      setSelectedDate(newDateTime);
+    }
+  };
+
+  const openDatePicker = () => {
+    setShowDatePicker(true);
+  };
+
+  const openTimePicker = () => {
+    setShowTimePicker(true);
+  };
+
+  // Organize appointments into upcoming and past
+  const now = new Date();
+  const upcomingAppointments = appointments.filter(app => app.date > now);
+  const pastAppointments = appointments.filter(app => app.date <= now);
+
+  // Sort appointments
+  const sortedUpcoming = upcomingAppointments.sort((a, b) => a.date.getTime() - b.date.getTime());
+  const sortedPast = pastAppointments.sort((a, b) => b.date.getTime() - a.date.getTime());
+
+
+
+
+
+
 
   const renderItem = ({ item }: { item: Appointment }) => (
     <TouchableOpacity
       style={styles.appItem}
-      onPress={() => {/* navigate to details */}}
+      onPress={() => navigation.navigate('AppointmentDetail', { 
+        appointment: {
+          ...item,
+          date: item.date.toISOString(),
+          timestamp: item.timestamp.toISOString()
+        }
+      })}
     >
       <View style={styles.appHeader}>
-        <Text style={styles.appDate}>{item.timestamp.toLocaleString()}</Text>
+        <Text style={styles.appDate}>{item.date.toLocaleDateString()}</Text>
         <Ionicons name="chevron-forward" size={20} color="#888" />
       </View>
       <Text numberOfLines={1} style={styles.appTitle}>{item.title}</Text>
-      <Text style={styles.appScheduledDate}>Scheduled: {item.date.toLocaleDateString()}</Text>
+      <Text style={styles.appScheduledDate}>
+        {item.date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+      </Text>
     </TouchableOpacity>
   );
 
   return (
     <View style={styles.container}>
       <FlatList
-        data={appointments}
+        data={[]}
         keyExtractor={(item) => item.id}
         renderItem={renderItem}
         contentContainerStyle={styles.list}
+        ListHeaderComponent={() => (
+          <View>
+            {/* Upcoming Appointments */}
+            {sortedUpcoming.length > 0 && (
+              <View style={styles.section}>
+                <Text style={styles.sectionTitle}>Upcoming Appointments</Text>
+                {sortedUpcoming.map((item) => (
+                  <View key={item.id}>
+                    {renderItem({ item })}
+                  </View>
+                ))}
+              </View>
+            )}
+
+            {/* Past Appointments */}
+            {sortedPast.length > 0 && (
+              <View style={styles.section}>
+                <Text style={styles.sectionTitle}>Past Appointments</Text>
+                {sortedPast.map((item) => (
+                  <View key={item.id}>
+                    {renderItem({ item })}
+                  </View>
+                ))}
+              </View>
+            )}
+
+            {/* Empty State */}
+            {appointments.length === 0 && (
+              <View style={styles.emptyState}>
+                <Ionicons name="calendar" size={64} color="#cbd5e1" />
+                <Text style={styles.emptyStateTitle}>No Appointments Yet</Text>
+                <Text style={styles.emptyStateText}>
+                  Tap the + button to schedule your first appointment.
+                </Text>
+              </View>
+            )}
+          </View>
+        )}
       />
       
       {showPicker && (
         <View style={styles.pickerContainer}>
           <Text style={styles.pickerTitle}>Add New Appointment</Text>
+          
           <TextInput
             style={styles.titleInput}
             placeholder="Appointment name"
@@ -78,23 +158,23 @@ export default function AppointmentsScreen({ navigation }: any) {
             placeholderTextColor="#64748b"
             textAlign="center"
           />
-          <TouchableOpacity 
-            style={styles.datePickerContainer}
-            onPress={() => setShowDatePicker(true)}
-          >
-            <Text style={styles.dateDisplay}>
-              {selectedDate ? selectedDate.toLocaleDateString() : 'Select Date'}
-            </Text>
-          </TouchableOpacity>
-          
-          {showDatePicker && (
-            <DateTimePicker
-              value={selectedDate || new Date()}
-              mode="date"
-              display="default"
-              onChange={onDateChange}
-            />
-          )}
+
+          <View style={styles.dateTimeContainer}>
+            <TouchableOpacity style={styles.dateTimeButton} onPress={openDatePicker}>
+              <Ionicons name="calendar" size={20} color="#00b4d8" />
+              <Text style={styles.dateTimeText}>
+                {selectedDate.toLocaleDateString()}
+              </Text>
+            </TouchableOpacity>
+            
+            <TouchableOpacity style={styles.dateTimeButton} onPress={openTimePicker}>
+              <Ionicons name="time" size={20} color="#00b4d8" />
+              <Text style={styles.dateTimeText}>
+                {selectedDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+              </Text>
+            </TouchableOpacity>
+          </View>
+
           <View style={styles.pickerButtons}>
             <TouchableOpacity style={styles.cancelButton} onPress={() => setShowPicker(false)}>
               <Text style={styles.cancelButtonText}>Cancel</Text>
@@ -104,6 +184,26 @@ export default function AppointmentsScreen({ navigation }: any) {
             </TouchableOpacity>
           </View>
         </View>
+      )}
+
+      {/* Date/Time Pickers */}
+      {showDatePicker && (
+        <DateTimePicker
+          value={selectedDate}
+          mode="date"
+          display="default"
+          onChange={handleDateChange}
+          minimumDate={new Date()}
+        />
+      )}
+      
+      {showTimePicker && (
+        <DateTimePicker
+          value={selectedDate}
+          mode="time"
+          display="default"
+          onChange={handleTimeChange}
+        />
       )}
       
       <TouchableOpacity
@@ -123,6 +223,32 @@ export default function AppointmentsScreen({ navigation }: any) {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#fafafa' },
   list: { padding: 12, paddingTop: 16, paddingBottom: 140 },
+  section: {
+    marginBottom: 24,
+  },
+  sectionTitle: {
+    ...fontStyles.h3,
+    color: '#1e293b',
+    marginBottom: 12,
+    paddingHorizontal: 4,
+  },
+  emptyState: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 60,
+  },
+  emptyStateTitle: {
+    ...fontStyles.h3,
+    color: '#64748b',
+    marginTop: 16,
+    marginBottom: 8,
+  },
+  emptyStateText: {
+    ...fontStyles.body,
+    color: '#94a3b8',
+    textAlign: 'center',
+    paddingHorizontal: 32,
+  },
   appItem: { 
     backgroundColor: '#ffffff', 
     padding: 16, 
@@ -183,24 +309,29 @@ const styles = StyleSheet.create({
     ...fontStyles.body,
     textAlign: 'center',
   },
-  datePickerContainer: {
-    borderWidth: 1,
-    borderColor: '#e2e8f0',
-    borderRadius: 12,
-    padding: 16,
+  dateTimeContainer: {
+    flexDirection: 'row',
+    gap: 12,
     marginBottom: 16,
+  },
+  dateTimeButton: {
+    flex: 1,
+    flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#ffffff',
-    minHeight: 60,
+    padding: 12,
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+    borderRadius: 8,
+    backgroundColor: '#f8fafc',
+    gap: 8,
   },
-
-
-  dateDisplay: {
+  dateTimeText: {
     ...fontStyles.body,
     color: '#1e293b',
-    textAlign: 'center',
   },
+
+
 
   modalOverlay: {
     flex: 1,

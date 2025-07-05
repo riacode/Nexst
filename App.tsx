@@ -8,8 +8,11 @@ import SymptomsScreen from './screens/SymptomsScreen';
 import AppointmentsScreen from './screens/AppointmentsScreen';
 import RecommendationsScreen from './screens/RecommendationsScreen';
 import RecordingDetailScreen from './screens/RecordingDetailScreen';
+import AppointmentDetailScreen from './screens/AppointmentDetailScreen';
 import Header from './components/Header';
 import CustomTabBar from './components/CustomTabBar';
+import { RecommendationsProvider } from './contexts/RecommendationsContext';
+import { SymptomLogsProvider } from './contexts/SymptomLogsContext';
 
 const Tab = createBottomTabNavigator();
 const Stack = createStackNavigator();
@@ -44,20 +47,29 @@ export default function App() {
   };
 
   return (
-    <NavigationContainer>
-      <Stack.Navigator>
-        <Stack.Screen
-          name="MainTabs"
-          component={MainTabNavigator}
-          options={{ headerShown: false }}
-        />
-        <Stack.Screen
-          name="RecordingDetail"
-          component={RecordingDetailScreen}
-          options={{ headerShown: false }}
-        />
-      </Stack.Navigator>
-    </NavigationContainer>
+    <SymptomLogsProvider>
+      <RecommendationsProvider>
+        <NavigationContainer>
+          <Stack.Navigator>
+            <Stack.Screen
+              name="MainTabs"
+              component={MainTabNavigator}
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen
+              name="RecordingDetail"
+              component={RecordingDetailScreen}
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen
+              name="AppointmentDetail"
+              component={AppointmentDetailScreen}
+              options={{ headerShown: false }}
+            />
+          </Stack.Navigator>
+        </NavigationContainer>
+      </RecommendationsProvider>
+    </SymptomLogsProvider>
   );
 
   function MainTabNavigator() {

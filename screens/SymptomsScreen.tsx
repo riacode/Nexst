@@ -2,32 +2,61 @@ import React, { useState, useEffect, useRef } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Alert, ScrollView, Animated} from 'react-native';
 import { Audio } from 'expo-av';
 import { Ionicons } from '@expo/vector-icons';
-
-interface SymptomLog {
-    id: string;
-    timestamp: Date;
-    summary: string;
-    audioURI?: string;
-}
+import { transcribeAudio, generateSummary, generateRecommendations } from '../utils/openai';
+import { SymptomLog, MedicalRecommendation, RecommendationAlert } from '../types/recommendations';
+import { useRecommendations } from '../contexts/RecommendationsContext';
+import { useSymptomLogs } from '../contexts/SymptomLogsContext';
 
 export default function SymptomScreen({ navigation }: any) {
     const [logs, setLogs] = useState<SymptomLog[]>([]);
-    const [recording, setRecording] = useState<Audio.Recording | null>(null);
     const [status, setStatus] = useState('Tap to record your check-in');
     const [audioURI, setAudioURI] = useState<string | null>(null);
     const [alertMessage, setAlertMessage] = useState<string>('');
     const [alertVisible, setAlertVisible] = useState<boolean>(true);
+    const [isProcessing, setIsProcessing] = useState<boolean>(false);
+    const [activeAlert, setActiveAlert] = useState<RecommendationAlert | null>(null);
     
     const pulseAnim = useRef(new Animated.Value(1)).current;
+    const spinAnim = useRef(new Animated.Value(0)).current;
 
-    // generate alert
+    // Use the global recommendations context
+    const { recommendations, addRecommendations } = useRecommendations();
+    const { addSymptomLog } = useSymptomLogs();
+
+    // Audio recording state
+    const [recording, setRecording] = useState<Audio.Recording | null>(null);
+    const [isRecording, setIsRecording] = useState(false);
+
+    // generate recommendations when symptoms are added
     useEffect(() => {
-        if (logs.length >= 3) {
-            setAlertMessage('You\'ve logged similar symptoms 3 times in a row. Consider booking an appointment.');
-        } else {
-            setAlertMessage('');
-        }
-    }, [logs]);
+        const checkForRecommendations = async () => {
+            if (logs.length >= 2) {
+                try {
+                    const newRecommendations = await generateRecommendations(logs);
+                    if (newRecommendations.length > 0) {
+                        // Add to global recommendations context
+                        addRecommendations(newRecommendations);
+                        
+                        // Create alert for highest priority recommendation
+                        const highPriorityRec = newRecommendations.find(rec => rec.priority === 'HIGH');
+                        if (highPriorityRec) {
+                            setActiveAlert({
+                                id: Date.now().toString(),
+                                recommendation: highPriorityRec,
+                                isRead: false,
+                                createdAt: new Date()
+                            });
+                            setAlertVisible(true);
+                        }
+                    }
+                } catch (error) {
+                    console.error('Error generating recommendations:', error);
+                }
+            }
+        };
+        
+        checkForRecommendations();
+    }, [logs, addRecommendations]);
 
     // pulsating animation for first recording
     useEffect(() => {
@@ -54,42 +83,100 @@ export default function SymptomScreen({ navigation }: any) {
         }
     }, [logs.length, pulseAnim]);
 
+    // spinning animation for processing
+    useEffect(() => {
+        if (isProcessing) {
+            const spinAnimation = Animated.loop(
+                Animated.timing(spinAnim, {
+                    toValue: 1,
+                    duration: 1000,
+                    useNativeDriver: true,
+                })
+            );
+            spinAnimation.start();
+            
+            return () => spinAnimation.stop();
+        } else {
+            spinAnim.setValue(0);
+        }
+    }, [isProcessing, spinAnim]);
+
+
+
     const handleRecord = async () => {
-        if (recording) { // and they press the button to stop
+        if (isRecording) { // Stop recording
             try {
                 console.log('Stopping recording...');
-                await recording.stopAndUnloadAsync();
-                const uri = recording.getURI();
-                if (uri) {
-                    setAudioURI(uri);
+                if (recording) {
+                    await recording.stopAndUnloadAsync();
+                    const uri = recording.getURI();
+                    if (uri) {
+                        setAudioURI(uri);
+                        setIsProcessing(true);
+                        setStatus("Processing audio...");
+                        
+                        try {
+                            // Transcribe audio
+                            const transcript = await transcribeAudio(uri);
+                            console.log("Transcript:", transcript);
+                            
+                            // Generate summary
+                            const summary = await generateSummary(transcript);
+                            console.log("Summary:", summary);
+                            
+                            // Add to logs
+                            const now = new Date();
+                            const newLog = { 
+                                id: now.toISOString(), 
+                                timestamp: now, 
+                                summary, 
+                                transcript,
+                                audioURI: uri 
+                            };
+                            setLogs(prevLogs => [newLog, ...prevLogs]);
+                            addSymptomLog(newLog);
+                            
+                            setStatus("Recording saved!");
+                        } catch (error) {
+                            console.error("OpenAI processing error:", error);
+                            setStatus("Failed to process audio.");
+                            Alert.alert("Error", "Failed to process audio. Please try again.");
+                        } finally {
+                            setIsProcessing(false);
+                        }
+                    }
+                    console.log("Audio saved at: ", uri);
                 }
-                const now = new Date();
-                const summary = "Summary";
-                setLogs(prevLogs => [{ id: now.toISOString(), timestamp: now, summary, audioURI: uri || undefined }, ...prevLogs]);
                 setRecording(null);
-                console.log("Audio saved at: ", uri);
+                setIsRecording(false);
             } catch (error) {
                 setStatus("Failed to stop recording.");
                 console.error("Error saving audio: ", error);
+                setIsProcessing(false);
+                setIsRecording(false);
             }
-        } else { // and they press the button to start
+        } else { // Start recording
             try {
                 console.log('Requesting permissions...');
                 const permission = await Audio.requestPermissionsAsync();
-                if (permission.status !== 'granted') {
+                if (!permission.granted) {
                     setStatus("Microphone permission required.");
                     console.log("Permission for recording was denied.");
                     return;
                 }
+                
                 console.log('Starting recording...');
                 await Audio.setAudioModeAsync({
                     allowsRecordingIOS: true,
                     playsInSilentModeIOS: true,
                 });
-                const { recording } = await Audio.Recording.createAsync(
-                    Audio.RecordingOptionsPresets.HIGH_QUALITY,
+                
+                const { recording: newRecording } = await Audio.Recording.createAsync(
+                    Audio.RecordingOptionsPresets.HIGH_QUALITY
                 );
-                setRecording(recording);
+                
+                setRecording(newRecording);
+                setIsRecording(true);
                 setStatus("Recording...");
             } catch (error) {
                 setStatus("Failed to start recording.");
@@ -99,50 +186,84 @@ export default function SymptomScreen({ navigation }: any) {
     };
 
     const renderLog = (log: SymptomLog) => (
-        <TouchableOpacity key={log.id} style={styles.logCard} onPress={() => navigation.navigate('RecordingDetail', { log })}>
+        <TouchableOpacity key={log.id} style={styles.logCard} onPress={() => navigation.navigate('RecordingDetail', { 
+          log: {
+            ...log,
+            timestamp: log.timestamp.toISOString() // Convert Date to string for navigation
+          }
+        })}>
+          <Text numberOfLines={1} style={styles.logTitle}>{log.summary}</Text>
           <View style={styles.logHeader}>
             <Text style={styles.logDate}>{log.timestamp.toLocaleString()}</Text>
             <Ionicons name="chevron-forward" size={20} color="#888" />
           </View>
-          <Text numberOfLines={1} style={styles.logSummary}>"{log.summary}"</Text>
         </TouchableOpacity>
       );
 
       return (
         <View style={styles.container}>
-          {alertMessage && alertVisible && (
+          {activeAlert && alertVisible && (
             <TouchableOpacity 
-              style={styles.alert} 
+              style={[
+                styles.alert, 
+                activeAlert.recommendation.priority === 'HIGH' && styles.alertHigh
+              ]} 
               onPress={() => {
                 setAlertVisible(false);
+                setActiveAlert(null); // Remove the alert completely
                 navigation.navigate('Recommendations');
               }}
             >
-              <Text style={styles.alertText}>💡 {alertMessage}</Text>
+              <Text style={styles.alertText}>
+                {activeAlert.recommendation.priority === 'HIGH' ? '🚨 ' : '💡 '}
+                {activeAlert.recommendation.title}
+              </Text>
               <Ionicons name="arrow-forward" size={16} color="#01579b" />
             </TouchableOpacity>
           )}
           <ScrollView contentContainerStyle={styles.logsContainer}>
             {logs.map(renderLog)}
           </ScrollView>
-          <Animated.View
-            style={[
-              styles.recordButton, 
-              logs.length > 0 && styles.recordButtonSmall,
-              { transform: [{ scale: pulseAnim }] }
-            ]}
-          >
-            <TouchableOpacity
-              style={styles.recordButtonInner}
-              onPress={handleRecord}
+          {isProcessing ? (
+            <View style={styles.processingContainer}>
+              <Animated.View 
+                style={[
+                  styles.processingSpinner,
+                  {
+                    transform: [{
+                      rotate: spinAnim.interpolate({
+                        inputRange: [0, 1],
+                        outputRange: ['0deg', '360deg']
+                      })
+                    }]
+                  }
+                ]}
+              >
+                <Ionicons name="sync" size={32} color="#00b4d8" />
+              </Animated.View>
+              <Text style={styles.processingText}>Processing your recording...</Text>
+            </View>
+          ) : (
+            <Animated.View
+              style={[
+                styles.recordButton, 
+                logs.length > 0 && styles.recordButtonSmall,
+                { transform: [{ scale: pulseAnim }] }
+              ]}
             >
-              <Ionicons 
-                name={recording ? 'stop' : 'mic'} 
-                size={logs.length === 0 ? 48 : 32} 
-                color="#fff" 
-              />
-            </TouchableOpacity>
-          </Animated.View>
+              <TouchableOpacity
+                style={styles.recordButtonInner}
+                onPress={handleRecord}
+                disabled={isProcessing}
+              >
+                <Ionicons 
+                  name={isRecording ? 'stop' : 'mic'} 
+                  size={logs.length === 0 ? 48 : 32} 
+                  color="#fff" 
+                />
+              </TouchableOpacity>
+            </Animated.View>
+          )}
         </View>
       );
     }
@@ -162,9 +283,9 @@ export default function SymptomScreen({ navigation }: any) {
         shadowColor: '#000', shadowOpacity: 0.08, shadowRadius: 6, elevation: 3,
         borderLeftWidth: 4, borderLeftColor: '#00b4d8',
       },
-      logHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+      logHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 8 },
       logDate: { color: '#64748b', fontSize: 12, fontWeight: '500' },
-      logSummary: { marginTop: 6, fontSize: 16, color: '#1e293b', fontWeight: '500' },
+      logTitle: { fontSize: 18, color: '#1e293b', fontWeight: '600' },
       recordButton: {
         position: 'absolute', bottom: 24, alignSelf: 'center',
         backgroundColor: '#00b4d8', width: 100, height: 100, borderRadius: 50,
@@ -179,6 +300,35 @@ export default function SymptomScreen({ navigation }: any) {
         height: '100%',
         justifyContent: 'center',
         alignItems: 'center',
+      },
+      processingContainer: {
+        position: 'absolute',
+        bottom: 24,
+        alignSelf: 'center',
+        alignItems: 'center',
+        justifyContent: 'center',
+        backgroundColor: '#ffffff',
+        paddingHorizontal: 24,
+        paddingVertical: 16,
+        borderRadius: 25,
+        shadowColor: '#000',
+        shadowOpacity: 0.1,
+        shadowRadius: 8,
+        elevation: 3,
+        borderWidth: 1,
+        borderColor: '#e2e8f0',
+      },
+      processingSpinner: {
+        marginBottom: 8,
+      },
+      processingText: {
+        fontSize: 14,
+        color: '#64748b',
+        fontWeight: '500',
+      },
+      alertHigh: {
+        backgroundColor: '#fff5f5',
+        borderColor: '#ef4444',
       },
     });
     
