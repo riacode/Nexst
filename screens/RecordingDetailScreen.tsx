@@ -202,7 +202,7 @@ export default function RecordingDetailScreen({ route, navigation }: any) {
         {/* Appointment Info */}
         <View style={styles.recordingCard}>
           <View style={styles.recordingHeader}>
-            <Ionicons name="mic" size={32} color="#0288d1" />
+            <Ionicons name="mic" size={32} color="#00b4d8" />
             <Text style={styles.recordingTitle}>Symptom Recording</Text>
           </View>
           

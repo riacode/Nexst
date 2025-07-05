@@ -239,7 +239,7 @@ export default function SymptomScreen({ navigation }: any) {
                 {activeAlert.recommendation.priority === 'HIGH' ? '🚨 ' : '💡 '}
                 {activeAlert.recommendation.title}
               </Text>
-              <Ionicons name="arrow-forward" size={16} color="#01579b" />
+              <Ionicons name="arrow-forward" size={16} color="#00b4d8" />
             </TouchableOpacity>
           )}
           <ScrollView contentContainerStyle={styles.logsContainer}>
@@ -297,7 +297,7 @@ export default function SymptomScreen({ navigation }: any) {
         backgroundColor: '#e0f7ff', padding: 12, margin: 12, borderRadius: 8,
         borderColor: '#00b4d8', borderWidth: 1,
       },
-      alertText: { flex: 1, color: '#0077b6' },
+      alertText: { flex: 1, color: '#00b4d8' },
       logsContainer: { padding: 12, paddingBottom: 140 },
       logCard: {
         backgroundColor: '#ffffff', padding: 16, borderRadius: 12, marginBottom: 12,

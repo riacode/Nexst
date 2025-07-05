@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -6,9 +6,11 @@ import {
   TouchableOpacity,
   SafeAreaView,
   Dimensions,
+  Animated,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useOnboarding } from '../contexts/OnboardingContext';
+import LogoV8 from '../components/LogoV8';
 
 const { width, height } = Dimensions.get('window');
 
@@ -18,6 +20,20 @@ interface OnboardingScreenProps {
 
 export default function OnboardingScreen({ navigation }: OnboardingScreenProps) {
   const { markOnboardingComplete } = useOnboarding();
+  const underlineAnim = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    // Start the underline animation after 2 seconds
+    const timer = setTimeout(() => {
+      Animated.timing(underlineAnim, {
+        toValue: 1,
+        duration: 800,
+        useNativeDriver: false,
+      }).start();
+    }, 2000);
+
+    return () => clearTimeout(timer);
+  }, [underlineAnim]);
 
   const handleGetStarted = () => {
     // Mark onboarding as complete - navigation will happen automatically
@@ -30,11 +46,25 @@ export default function OnboardingScreen({ navigation }: OnboardingScreenProps) 
         {/* Header */}
         <View style={styles.header}>
           <View style={styles.logoContainer}>
-            <Ionicons name="medical" size={48} color="#00b4d8" />
-            <Text style={styles.appName}>Clynic</Text>
+            <LogoV8 size={64} color="#00b4d8" />
           </View>
-          <Text style={styles.tagline}>Your Clinic in Your Pocket</Text>
-          <Text style={styles.subtitle}>AI-powered symptom tracking & health insights</Text>
+          <View style={styles.taglineContainer}>
+            <Text style={styles.tagline}>
+              <Text style={styles.boldText}>Reimagining</Text> how you{'\n'}
+              <Text style={styles.underlinedText}>manage your health</Text>.
+            </Text>
+            <Animated.View 
+              style={[
+                styles.cursiveUnderline,
+                {
+                  width: underlineAnim.interpolate({
+                    inputRange: [0, 1],
+                    outputRange: [0, 120],
+                  }),
+                },
+              ]}
+            />
+          </View>
         </View>
 
         {/* Features */}
@@ -44,10 +74,10 @@ export default function OnboardingScreen({ navigation }: OnboardingScreenProps) 
               <Ionicons name="mic" size={32} color="#10b981" />
             </View>
             <View style={styles.featureText}>
-              <Text style={styles.featureTitle}>Speak → Analyze</Text>
-              <Text style={styles.featureDescription}>
-                Voice your symptoms, get instant medical insights
-              </Text>
+              <Text style={styles.featureTitle}>Voice Symptom Tracking</Text>
+                              <Text style={styles.featureDescription}>
+                  Record your symptoms effortlessly in just 30 seconds.
+                </Text>
             </View>
           </View>
 
@@ -56,9 +86,9 @@ export default function OnboardingScreen({ navigation }: OnboardingScreenProps) 
               <Ionicons name="bulb" size={32} color="#f59e0b" />
             </View>
             <View style={styles.featureText}>
-              <Text style={styles.featureTitle}>Smart Guidance</Text>
+              <Text style={styles.featureTitle}>Personalized Action Items</Text>
               <Text style={styles.featureDescription}>
-                Personalized recommendations & next steps
+                Get immediate recommended next steps based on your symptoms.
               </Text>
             </View>
           </View>
@@ -68,9 +98,9 @@ export default function OnboardingScreen({ navigation }: OnboardingScreenProps) 
               <Ionicons name="calendar" size={32} color="#8b5cf6" />
             </View>
             <View style={styles.featureText}>
-              <Text style={styles.featureTitle}>Doctor-Ready</Text>
+              <Text style={styles.featureTitle}>Appointment Prep</Text>
               <Text style={styles.featureDescription}>
-                Tailored questions for your appointments
+                Walk into appointments with tailored questions and symptom history.
               </Text>
             </View>
           </View>
@@ -79,7 +109,7 @@ export default function OnboardingScreen({ navigation }: OnboardingScreenProps) 
         {/* Bottom Section */}
         <View style={styles.bottomSection}>
           <Text style={styles.bottomText}>
-            Your personal health companion. Always ready, always smart.
+            Your personal AI-powered clinic,{'\n'}always ready when you need it.
           </Text>
           
           <TouchableOpacity style={styles.getStartedButton} onPress={handleGetStarted}>
@@ -99,13 +129,13 @@ const styles = StyleSheet.create({
   },
   content: {
     flex: 1,
-    paddingHorizontal: 24,
+    paddingHorizontal: 32,
     paddingTop: 40,
     paddingBottom: 40,
   },
   header: {
     alignItems: 'center',
-    marginBottom: 60,
+    marginBottom: 40,
   },
   logoContainer: {
     flexDirection: 'row',
@@ -123,6 +153,25 @@ const styles = StyleSheet.create({
     color: '#64748b',
     textAlign: 'center',
     lineHeight: 24,
+  },
+  boldText: {
+    fontWeight: '700',
+    color: '#1e293b',
+  },
+  taglineContainer: {
+    alignItems: 'center',
+    position: 'relative',
+  },
+  underlinedText: {
+    fontWeight: '600',
+    color: '#1e293b',
+  },
+  cursiveUnderline: {
+    height: 2,
+    backgroundColor: '#00b4d8',
+    borderRadius: 1,
+    marginTop: 4,
+    alignSelf: 'center',
   },
   subtitle: {
     fontSize: 14,
