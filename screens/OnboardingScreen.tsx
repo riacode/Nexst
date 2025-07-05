@@ -23,14 +23,14 @@ export default function OnboardingScreen({ navigation }: OnboardingScreenProps) 
   const underlineAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
-    // Start the underline animation after 2 seconds
+    // Start the underline animation after 1.5 seconds
     const timer = setTimeout(() => {
       Animated.timing(underlineAnim, {
         toValue: 1,
         duration: 800,
         useNativeDriver: false,
       }).start();
-    }, 2000);
+    }, 1500);
 
     return () => clearTimeout(timer);
   }, [underlineAnim]);
@@ -59,7 +59,7 @@ export default function OnboardingScreen({ navigation }: OnboardingScreenProps) 
                 {
                   width: underlineAnim.interpolate({
                     inputRange: [0, 1],
-                    outputRange: [0, 120],
+                    outputRange: [0, 180],
                   }),
                 },
               ]}
