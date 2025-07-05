@@ -33,7 +33,8 @@ export default function OnboardingScreen({ navigation }: OnboardingScreenProps) 
             <Ionicons name="medical" size={48} color="#00b4d8" />
             <Text style={styles.appName}>Clynic</Text>
           </View>
-          <Text style={styles.tagline}>Your Personal Health Companion</Text>
+          <Text style={styles.tagline}>Your Clinic in Your Pocket</Text>
+          <Text style={styles.subtitle}>AI-powered symptom tracking & health insights</Text>
         </View>
 
         {/* Features */}
@@ -43,9 +44,9 @@ export default function OnboardingScreen({ navigation }: OnboardingScreenProps) 
               <Ionicons name="mic" size={32} color="#10b981" />
             </View>
             <View style={styles.featureText}>
-              <Text style={styles.featureTitle}>Voice Your Symptoms</Text>
+              <Text style={styles.featureTitle}>Speak → Analyze</Text>
               <Text style={styles.featureDescription}>
-                Record your symptoms naturally and get instant insights
+                Voice your symptoms, get instant medical insights
               </Text>
             </View>
           </View>
@@ -55,9 +56,9 @@ export default function OnboardingScreen({ navigation }: OnboardingScreenProps) 
               <Ionicons name="bulb" size={32} color="#f59e0b" />
             </View>
             <View style={styles.featureText}>
-              <Text style={styles.featureTitle}>Smart Recommendations</Text>
+              <Text style={styles.featureTitle}>Smart Guidance</Text>
               <Text style={styles.featureDescription}>
-                Get personalized health recommendations and next steps
+                Personalized recommendations & next steps
               </Text>
             </View>
           </View>
@@ -67,21 +68,9 @@ export default function OnboardingScreen({ navigation }: OnboardingScreenProps) 
               <Ionicons name="calendar" size={32} color="#8b5cf6" />
             </View>
             <View style={styles.featureText}>
-              <Text style={styles.featureTitle}>Appointment Prep</Text>
+              <Text style={styles.featureTitle}>Doctor-Ready</Text>
               <Text style={styles.featureDescription}>
-                Prepare for doctor visits with tailored questions and insights
-              </Text>
-            </View>
-          </View>
-
-          <View style={styles.featureItem}>
-            <View style={styles.featureIcon}>
-              <Ionicons name="trending-up" size={32} color="#ef4444" />
-            </View>
-            <View style={styles.featureText}>
-              <Text style={styles.featureTitle}>Track Your Health</Text>
-              <Text style={styles.featureDescription}>
-                Monitor symptoms over time and identify patterns
+                Tailored questions for your appointments
               </Text>
             </View>
           </View>
@@ -90,7 +79,7 @@ export default function OnboardingScreen({ navigation }: OnboardingScreenProps) 
         {/* Bottom Section */}
         <View style={styles.bottomSection}>
           <Text style={styles.bottomText}>
-            Take control of your health journey with intelligent symptom tracking and personalized care guidance.
+            Your personal health companion. Always ready, always smart.
           </Text>
           
           <TouchableOpacity style={styles.getStartedButton} onPress={handleGetStarted}>
@@ -134,6 +123,13 @@ const styles = StyleSheet.create({
     color: '#64748b',
     textAlign: 'center',
     lineHeight: 24,
+  },
+  subtitle: {
+    fontSize: 14,
+    color: '#94a3b8',
+    textAlign: 'center',
+    marginTop: 8,
+    fontWeight: '500',
   },
   featuresContainer: {
     flex: 1,
