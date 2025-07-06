@@ -13,6 +13,7 @@ import AppointmentDetailScreen from './screens/AppointmentDetailScreen';
 import OnboardingScreen from './screens/OnboardingScreen';
 import Header from './components/Header';
 import CustomTabBar from './components/CustomTabBar';
+import SettingsModal from './components/SettingsModal';
 import { RecommendationsProvider, useRecommendations } from './contexts/RecommendationsContext';
 import { SymptomLogsProvider, useSymptomLogs } from './contexts/SymptomLogsContext';
 import { AppointmentsProvider, useAppointments } from './contexts/AppointmentsContext';
@@ -25,71 +26,57 @@ function MainTabNavigator() {
   const { clearAllSymptomLogs } = useSymptomLogs();
   const { clearAllRecommendations } = useRecommendations();
   const { clearAllAppointments } = useAppointments();
+  const [settingsVisible, setSettingsVisible] = useState(false);
 
   const handleSettingsPress = () => {
+    setSettingsVisible(true);
+  };
+
+  const handleClearSymptomLogs = () => {
     Alert.alert(
-      'Settings',
-      'Choose an option:',
+      'Clear All Symptom Logs',
+      'Are you sure you want to delete all your symptom recordings, summaries, transcripts, and logs? This action cannot be undone.',
       [
         { text: 'Cancel', style: 'cancel' },
         { 
-          text: 'Clear All Symptom Logs', 
+          text: 'Clear All', 
           style: 'destructive',
           onPress: () => {
-            Alert.alert(
-              'Clear All Symptom Logs',
-              'Are you sure you want to delete all your symptom recordings, summaries, transcripts, and logs? This action cannot be undone.',
-              [
-                { text: 'Cancel', style: 'cancel' },
-                { 
-                  text: 'Clear All', 
-                  style: 'destructive',
-                  onPress: () => {
-                    clearAllSymptomLogs();
-                  }
-                }
-              ]
-            );
+            clearAllSymptomLogs();
           }
-        },
+        }
+      ]
+    );
+  };
+
+  const handleClearAppointments = () => {
+    Alert.alert(
+      'Clear All Appointments',
+      'Are you sure you want to delete all your upcoming and previous appointments and their recommended questions? This action cannot be undone.',
+      [
+        { text: 'Cancel', style: 'cancel' },
         { 
-          text: 'Clear All Appointments', 
+          text: 'Clear All', 
           style: 'destructive',
           onPress: () => {
-            Alert.alert(
-              'Clear All Appointments',
-              'Are you sure you want to delete all your upcoming and previous appointments and their recommended questions? This action cannot be undone.',
-              [
-                { text: 'Cancel', style: 'cancel' },
-                { 
-                  text: 'Clear All', 
-                  style: 'destructive',
-                  onPress: () => {
-                    clearAllAppointments();
-                  }
-                }
-              ]
-            );
+            clearAllAppointments();
           }
-        },
+        }
+      ]
+    );
+  };
+
+  const handleClearRecommendations = () => {
+    Alert.alert(
+      'Clear All Recommendations',
+      'Are you sure you want to delete all your completed, current, and canceled recommendations? This action cannot be undone.',
+      [
+        { text: 'Cancel', style: 'cancel' },
         { 
-          text: 'Clear All Recommendations', 
+          text: 'Clear All', 
           style: 'destructive',
           onPress: () => {
-            Alert.alert(
-              'Clear All Recommendations',
-              'Are you sure you want to delete all your completed, current, and canceled recommendations? This action cannot be undone.',
-              [
-                { text: 'Cancel', style: 'cancel' },
-                { 
-                  text: 'Clear All', 
-                  style: 'destructive',
-                  onPress: () => {
-                    clearAllRecommendations();
-                  }
-                }
-              ]
-            );
+            clearAllRecommendations();
           }
         }
       ]
@@ -97,33 +84,43 @@ function MainTabNavigator() {
   };
 
   return (
-    <Tab.Navigator
-      tabBar={props => <CustomTabBar {...props} />}
-      screenOptions={({ route }) => ({
-        header: ({ route }) => (
-          <Header
-            title={route.name}
-            onSettingsPress={handleSettingsPress}
-          />
-        ),
-      })}
-    >
-      <Tab.Screen 
-        name="Symptoms" 
-        component={SymptomsScreen}
-        options={{ tabBarLabel: 'Symptoms' }}
+    <>
+      <Tab.Navigator
+        tabBar={props => <CustomTabBar {...props} />}
+        screenOptions={({ route }) => ({
+          header: ({ route }) => (
+            <Header
+              title={route.name}
+              onSettingsPress={handleSettingsPress}
+            />
+          ),
+        })}
+      >
+        <Tab.Screen 
+          name="Symptoms" 
+          component={SymptomsScreen}
+          options={{ tabBarLabel: 'Symptoms' }}
+        />
+        <Tab.Screen 
+          name="Recommendations" 
+          component={RecommendationsScreen}
+          options={{ tabBarLabel: 'Recommendations' }}
+        />
+        <Tab.Screen 
+          name="Appointments" 
+          component={AppointmentsScreen}
+          options={{ tabBarLabel: 'Appointments' }}
+        />
+      </Tab.Navigator>
+
+      <SettingsModal
+        visible={settingsVisible}
+        onClose={() => setSettingsVisible(false)}
+        onClearSymptomLogs={handleClearSymptomLogs}
+        onClearAppointments={handleClearAppointments}
+        onClearRecommendations={handleClearRecommendations}
       />
-      <Tab.Screen 
-        name="Recommendations" 
-        component={RecommendationsScreen}
-        options={{ tabBarLabel: 'Recommendations' }}
-      />
-      <Tab.Screen 
-        name="Appointments" 
-        component={AppointmentsScreen}
-        options={{ tabBarLabel: 'Appointments' }}
-      />
-    </Tab.Navigator>
+    </>
   );
 }
 
