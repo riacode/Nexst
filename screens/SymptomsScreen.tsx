@@ -8,6 +8,8 @@ import { SymptomLog, MedicalRecommendation, RecommendationAlert } from '../types
 import { useRecommendations } from '../contexts/RecommendationsContext';
 import { useSymptomLogs } from '../contexts/SymptomLogsContext';
 import { useOnboarding } from '../contexts/OnboardingContext';
+import { NotificationService } from '../utils/notifications';
+import NotificationPermission from '../components/NotificationPermission';
 
 export default function SymptomScreen({ navigation }: any) {
     const [status, setStatus] = useState('Tap to record your check-in');
@@ -40,6 +42,15 @@ export default function SymptomScreen({ navigation }: any) {
                     if (newRecommendations.length > 0) {
                         // Add to global recommendations context
                         addRecommendations(newRecommendations);
+                        
+                        // Send notifications for new recommendations
+                        for (const recommendation of newRecommendations) {
+                            if (recommendation.priority === 'HIGH') {
+                                await NotificationService.sendHighPriorityNotification(recommendation);
+                            } else {
+                                await NotificationService.sendRecommendationNotification(recommendation);
+                            }
+                        }
                         
                         // Create alert for highest priority recommendation
                         const highPriorityRec = newRecommendations.find(rec => rec.priority === 'HIGH');
@@ -205,6 +216,8 @@ export default function SymptomScreen({ navigation }: any) {
 
       return (
         <View style={styles.container}>
+          
+          <NotificationPermission />
           
           {activeAlert && alertVisible && (
             <TouchableOpacity 

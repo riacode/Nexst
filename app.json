@@ -32,7 +32,8 @@
           "microphonePermission": "Allow Clynic to access your microphone for recording symptoms."
         }
       ],
-      "expo-font"
+      "expo-font",
+      "expo-notifications"
     ]
   }
 }

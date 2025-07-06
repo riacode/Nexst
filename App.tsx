@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createStackNavigator } from '@react-navigation/stack';
 import { Ionicons } from '@expo/vector-icons';
 import { Alert } from 'react-native';
+import { setupNotificationListeners } from './utils/notifications';
 import SymptomsScreen from './screens/SymptomsScreen';
 import AppointmentsScreen from './screens/AppointmentsScreen';
 import RecommendationsScreen from './screens/RecommendationsScreen';
@@ -128,6 +129,13 @@ function MainTabNavigator() {
 
 function AppContent() {
   const { hasSeenOnboarding } = useOnboarding();
+
+  useEffect(() => {
+    // Set up notification listeners when the app starts
+    const cleanup = setupNotificationListeners(null); // We'll pass navigation later
+    
+    return cleanup;
+  }, []);
 
   return (
     <NavigationContainer>
