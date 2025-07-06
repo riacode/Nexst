@@ -18,6 +18,7 @@ import { RecommendationsProvider, useRecommendations } from './contexts/Recommen
 import { SymptomLogsProvider, useSymptomLogs } from './contexts/SymptomLogsContext';
 import { AppointmentsProvider, useAppointments } from './contexts/AppointmentsContext';
 import { OnboardingProvider, useOnboarding } from './contexts/OnboardingContext';
+import { NotificationSettingsProvider, useNotificationSettings } from './contexts/NotificationSettingsContext';
 
 const Tab = createBottomTabNavigator();
 const Stack = createStackNavigator();
@@ -26,6 +27,7 @@ function MainTabNavigator() {
   const { clearAllSymptomLogs } = useSymptomLogs();
   const { clearAllRecommendations } = useRecommendations();
   const { clearAllAppointments } = useAppointments();
+  const { settings, updateSettings } = useNotificationSettings();
   const [settingsVisible, setSettingsVisible] = useState(false);
 
   const handleSettingsPress = () => {
@@ -83,6 +85,10 @@ function MainTabNavigator() {
     );
   };
 
+  const handleUpdateNotificationSettings = async (enabled: boolean, time: Date, frequency: string) => {
+    await updateSettings(enabled, time, frequency);
+  };
+
   return (
     <>
       <Tab.Navigator
@@ -119,6 +125,10 @@ function MainTabNavigator() {
         onClearSymptomLogs={handleClearSymptomLogs}
         onClearAppointments={handleClearAppointments}
         onClearRecommendations={handleClearRecommendations}
+        onUpdateNotificationSettings={handleUpdateNotificationSettings}
+        notificationEnabled={settings.enabled}
+        notificationTime={settings.time}
+        notificationFrequency={settings.frequency}
       />
     </>
   );
@@ -168,7 +178,9 @@ export default function App() {
       <SymptomLogsProvider>
         <RecommendationsProvider>
           <AppointmentsProvider>
-            <AppContent />
+            <NotificationSettingsProvider>
+              <AppContent />
+            </NotificationSettingsProvider>
           </AppointmentsProvider>
         </RecommendationsProvider>
       </SymptomLogsProvider>

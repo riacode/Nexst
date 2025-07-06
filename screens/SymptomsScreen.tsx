@@ -12,12 +12,13 @@ import { NotificationService } from '../utils/notifications';
 import NotificationPermission from '../components/NotificationPermission';
 
 export default function SymptomScreen({ navigation }: any) {
-    const [status, setStatus] = useState('Tap to record your check-in');
     const [audioURI, setAudioURI] = useState<string | null>(null);
     const [alertMessage, setAlertMessage] = useState<string>('');
     const [alertVisible, setAlertVisible] = useState<boolean>(true);
     const [isProcessing, setIsProcessing] = useState<boolean>(false);
     const [activeAlert, setActiveAlert] = useState<RecommendationAlert | null>(null);
+    const [hasRecordedToday, setHasRecordedToday] = useState<boolean>(false);
+    const [status, setStatus] = useState('Tap to record your daily check-in');
     
     const pulseAnim = useRef(new Animated.Value(1)).current;
     const spinAnim = useRef(new Animated.Value(0)).current;
@@ -27,11 +28,33 @@ export default function SymptomScreen({ navigation }: any) {
     const { symptomLogs, addSymptomLog } = useSymptomLogs();
     const { markOnboardingComplete } = useOnboarding();
 
-
-
     // Audio recording state
     const [recording, setRecording] = useState<Audio.Recording | null>(null);
     const [isRecording, setIsRecording] = useState(false);
+
+    // Check if user has recorded today
+    const checkIfRecordedToday = () => {
+        const today = new Date();
+        const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+        const todayEnd = new Date(todayStart.getTime() + 24 * 60 * 60 * 1000);
+        
+        return symptomLogs.some(log => {
+            const logDate = new Date(log.timestamp);
+            return logDate >= todayStart && logDate < todayEnd;
+        });
+    };
+
+    // Update hasRecordedToday when symptomLogs change
+    useEffect(() => {
+        setHasRecordedToday(checkIfRecordedToday());
+    }, [symptomLogs]);
+
+    // Update status text based on whether user has recorded today
+    useEffect(() => {
+        if (!isProcessing && !isRecording) {
+            setStatus(hasRecordedToday ? 'Tap to record another check-in' : 'Tap to record your daily check-in');
+        }
+    }, [hasRecordedToday, isProcessing, isRecording]);
 
     // generate recommendations when symptoms are added
     useEffect(() => {
@@ -73,9 +96,9 @@ export default function SymptomScreen({ navigation }: any) {
         checkForRecommendations();
     }, [symptomLogs, addRecommendations]);
 
-    // pulsating animation for first recording
+    // pulsating animation for first recording of the day
     useEffect(() => {
-        if (symptomLogs.length === 0) {
+        if (!hasRecordedToday) {
             const pulseAnimation = Animated.loop(
                 Animated.sequence([
                     Animated.timing(pulseAnim, {
@@ -96,7 +119,7 @@ export default function SymptomScreen({ navigation }: any) {
         } else {
             pulseAnim.setValue(1);
         }
-    }, [symptomLogs.length, pulseAnim]);
+    }, [hasRecordedToday, pulseAnim]);
 
     // spinning animation for processing
     useEffect(() => {
