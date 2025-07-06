@@ -210,9 +210,19 @@ export default function RecordingDetailScreen({ route, navigation }: any) {
             {logWithDate.timestamp.toLocaleString()}
           </Text>
           
-          <Text style={styles.transcript}>
-            "{logWithDate.transcript}"
-          </Text>
+          <View style={styles.summarySection}>
+            <Text style={styles.sectionLabel}>Key Points</Text>
+            <Text style={styles.summary}>
+              {logWithDate.summary}
+            </Text>
+          </View>
+          
+          <View style={styles.transcriptSection}>
+            <Text style={styles.sectionLabel}>Full Recording</Text>
+            <Text style={styles.transcript}>
+              "{logWithDate.transcript}"
+            </Text>
+          </View>
 
           {logWithDate.audioURI && (
             <View style={styles.audioPlayer}>
@@ -269,8 +279,9 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 16,
+    paddingHorizontal: 16,
     paddingTop: 50,
+    paddingBottom: 12,
     backgroundColor: '#ffffff',
     borderBottomWidth: 1,
     borderBottomColor: '#e2e8f0',
@@ -282,7 +293,6 @@ const styles = StyleSheet.create({
   headerTitle: {
     ...fontStyles.h3,
     color: '#1e293b',
-    letterSpacing: 1,
   },
   content: {
     flex: 1,
@@ -312,10 +322,29 @@ const styles = StyleSheet.create({
     color: '#64748b',
     marginBottom: 16,
   },
+  summarySection: {
+    marginBottom: 20,
+  },
+  transcriptSection: {
+    marginBottom: 24,
+  },
+  sectionLabel: {
+    ...fontStyles.bodyMedium,
+    color: '#64748b',
+    fontWeight: '600',
+    marginBottom: 8,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+  summary: {
+    ...fontStyles.body,
+    color: '#1e293b',
+    lineHeight: 22,
+    fontWeight: '500',
+  },
   transcript: {
     ...fontStyles.body,
     color: '#1e293b',
-    marginBottom: 24,
     lineHeight: 24,
   },
   audioPlayer: {

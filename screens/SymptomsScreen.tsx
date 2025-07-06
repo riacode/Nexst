@@ -10,7 +10,6 @@ import { useSymptomLogs } from '../contexts/SymptomLogsContext';
 import { useOnboarding } from '../contexts/OnboardingContext';
 
 export default function SymptomScreen({ navigation }: any) {
-    const [logs, setLogs] = useState<SymptomLog[]>([]);
     const [status, setStatus] = useState('Tap to record your check-in');
     const [audioURI, setAudioURI] = useState<string | null>(null);
     const [alertMessage, setAlertMessage] = useState<string>('');
@@ -23,7 +22,7 @@ export default function SymptomScreen({ navigation }: any) {
 
     // Use the global recommendations context
     const { recommendations, addRecommendations } = useRecommendations();
-    const { addSymptomLog } = useSymptomLogs();
+    const { symptomLogs, addSymptomLog } = useSymptomLogs();
     const { markOnboardingComplete } = useOnboarding();
 
 
@@ -35,9 +34,9 @@ export default function SymptomScreen({ navigation }: any) {
     // generate recommendations when symptoms are added
     useEffect(() => {
         const checkForRecommendations = async () => {
-            if (logs.length >= 2) {
+            if (symptomLogs.length >= 2) {
                 try {
-                    const newRecommendations = await generateRecommendations(logs);
+                    const newRecommendations = await generateRecommendations(symptomLogs);
                     if (newRecommendations.length > 0) {
                         // Add to global recommendations context
                         addRecommendations(newRecommendations);
@@ -61,11 +60,11 @@ export default function SymptomScreen({ navigation }: any) {
         };
         
         checkForRecommendations();
-    }, [logs, addRecommendations]);
+    }, [symptomLogs, addRecommendations]);
 
     // pulsating animation for first recording
     useEffect(() => {
-        if (logs.length === 0) {
+        if (symptomLogs.length === 0) {
             const pulseAnimation = Animated.loop(
                 Animated.sequence([
                     Animated.timing(pulseAnim, {
@@ -86,7 +85,7 @@ export default function SymptomScreen({ navigation }: any) {
         } else {
             pulseAnim.setValue(1);
         }
-    }, [logs.length, pulseAnim]);
+    }, [symptomLogs.length, pulseAnim]);
 
     // spinning animation for processing
     useEffect(() => {
@@ -129,7 +128,7 @@ export default function SymptomScreen({ navigation }: any) {
                             const summary = await generateSummary(transcript);
                             console.log("Summary:", summary);
                             
-                            // Add to logs
+                            // Add to global symptom logs
                             const now = new Date();
                             const newLog = { 
                                 id: now.toISOString(), 
@@ -138,7 +137,6 @@ export default function SymptomScreen({ navigation }: any) {
                                 transcript,
                                 audioURI: uri 
                             };
-                            setLogs(prevLogs => [newLog, ...prevLogs]);
                             addSymptomLog(newLog);
                             
                             setStatus("Recording saved!");
@@ -197,7 +195,7 @@ export default function SymptomScreen({ navigation }: any) {
             timestamp: log.timestamp.toISOString() // Convert Date to string for navigation
           }
         })}>
-          <Text numberOfLines={1} style={styles.logTitle}>{log.summary}</Text>
+          <Text style={styles.logTitle}>{log.summary}</Text>
           <View style={styles.logHeader}>
             <Text style={styles.logDate}>{log.timestamp.toLocaleString()}</Text>
             <Ionicons name="chevron-forward" size={20} color="#888" />
@@ -228,7 +226,7 @@ export default function SymptomScreen({ navigation }: any) {
             </TouchableOpacity>
           )}
           <ScrollView contentContainerStyle={styles.logsContainer}>
-            {logs.map(renderLog)}
+            {symptomLogs.map(renderLog)}
           </ScrollView>
           {isProcessing ? (
             <View style={styles.processingContainer}>
@@ -253,7 +251,7 @@ export default function SymptomScreen({ navigation }: any) {
             <Animated.View
               style={[
                 styles.recordButton, 
-                logs.length > 0 && styles.recordButtonSmall,
+                symptomLogs.length > 0 && styles.recordButtonSmall,
                 { transform: [{ scale: pulseAnim }] }
               ]}
             >
@@ -264,7 +262,7 @@ export default function SymptomScreen({ navigation }: any) {
               >
                 <Ionicons 
                   name={isRecording ? 'stop' : 'mic'} 
-                  size={logs.length === 0 ? 48 : 32} 
+                  size={symptomLogs.length === 0 ? 48 : 32} 
                   color="#fff" 
                 />
               </TouchableOpacity>
