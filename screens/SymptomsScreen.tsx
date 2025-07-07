@@ -3,7 +3,7 @@ import { View, Text, TouchableOpacity, StyleSheet, Alert, ScrollView, Animated} 
 import { Audio } from 'expo-av';
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { transcribeAudio, generateSummary, generateRecommendations } from '../utils/openai';
+import { transcribeAudio, generateSummary, generateRecommendations, generateDailyWellnessRecommendation } from '../utils/openai';
 import { SymptomLog, MedicalRecommendation, RecommendationAlert } from '../types/recommendations';
 import { useRecommendations } from '../contexts/RecommendationsContext';
 import { useSymptomLogs } from '../contexts/SymptomLogsContext';
@@ -56,40 +56,72 @@ export default function SymptomScreen({ navigation }: any) {
         }
     }, [hasRecordedToday, isProcessing, isRecording]);
 
+    // Check for daily wellness recommendations on component mount
+    useEffect(() => {
+        const checkDailyWellness = async () => {
+            try {
+                const wellnessRecommendations = await generateDailyWellnessRecommendation();
+                if (wellnessRecommendations.length > 0) {
+                    addRecommendations(wellnessRecommendations);
+                    
+                    // Send notification for daily wellness recommendation
+                    for (const recommendation of wellnessRecommendations) {
+                        await NotificationService.sendRecommendationNotification(recommendation);
+                    }
+                }
+            } catch (error) {
+                console.error('Error checking daily wellness recommendations:', error);
+            }
+        };
+        
+        checkDailyWellness();
+    }, [addRecommendations]);
+
     // generate recommendations when symptoms are added
     useEffect(() => {
         const checkForRecommendations = async () => {
-            if (symptomLogs.length >= 2) {
-                try {
-                    const newRecommendations = await generateRecommendations(symptomLogs);
-                    if (newRecommendations.length > 0) {
-                        // Add to global recommendations context
-                        addRecommendations(newRecommendations);
-                        
-                        // Send notifications for new recommendations
-                        for (const recommendation of newRecommendations) {
-                            if (recommendation.priority === 'HIGH') {
-                                await NotificationService.sendHighPriorityNotification(recommendation);
-                            } else {
-                                await NotificationService.sendRecommendationNotification(recommendation);
-                            }
-                        }
-                        
-                        // Create alert for highest priority recommendation
-                        const highPriorityRec = newRecommendations.find(rec => rec.priority === 'HIGH');
-                        if (highPriorityRec) {
-                            setActiveAlert({
-                                id: Date.now().toString(),
-                                recommendation: highPriorityRec,
-                                isRead: false,
-                                createdAt: new Date()
-                            });
-                            setAlertVisible(true);
+            try {
+                let newRecommendations: MedicalRecommendation[] = [];
+                
+                // Generate symptom-based recommendations if we have logs
+                if (symptomLogs.length >= 1) {
+                    const symptomRecommendations = await generateRecommendations(symptomLogs);
+                    newRecommendations = [...newRecommendations, ...symptomRecommendations];
+                }
+                
+                // Generate daily wellness recommendation if no symptom-based recommendations
+                if (newRecommendations.length === 0) {
+                    const wellnessRecommendations = await generateDailyWellnessRecommendation();
+                    newRecommendations = [...newRecommendations, ...wellnessRecommendations];
+                }
+                
+                if (newRecommendations.length > 0) {
+                    // Add to global recommendations context
+                    addRecommendations(newRecommendations);
+                    
+                    // Send notifications for new recommendations
+                    for (const recommendation of newRecommendations) {
+                        if (recommendation.priority === 'HIGH') {
+                            await NotificationService.sendHighPriorityNotification(recommendation);
+                        } else {
+                            await NotificationService.sendRecommendationNotification(recommendation);
                         }
                     }
-                } catch (error) {
-                    console.error('Error generating recommendations:', error);
+                    
+                    // Create alert for highest priority recommendation
+                    const highPriorityRec = newRecommendations.find(rec => rec.priority === 'HIGH');
+                    if (highPriorityRec) {
+                        setActiveAlert({
+                            id: Date.now().toString(),
+                            recommendation: highPriorityRec,
+                            isRead: false,
+                            createdAt: new Date()
+                        });
+                        setAlertVisible(true);
+                    }
                 }
+            } catch (error) {
+                console.error('Error generating recommendations:', error);
             }
         };
         
