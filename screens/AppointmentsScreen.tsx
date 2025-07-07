@@ -14,15 +14,11 @@ interface Appointment {
 
 export default function AppointmentsScreen({ navigation }: any) {
   const { appointments, addAppointment: addAppointmentToContext } = useAppointments();
-  const [showPicker, setShowPicker] = useState(false);
+  const [showModal, setShowModal] = useState(false);
   const [titleInput, setTitleInput] = useState('');
   const [selectedDate, setSelectedDate] = useState(new Date());
-  const [showDatePicker, setShowDatePicker] = useState(false);
-  const [showTimePicker, setShowTimePicker] = useState(false);
-  const [pickerMode, setPickerMode] = useState<'date' | 'time'>('date');
   const [upcomingCollapsed, setUpcomingCollapsed] = useState(false);
   const [pastCollapsed, setPastCollapsed] = useState(false);
-
 
   const addAppointment = () => {
     if (!titleInput.trim()) {
@@ -37,20 +33,18 @@ export default function AppointmentsScreen({ navigation }: any) {
       date: selectedDate,
       timestamp: now
     });
-    setShowPicker(false);
+    setShowModal(false);
     setTitleInput('');
     setSelectedDate(new Date());
   };
 
   const handleDateChange = (event: any, date?: Date) => {
-    setShowDatePicker(false);
     if (date) {
       setSelectedDate(date);
     }
   };
 
   const handleTimeChange = (event: any, time?: Date) => {
-    setShowTimePicker(false);
     if (time) {
       const newDateTime = new Date(selectedDate);
       newDateTime.setHours(time.getHours());
@@ -59,12 +53,10 @@ export default function AppointmentsScreen({ navigation }: any) {
     }
   };
 
-  const openDatePicker = () => {
-    setShowDatePicker(true);
-  };
-
-  const openTimePicker = () => {
-    setShowTimePicker(true);
+  const resetForm = () => {
+    setTitleInput('');
+    setSelectedDate(new Date());
+    setShowModal(false);
   };
 
   const CollapsibleSection = ({ 
@@ -198,69 +190,79 @@ export default function AppointmentsScreen({ navigation }: any) {
         )}
       />
       
-      {showPicker && (
-        <View style={styles.pickerContainer}>
-          <Text style={styles.pickerTitle}>Add New Appointment</Text>
-          
-          <TextInput
-            style={styles.titleInput}
-            placeholder="Appointment name"
-            value={titleInput}
-            onChangeText={setTitleInput}
-            placeholderTextColor="#64748b"
-            textAlign="center"
-          />
+      {showModal && (
+        <Modal
+          visible={showModal}
+          animationType="slide"
+          transparent={true}
+          onRequestClose={() => setShowModal(false)}
+        >
+          <View style={styles.modalOverlay}>
+            <View style={styles.modalContent}>
+              <View style={styles.modalHeader}>
+                <Text style={styles.modalTitle}>Add New Appointment</Text>
+                <TouchableOpacity onPress={() => setShowModal(false)}>
+                  <Ionicons name="close" size={24} color="#64748b" />
+                </TouchableOpacity>
+              </View>
 
-          <View style={styles.dateTimeContainer}>
-            <TouchableOpacity style={styles.dateTimeButton} onPress={openDatePicker}>
-              <Ionicons name="calendar" size={20} color="#00b4d8" />
-              <Text style={styles.dateTimeText}>
-                {selectedDate.toLocaleDateString()}
-              </Text>
-            </TouchableOpacity>
-            
-            <TouchableOpacity style={styles.dateTimeButton} onPress={openTimePicker}>
-              <Ionicons name="time" size={20} color="#00b4d8" />
-              <Text style={styles.dateTimeText}>
-                {selectedDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-              </Text>
-            </TouchableOpacity>
-          </View>
+              <TextInput
+                style={styles.titleInput}
+                placeholder="Appointment name"
+                value={titleInput}
+                onChangeText={setTitleInput}
+                placeholderTextColor="#64748b"
+                textAlign="center"
+              />
 
-          <View style={styles.pickerButtons}>
-            <TouchableOpacity style={styles.cancelButton} onPress={() => setShowPicker(false)}>
-              <Text style={styles.cancelButtonText}>Cancel</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.addButtonStyle} onPress={addAppointment}>
-              <Text style={styles.addButtonText}>Add</Text>
-            </TouchableOpacity>
+              <View style={styles.dateTimeContainer}>
+                <View style={styles.dateTimeSection}>
+                  <Text style={styles.dateTimeLabel}>Date</Text>
+                  <View style={styles.pickerWrapper}>
+                    <DateTimePicker
+                      value={selectedDate}
+                      mode="date"
+                      display="default"
+                      onChange={handleDateChange}
+                      minimumDate={new Date()}
+                      style={styles.inlinePicker}
+                    />
+                  </View>
+                </View>
+                
+                <View style={styles.dateTimeSection}>
+                  <Text style={styles.dateTimeLabel}>Time</Text>
+                  <View style={styles.pickerWrapper}>
+                    <DateTimePicker
+                      value={selectedDate}
+                      mode="time"
+                      display="default"
+                      onChange={handleTimeChange}
+                      style={styles.inlinePicker}
+                    />
+                  </View>
+                </View>
+              </View>
+
+              <View style={styles.pickerButtons}>
+                <TouchableOpacity style={styles.cancelButton} onPress={resetForm}>
+                  <Text style={styles.cancelButtonText}>Cancel</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.addButtonStyle} onPress={addAppointment}>
+                  <Text style={styles.addButtonText}>Add</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
           </View>
-        </View>
+        </Modal>
       )}
 
       {/* Date/Time Pickers */}
-      {showDatePicker && (
-        <DateTimePicker
-          value={selectedDate}
-          mode="date"
-          display="default"
-          onChange={handleDateChange}
-          minimumDate={new Date()}
-        />
-      )}
-      
-      {showTimePicker && (
-        <DateTimePicker
-          value={selectedDate}
-          mode="time"
-          display="default"
-          onChange={handleTimeChange}
-        />
-      )}
+      {/* These are now handled inline within the modal */}
       
       <TouchableOpacity
         style={[styles.recordButton, appointments.length > 0 && styles.recordButtonSmall]}
-        onPress={() => setShowPicker(true)}
+        onPress={() => setShowModal(true)}
       >
         <Ionicons 
           name="add" 
@@ -350,55 +352,51 @@ const styles = StyleSheet.create({
     ...fontStyles.caption,
     color: '#64748b',
   },
-  pickerContainer: {
-    position: 'absolute',
-    top: '20%',
-    left: 20,
-    right: 20,
-    backgroundColor: '#ffffff',
-    borderRadius: 20,
-    padding: 24,
-    shadowColor: '#000',
-    shadowOpacity: 0.15,
-    shadowRadius: 12,
-    elevation: 8,
-    zIndex: 20,
-  },
-  pickerTitle: {
-    ...fontStyles.h3,
-    color: '#1e293b',
-    marginBottom: 16,
-    textAlign: 'center',
-  },
+
   titleInput: {
     borderWidth: 1,
     borderColor: '#e2e8f0',
     borderRadius: 12,
     padding: 16,
-    marginBottom: 16,
+    marginBottom: 20,
+    backgroundColor: '#f8fafc',
     ...fontStyles.body,
     textAlign: 'center',
   },
   dateTimeContainer: {
     flexDirection: 'row',
-    gap: 12,
-    marginBottom: 16,
+    gap: 16,
+    marginBottom: 20,
   },
-  dateTimeButton: {
+
+  dateTimeSection: {
     flex: 1,
-    flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    padding: 12,
     borderWidth: 1,
     borderColor: '#e2e8f0',
-    borderRadius: 8,
+    borderRadius: 12,
     backgroundColor: '#f8fafc',
-    gap: 8,
+    padding: 12,
   },
-  dateTimeText: {
-    ...fontStyles.body,
-    color: '#1e293b',
+  dateTimeLabel: {
+    ...fontStyles.caption,
+    color: '#64748b',
+    marginBottom: 8,
+    textAlign: 'center',
+    fontWeight: '600',
+  },
+  pickerWrapper: {
+    width: '100%',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  inlinePicker: {
+    width: '100%',
+    backgroundColor: 'transparent',
+    borderWidth: 0,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 
 
@@ -406,13 +404,20 @@ const styles = StyleSheet.create({
   modalOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    justifyContent: 'flex-end',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
   },
   modalContent: {
     backgroundColor: '#ffffff',
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    padding: 20,
+    borderRadius: 20,
+    padding: 24,
+    width: '100%',
+    maxWidth: 400,
+    shadowColor: '#000',
+    shadowOpacity: 0.25,
+    shadowRadius: 20,
+    elevation: 10,
   },
   modalHeader: {
     flexDirection: 'row',
