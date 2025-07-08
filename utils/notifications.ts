@@ -97,7 +97,7 @@ export const setupNotificationListeners = (navigation: any) => {
   });
 
   return () => {
-    Notifications.removeNotificationSubscription(notificationListener);
-    Notifications.removeNotificationSubscription(responseListener);
+    notificationListener.remove();
+    responseListener.remove();
   };
 }; 

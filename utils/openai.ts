@@ -155,7 +155,6 @@ const extractSymptomsFromTranscript = (transcript: string): string[] => {
 
 // Helper function to track last recommendation time (simple in-memory storage)
 let lastRecommendationTimestamp = 0;
-let lastDailyRecommendationDate = '';
 
 const getLastRecommendationTime = async (): Promise<number> => {
   return lastRecommendationTimestamp;
@@ -163,14 +162,6 @@ const getLastRecommendationTime = async (): Promise<number> => {
 
 const setLastRecommendationTime = async (): Promise<void> => {
   lastRecommendationTimestamp = Date.now();
-};
-
-const getLastDailyRecommendationDate = async (): Promise<string> => {
-  return lastDailyRecommendationDate;
-};
-
-const setLastDailyRecommendationDate = async (): Promise<void> => {
-  lastDailyRecommendationDate = new Date().toDateString();
 };
 
 // Helper function to make API request with retry logic
@@ -202,41 +193,67 @@ const makeOpenAIRequest = async (requestBody: any, maxRetries: number = 3): Prom
 
       // Handle rate limiting
       if (response.status === 429) {
-        try {
-          const errorData = JSON.parse(errorText);
-          if (errorData.error?.code === 'rate_limit_exceeded') {
-            const retryAfter = errorData.error?.message?.match(/Please try again in ([\d.]+)s/)?.[1];
-            const waitTime = retryAfter ? parseFloat(retryAfter) * 1000 : Math.pow(2, attempt) * 1000;
-            
-            console.log(`Rate limit hit (attempt ${attempt}), waiting ${waitTime}ms...`);
-            await new Promise(resolve => setTimeout(resolve, waitTime));
-            continue; // Retry
-          }
-        } catch (parseError) {
-          console.error('Failed to parse rate limit error:', parseError);
-        }
+        const waitTime = Math.pow(2, attempt) * 1000;
+        console.log(`Rate limit hit (attempt ${attempt}), waiting ${waitTime}ms...`);
+        await new Promise(resolve => setTimeout(resolve, waitTime));
+        continue;
       }
 
-      // For other errors, throw immediately
       throw new Error(`API request failed: ${response.status} ${response.statusText} - ${errorText}`);
     } catch (error) {
       if (attempt === maxRetries) {
         throw error;
       }
-      
-      // Exponential backoff for other errors
       const waitTime = Math.pow(2, attempt) * 1000;
       console.log(`Request failed (attempt ${attempt}), retrying in ${waitTime}ms...`);
       await new Promise(resolve => setTimeout(resolve, waitTime));
     }
   }
-  
-  throw new Error('Max retries exceeded');
+
+  throw new Error('API request failed after all retries');
 };
 
-export const generateRecommendations = async (symptomLogs: SymptomLog[]): Promise<MedicalRecommendation[]> => {
+// Check if transcript contains actual health concerns
+const hasHealthConcerns = (transcript: string): boolean => {
+  const healthKeywords = [
+    'pain', 'ache', 'hurt', 'sore', 'uncomfortable', 'sick', 'ill', 'fever',
+    'headache', 'migraine', 'dizzy', 'nausea', 'vomiting', 'diarrhea', 'constipation',
+    'cough', 'sneeze', 'runny nose', 'congestion', 'shortness of breath', 'wheezing',
+    'chest pain', 'heart palpitation', 'irregular heartbeat', 'high blood pressure',
+    'abdominal pain', 'stomach ache', 'bloating', 'gas', 'acid reflux', 'heartburn',
+    'rash', 'itch', 'swelling', 'bruise', 'cut', 'bleeding', 'infection',
+    'fatigue', 'tired', 'exhausted', 'weak', 'dizzy', 'lightheaded', 'fainting',
+    'anxiety', 'panic', 'depression', 'sad', 'hopeless', 'stress', 'overwhelmed',
+    'insomnia', 'can\'t sleep', 'sleep problems', 'nightmares', 'night sweats',
+    'weight loss', 'weight gain', 'loss of appetite', 'increased appetite',
+    'thirst', 'frequent urination', 'irregular period', 'missed period', 'pregnancy',
+    'joint pain', 'muscle pain', 'back pain', 'neck pain', 'shoulder pain',
+    'numbness', 'tingling', 'weakness', 'paralysis', 'seizure', 'tremor',
+    'vision problems', 'blurred vision', 'double vision', 'eye pain',
+    'hearing problems', 'ringing in ears', 'ear pain', 'ear infection',
+    'dental pain', 'toothache', 'gum problems', 'mouth sores',
+    'skin problems', 'acne', 'eczema', 'psoriasis', 'mole changes',
+    'lump', 'bump', 'growth', 'tumor', 'cancer', 'cancerous'
+  ];
+
+  const transcriptLower = transcript.toLowerCase();
+  return healthKeywords.some(keyword => transcriptLower.includes(keyword));
+};
+
+// Check if a recommendation already exists for a specific symptom
+const hasExistingRecommendation = (symptom: string, existingRecommendations: MedicalRecommendation[]): boolean => {
+  return existingRecommendations.some(rec => 
+    rec.symptomsTriggering.some(trigger => 
+      trigger.toLowerCase().includes(symptom.toLowerCase())
+    ) && !rec.isCompleted && !rec.isCancelled
+  );
+};
+
+export const generateRecommendations = async (
+  symptomLogs: SymptomLog[], 
+  existingRecommendations: MedicalRecommendation[] = []
+): Promise<MedicalRecommendation[]> => {
   try {
-    // Debug: Check if API key is available
     if (!OPENAI_API_KEY) {
       console.error('OpenAI API key is not set');
       throw new Error('OpenAI API key is not configured');
@@ -246,80 +263,91 @@ export const generateRecommendations = async (symptomLogs: SymptomLog[]): Promis
       return []; // Need at least 1 log to generate recommendations
     }
 
-    // Rate limiting: Only generate recommendations every 2 minutes (reduced from 5)
+    // Rate limiting: Only generate recommendations every 5 minutes
     const lastRecommendationTime = await getLastRecommendationTime();
     const timeSinceLastRecommendation = Date.now() - lastRecommendationTime;
-    const minInterval = 2 * 60 * 1000; // 2 minutes
+    const minInterval = 5 * 60 * 1000; // 5 minutes
     
     if (timeSinceLastRecommendation < minInterval) {
       console.log(`Skipping recommendation generation - too soon since last one (${Math.round(timeSinceLastRecommendation / 1000)}s ago)`);
       return [];
     }
 
+    // Get the most recent symptom log
+    const latestLog = symptomLogs[0]; // Assuming logs are sorted by newest first
+    
+    // Check if the latest log contains actual health concerns
+    if (!hasHealthConcerns(latestLog.transcript)) {
+      console.log('No health concerns detected in latest symptom log - skipping recommendation generation');
+      return [];
+    }
+
     const patterns = analyzeSymptomPatterns(symptomLogs);
-    const logsText = symptomLogs.map(log => 
+    
+    // Filter out symptoms that already have active recommendations
+    const newSymptoms = patterns.filter(pattern => 
+      !hasExistingRecommendation(pattern.symptom, existingRecommendations)
+    );
+
+    if (newSymptoms.length === 0) {
+      console.log('All detected symptoms already have active recommendations');
+      return [];
+    }
+
+    // Focus on the most recent symptom that needs attention
+    const primarySymptom = newSymptoms[0];
+    
+    const logsText = symptomLogs.slice(0, 3).map(log => 
       `Date: ${log.timestamp.toLocaleDateString()} ${log.timestamp.toLocaleTimeString()}\nSummary: ${log.summary}\nFull description: ${log.transcript}`
     ).join('\n\n');
 
-    const patternsText = patterns.map(pattern => 
-      `Symptom: ${pattern.symptom}\nFrequency: ${pattern.frequency} times\nFirst occurrence: ${pattern.firstOccurrence.toLocaleDateString()}\nLast occurrence: ${pattern.lastOccurrence.toLocaleDateString()}\nDuration: ${Math.round((pattern.lastOccurrence.getTime() - pattern.firstOccurrence.getTime()) / (1000 * 60 * 60 * 24))} days`
-    ).join('\n\n');
+    const prompt = `You are a focused healthcare assistant. A patient has reported a specific health concern that requires attention.
 
-    const prompt = `You are a caring healthcare assistant analyzing patient symptom patterns. Your role is to provide gentle, supportive recommendations that help patients take care of their health.
+PRIMARY SYMPTOM: ${primarySymptom.symptom}
+FREQUENCY: ${primarySymptom.frequency} times
+FIRST OCCURRENCE: ${primarySymptom.firstOccurrence.toLocaleDateString()}
+LAST OCCURRENCE: ${primarySymptom.lastOccurrence.toLocaleDateString()}
 
-PATIENT SYMPTOM HISTORY:
+RECENT SYMPTOM HISTORY:
 ${logsText}
 
-SYMPTOM PATTERN ANALYSIS:
-${patternsText}
+CRITICAL REQUIREMENTS:
+1. Generate ONLY ONE recommendation specifically for "${primarySymptom.symptom}"
+2. Be direct and actionable - no generic wellness advice
+3. Focus on the specific symptom and its severity
+4. Provide clear, specific action items
+5. Only suggest medical evaluation if genuinely needed for this symptom
 
-GENTLE HEALTH GUIDELINES:
-1. **Fever**: Consider seeing a doctor if fever lasts more than 3-5 days
-2. **Headaches**: New or changing headache patterns may benefit from medical evaluation
-3. **Chest Pain**: Any chest discomfort should be evaluated by a healthcare provider
-4. **Shortness of Breath**: New breathing difficulties warrant medical attention
-5. **Abdominal Pain**: Persistent or severe stomach pain should be checked
-6. **Mental Health**: Ongoing stress or mood changes may benefit from professional support
-7. **Irregular Periods**: Period changes lasting several months may need evaluation
-8. **Weight Changes**: Significant unexplained weight changes should be discussed with a doctor
-9. **Fatigue**: Persistent tiredness with other symptoms may need attention
-10. **Pain**: New or persistent pain should be evaluated
+SYMPTOM-SPECIFIC GUIDELINES:
+- **Headache**: Consider triggers, duration, severity, associated symptoms
+- **Chest Pain**: Always evaluate for cardiac concerns
+- **Fever**: Consider duration, temperature, associated symptoms
+- **Abdominal Pain**: Consider location, severity, associated symptoms
+- **Mental Health**: Consider severity, duration, impact on daily life
+- **Fatigue**: Consider duration, associated symptoms, impact on function
 
-RECOMMENDATION APPROACH:
-- HIGH Priority: Important to address soon (but not necessarily urgent)
-- MEDIUM Priority: Worth considering in the near future
-- LOW Priority: Gentle suggestions for wellness and monitoring
-
-For each recommendation, provide:
-1. Caring, supportive explanation
-2. Gentle action suggestions
-3. Reassuring context
-4. Optional follow-up suggestions
-
-Focus on being supportive and helpful rather than alarming. Use encouraging, gentle language. Only suggest medical evaluation when it would be genuinely beneficial for the patient's wellbeing.
-
-Format response as JSON array with this structure:
+Format response as a SINGLE JSON object (not array) with this structure:
 {
   "priority": "HIGH|MEDIUM|LOW",
-  "title": "string",
-  "description": "string",
+  "title": "Specific title for ${primarySymptom.symptom}",
+  "description": "Direct, specific explanation about this symptom",
   "actionItems": [
     {
       "id": "unique_id",
-      "title": "string",
-      "description": "string", 
+      "title": "Specific action for this symptom",
+      "description": "Clear, actionable description", 
       "type": "appointment|medication|exercise|diet|rest|monitoring|consultation|test",
       "isCompleted": false,
       "priority": "HIGH|MEDIUM|LOW"
     }
   ],
   "urgency": "immediate|within days|within weeks",
-  "category": "appointment|medication|lifestyle|monitoring|emergency|preventive",
-  "medicalRationale": "string",
-  "symptomsTriggering": ["string"],
-  "severityIndicators": ["string"],
+  "category": "appointment|medication|lifestyle|monitoring|emergency",
+  "medicalRationale": "Specific medical reasoning for this symptom",
+  "symptomsTriggering": ["${primarySymptom.symptom}"],
+  "severityIndicators": ["specific indicators for this symptom"],
   "followUpRequired": boolean,
-  "followUpTimeline": "string"
+  "followUpTimeline": "specific timeline for this symptom"
 }`;
 
     const requestBody = {
@@ -327,23 +355,18 @@ Format response as JSON array with this structure:
       messages: [
         {
           role: 'system',
-          content: 'You are a caring healthcare assistant providing gentle, supportive health recommendations. Be encouraging and helpful rather than alarming. Use warm, supportive language and only suggest medical evaluation when it would genuinely benefit the patient. Focus on wellness and prevention.'
+          content: 'You are a focused healthcare assistant. Generate ONE specific, actionable recommendation for the primary symptom. Be direct and avoid generic wellness advice. Only suggest medical evaluation when genuinely needed for the specific symptom.'
         },
         {
           role: 'user',
           content: prompt
         }
       ],
-      temperature: 0.2,
-      max_tokens: 2000,
+      temperature: 0.1,
+      max_tokens: 1500,
     };
 
-    console.log('Sending request to OpenAI:', {
-      url: `${OPENAI_API_URL}/chat/completions`,
-      hasApiKey: !!OPENAI_API_KEY,
-      promptLength: prompt.length,
-      model: requestBody.model
-    });
+    console.log('Generating symptom-specific recommendation for:', primarySymptom.symptom);
 
     const data: ChatCompletionResponse = await makeOpenAIRequest(requestBody);
     const content = data.choices[0]?.message?.content;
@@ -352,193 +375,32 @@ Format response as JSON array with this structure:
       throw new Error('No response from OpenAI');
     }
 
-    // Try to parse JSON response
     try {
-      const recommendations = JSON.parse(content);
-      const parsedRecommendations = Array.isArray(recommendations) ? recommendations : [recommendations];
+      const recommendation = JSON.parse(content);
       
       // Update last recommendation time
       await setLastRecommendationTime();
       
-      // Add metadata to each recommendation
-      return parsedRecommendations.map((rec: any, index: number) => ({
-        ...rec,
-        id: `rec_${Date.now()}_${index}`,
+      // Add metadata to the recommendation
+      return [{
+        ...recommendation,
+        id: `rec_${Date.now()}_${primarySymptom.symptom}`,
         createdAt: new Date(),
         isCompleted: false,
         isCancelled: false,
-        actionItems: rec.actionItems.map((item: any, itemIndex: number) => ({
+        actionItems: recommendation.actionItems.map((item: any, itemIndex: number) => ({
           ...item,
-          id: `action_${Date.now()}_${index}_${itemIndex}`,
+          id: `action_${Date.now()}_${primarySymptom.symptom}_${itemIndex}`,
           isCompleted: false
         }))
-      }));
-    } catch (parseError) {
-      console.error('Failed to parse recommendations JSON:', parseError);
-      console.error('Raw response:', content);
-      
-      // Fallback: return a gentle monitoring recommendation
-      return [{
-        priority: "LOW",
-        title: "Keep Up the Great Work",
-        description: "You're doing a wonderful job tracking your health! Continue monitoring your symptoms to better understand your patterns.",
-        actionItems: [{
-          id: `action_${Date.now()}_0_0`,
-          title: "Continue Your Health Journal",
-          description: "Keep recording your daily symptoms and feelings",
-          type: "monitoring",
-          isCompleted: false,
-          priority: "LOW"
-        }],
-        urgency: "within weeks",
-        category: "monitoring",
-        medicalRationale: "Regular health tracking helps you and your healthcare providers understand your patterns and make informed decisions about your care.",
-        symptomsTriggering: ["ongoing monitoring"],
-        severityIndicators: ["general wellness"],
-        followUpRequired: false,
-        id: `rec_${Date.now()}_0`,
-        createdAt: new Date(),
-        isCompleted: false,
-        isCancelled: false
       }];
+    } catch (parseError) {
+      console.error('Failed to parse recommendation JSON:', parseError);
+      console.error('Raw response:', content);
+      return [];
     }
   } catch (error) {
     console.error('Error generating recommendations:', error);
-    throw error;
-  }
-}; 
-
-export const generateDailyWellnessRecommendation = async (): Promise<MedicalRecommendation[]> => {
-  try {
-    if (!OPENAI_API_KEY) {
-      console.error('OpenAI API key is not set');
-      throw new Error('OpenAI API key is not configured');
-    }
-
-    // Check if we already generated a daily recommendation today
-    const lastDailyDate = await getLastDailyRecommendationDate();
-    const today = new Date().toDateString();
-    
-    if (lastDailyDate === today) {
-      console.log('Daily wellness recommendation already generated today');
-      return [];
-    }
-
-    const prompt = `You are a caring healthcare assistant providing daily wellness recommendations. Your role is to encourage healthy habits and preventive care.
-
-DAILY WELLNESS GUIDELINES:
-- Focus on preventive health and wellness
-- Encourage healthy lifestyle habits
-- Provide gentle reminders for self-care
-- Suggest activities that promote mental and physical wellbeing
-- Be encouraging and supportive
-
-Generate a single, gentle daily wellness recommendation that could include:
-- Hydration reminders
-- Exercise suggestions
-- Stress management tips
-- Sleep hygiene advice
-- Nutrition guidance
-- Mental health support
-- Preventive care reminders
-
-Format response as JSON array with this structure:
-{
-  "priority": "LOW",
-  "title": "string",
-  "description": "string",
-  "actionItems": [
-    {
-      "id": "unique_id",
-      "title": "string",
-      "description": "string", 
-      "type": "exercise|diet|rest|monitoring",
-      "isCompleted": false,
-      "priority": "LOW"
-    }
-  ],
-  "urgency": "within days",
-  "category": "preventive",
-  "medicalRationale": "string",
-  "symptomsTriggering": ["daily wellness"],
-  "severityIndicators": ["preventive care"],
-  "followUpRequired": false,
-  "followUpTimeline": "ongoing"
-}`;
-
-    const requestBody = {
-      model: 'gpt-4',
-      messages: [
-        {
-          role: 'system',
-          content: 'You are a caring healthcare assistant providing gentle, supportive daily wellness recommendations. Be encouraging and helpful, focusing on prevention and healthy habits.'
-        },
-        {
-          role: 'user',
-          content: prompt
-        }
-      ],
-      temperature: 0.3,
-      max_tokens: 1000,
-    };
-
-    const data: ChatCompletionResponse = await makeOpenAIRequest(requestBody);
-    const content = data.choices[0]?.message?.content;
-    
-    if (!content) {
-      throw new Error('No response from OpenAI');
-    }
-
-    try {
-      const recommendations = JSON.parse(content);
-      const parsedRecommendations = Array.isArray(recommendations) ? recommendations : [recommendations];
-      
-      // Update last daily recommendation date
-      await setLastDailyRecommendationDate();
-      
-      // Add metadata to each recommendation
-      return parsedRecommendations.map((rec: any, index: number) => ({
-        ...rec,
-        id: `daily_${Date.now()}_${index}`,
-        createdAt: new Date(),
-        isCompleted: false,
-        isCancelled: false,
-        actionItems: rec.actionItems.map((item: any, itemIndex: number) => ({
-          ...item,
-          id: `daily_action_${Date.now()}_${index}_${itemIndex}`,
-          isCompleted: false
-        }))
-      }));
-    } catch (parseError) {
-      console.error('Failed to parse daily wellness recommendations JSON:', parseError);
-      
-      // Fallback: return a gentle wellness recommendation
-      return [{
-        priority: "LOW",
-        title: "Daily Wellness Reminder",
-        description: "Take a moment today to check in with yourself and practice some self-care.",
-        actionItems: [{
-          id: `daily_action_${Date.now()}_0_0`,
-          title: "Practice Self-Care",
-          description: "Take 5 minutes to do something that makes you feel good",
-          type: "monitoring",
-          isCompleted: false,
-          priority: "LOW"
-        }],
-        urgency: "within days",
-        category: "preventive",
-        medicalRationale: "Regular self-care practices support overall mental and physical wellbeing.",
-        symptomsTriggering: ["daily wellness"],
-        severityIndicators: ["preventive care"],
-        followUpRequired: false,
-        id: `daily_${Date.now()}_0`,
-        createdAt: new Date(),
-        isCompleted: false,
-        isCancelled: false
-      }];
-    }
-  } catch (error) {
-    console.error('Error generating daily wellness recommendations:', error);
     throw error;
   }
 }; 

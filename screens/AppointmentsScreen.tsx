@@ -59,6 +59,14 @@ export default function AppointmentsScreen({ navigation }: any) {
     setShowModal(false);
   };
 
+  const formatDate = (date: Date) => {
+    return date.toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric'
+    });
+  };
+
   const CollapsibleSection = ({ 
     title, 
     isCollapsed, 
@@ -125,7 +133,7 @@ export default function AppointmentsScreen({ navigation }: any) {
       })}
     >
       <View style={styles.appHeader}>
-        <Text style={styles.appDate}>{item.date.toLocaleDateString()}</Text>
+        <Text style={styles.appDate}>{formatDate(item.date)}</Text>
         <Ionicons name="chevron-forward" size={20} color="#888" />
       </View>
       <Text numberOfLines={1} style={styles.appTitle}>{item.title}</Text>
