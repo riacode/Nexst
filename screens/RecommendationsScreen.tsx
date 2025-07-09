@@ -128,8 +128,9 @@ export default function RecommendationsScreen({ route, navigation }: any) {
             name={isCollapsed ? 'chevron-down' : 'chevron-up'} 
             size={20} 
             color="#64748b" 
+            style={{ marginRight: 8 }}
           />
-          <Text style={styles.sectionTitle}>{title}</Text>
+          <Text style={styles.sectionHeaderTitle}>{title}</Text>
           <Text style={styles.sectionCount}>({count})</Text>
         </View>
       </TouchableOpacity>
@@ -351,6 +352,12 @@ const styles = StyleSheet.create({
     ...fontStyles.h3,
     color: '#1e293b',
     marginBottom: 12,
+    marginRight: 8,
+  },
+  sectionHeaderTitle: {
+    ...fontStyles.h3,
+    color: '#1e293b',
+    marginRight: 8,
   },
   sectionHeader: {
     flexDirection: 'row',
@@ -363,12 +370,11 @@ const styles = StyleSheet.create({
   sectionHeaderLeft: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
   },
   sectionCount: {
-    ...fontStyles.caption,
-    color: '#64748b',
-    fontWeight: '500',
+    ...fontStyles.h3,
+    color: '#94a3b8',
+    fontWeight: '400',
   },
   recommendationCard: {
     backgroundColor: '#ffffff',
