@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createStackNavigator } from '@react-navigation/stack';
@@ -139,7 +139,7 @@ function AppContent() {
 
   useEffect(() => {
     // Set up notification listeners when the app starts
-    const cleanup = setupNotificationListeners(null); // We'll pass navigation later
+    const cleanup = setupNotificationListeners();
     
     return cleanup;
   }, []);

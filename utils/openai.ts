@@ -215,18 +215,19 @@ const makeOpenAIRequest = async (requestBody: any, maxRetries: number = 3): Prom
 
 // Check if transcript contains actual health concerns
 const hasHealthConcerns = (transcript: string): boolean => {
-  const healthKeywords = [
+  const negativeHealthKeywords = [
+    // Pain and discomfort
     'pain', 'ache', 'hurt', 'sore', 'uncomfortable', 'sick', 'ill', 'fever',
     'headache', 'migraine', 'dizzy', 'nausea', 'vomiting', 'diarrhea', 'constipation',
     'cough', 'sneeze', 'runny nose', 'congestion', 'shortness of breath', 'wheezing',
     'chest pain', 'heart palpitation', 'irregular heartbeat', 'high blood pressure',
     'abdominal pain', 'stomach ache', 'bloating', 'gas', 'acid reflux', 'heartburn',
     'rash', 'itch', 'swelling', 'bruise', 'cut', 'bleeding', 'infection',
-    'fatigue', 'tired', 'exhausted', 'weak', 'dizzy', 'lightheaded', 'fainting',
+    'fatigue', 'tired', 'exhausted', 'weak', 'lightheaded', 'fainting',
     'anxiety', 'panic', 'depression', 'sad', 'hopeless', 'stress', 'overwhelmed',
     'insomnia', 'can\'t sleep', 'sleep problems', 'nightmares', 'night sweats',
     'weight loss', 'weight gain', 'loss of appetite', 'increased appetite',
-    'thirst', 'frequent urination', 'irregular period', 'missed period', 'pregnancy',
+    'thirst', 'frequent urination', 'irregular period', 'missed period',
     'joint pain', 'muscle pain', 'back pain', 'neck pain', 'shoulder pain',
     'numbness', 'tingling', 'weakness', 'paralysis', 'seizure', 'tremor',
     'vision problems', 'blurred vision', 'double vision', 'eye pain',
@@ -236,8 +237,22 @@ const hasHealthConcerns = (transcript: string): boolean => {
     'lump', 'bump', 'growth', 'tumor', 'cancer', 'cancerous'
   ];
 
+  const positiveKeywords = [
+    'good', 'great', 'excellent', 'healthy', 'fine', 'well', 'better', 'improved',
+    'feeling good', 'feeling great', 'no problems', 'no issues', 'no symptoms',
+    'normal', 'usual', 'routine', 'stable', 'recovered', 'healed'
+  ];
+
   const transcriptLower = transcript.toLowerCase();
-  return healthKeywords.some(keyword => transcriptLower.includes(keyword));
+  
+  // Check for negative health keywords
+  const hasNegativeSymptoms = negativeHealthKeywords.some(keyword => transcriptLower.includes(keyword));
+  
+  // Check for positive keywords that might indicate no health concerns
+  const hasPositiveIndicators = positiveKeywords.some(keyword => transcriptLower.includes(keyword));
+  
+  // Only return true if there are negative symptoms AND no strong positive indicators
+  return hasNegativeSymptoms && !hasPositiveIndicators;
 };
 
 // Check if a recommendation already exists for a specific symptom
@@ -247,6 +262,157 @@ const hasExistingRecommendation = (symptom: string, existingRecommendations: Med
       trigger.toLowerCase().includes(symptom.toLowerCase())
     ) && !rec.isCompleted && !rec.isCancelled
   );
+};
+
+// Check if a symptom needs follow-up (mentioned but not resolved)
+const needsFollowUp = (symptom: string, symptomLogs: SymptomLog[]): boolean => {
+  const symptomLogsWithSymptom = symptomLogs.filter(log => 
+    log.transcript.toLowerCase().includes(symptom.toLowerCase())
+  );
+  
+  if (symptomLogsWithSymptom.length < 2) return false; // Need at least 2 mentions
+  
+  const firstMention = symptomLogsWithSymptom[symptomLogsWithSymptom.length - 1]; // Oldest
+  const lastMention = symptomLogsWithSymptom[0]; // Newest
+  
+  const daysBetween = Math.round((lastMention.timestamp.getTime() - firstMention.timestamp.getTime()) / (1000 * 60 * 60 * 24));
+  
+  // If symptom was mentioned more than 1 day ago and hasn't been resolved, it needs follow-up
+  return daysBetween > 1;
+};
+
+// Generate follow-up questions for unresolved symptoms
+export const generateFollowUpQuestions = async (symptomLogs: SymptomLog[]): Promise<string[]> => {
+  try {
+    if (!OPENAI_API_KEY) {
+      return [];
+    }
+    
+    if (symptomLogs.length < 2) {
+      return [];
+    }
+    
+    const patterns = analyzeSymptomPatterns(symptomLogs);
+    const unresolvedSymptoms = patterns.filter(pattern => 
+      needsFollowUp(pattern.symptom, symptomLogs)
+    );
+    
+    if (unresolvedSymptoms.length === 0) {
+      return [];
+    }
+    
+    const primarySymptom = unresolvedSymptoms[0];
+    const symptomLogsWithSymptom = symptomLogs.filter(log => 
+      log.transcript.toLowerCase().includes(primarySymptom.symptom.toLowerCase())
+    );
+    
+    const logsText = symptomLogsWithSymptom.slice(0, 3).map(log => 
+      `Date: ${log.timestamp.toLocaleDateString()}\nSummary: ${log.summary}\nDescription: ${log.transcript}`
+    ).join('\n\n');
+    
+    const prompt = `A patient mentioned "${primarySymptom.symptom}" but hasn't provided an update. Generate a gentle, supportive follow-up question to check if they're still experiencing this symptom.
+
+SYMPTOM HISTORY:
+${logsText}
+
+GENERATE ONE FOLLOW-UP QUESTION that:
+1. Is gentle and supportive, not pushy
+2. Asks if they're still experiencing the symptom
+3. Offers to help if they need it
+4. Uses warm, caring language
+
+Format as a simple string, no JSON.`;
+
+    const requestBody = {
+      model: 'gpt-4',
+      messages: [
+        {
+          role: 'system',
+          content: 'You are a caring healthcare assistant. Generate gentle follow-up questions to check on unresolved symptoms. Be supportive and helpful.'
+        },
+        {
+          role: 'user',
+          content: prompt
+        }
+      ],
+      temperature: 0.3,
+      max_tokens: 100,
+    };
+
+    const data: ChatCompletionResponse = await makeOpenAIRequest(requestBody);
+    const content = data.choices[0]?.message?.content;
+    
+    if (!content) {
+      return [];
+    }
+    
+    return [content.trim()];
+  } catch (error) {
+    console.error('Error generating follow-up questions:', error);
+    return [];
+  }
+};
+
+// Check for missed periods (women's health tracking)
+export const checkForMissedPeriod = async (symptomLogs: SymptomLog[]): Promise<string | null> => {
+  try {
+    if (!OPENAI_API_KEY) {
+      return null;
+    }
+    
+    const periodLogs = symptomLogs.filter(log => 
+      log.transcript.toLowerCase().includes('period') || 
+      log.transcript.toLowerCase().includes('menstrual')
+    );
+    
+    if (periodLogs.length === 0) {
+      return null;
+    }
+    
+    const lastPeriodLog = periodLogs[0]; // Most recent
+    const daysSinceLastPeriod = Math.round((Date.now() - lastPeriodLog.timestamp.getTime()) / (1000 * 60 * 60 * 24));
+    
+    // If it's been more than 35 days since last period mention, check if they missed it
+    if (daysSinceLastPeriod > 35) {
+      const prompt = `A patient mentioned their period ${daysSinceLastPeriod} days ago but hasn't mentioned it since. Generate a gentle question to check if they've had their period since then or if they forgot to mention it.
+
+Generate ONE gentle question that:
+1. Is supportive and not alarming
+2. Asks if they've had their period since the last mention
+3. Offers to help track it if needed
+4. Uses caring, non-judgmental language
+
+Format as a simple string, no JSON.`;
+
+      const requestBody = {
+        model: 'gpt-4',
+        messages: [
+          {
+            role: 'system',
+            content: 'You are a caring healthcare assistant. Generate gentle questions about menstrual health tracking. Be supportive and helpful.'
+          },
+          {
+            role: 'user',
+            content: prompt
+          }
+        ],
+        temperature: 0.3,
+        max_tokens: 100,
+      };
+
+      const data: ChatCompletionResponse = await makeOpenAIRequest(requestBody);
+      const content = data.choices[0]?.message?.content;
+      
+      if (content) {
+        return content.trim();
+      }
+    }
+    
+    return null;
+  } catch (error) {
+    console.error('Error checking for missed period:', error);
+    return null;
+  }
 };
 
 export const generateRecommendations = async (
@@ -301,7 +467,7 @@ export const generateRecommendations = async (
       `Date: ${log.timestamp.toLocaleDateString()} ${log.timestamp.toLocaleTimeString()}\nSummary: ${log.summary}\nFull description: ${log.transcript}`
     ).join('\n\n');
 
-    const prompt = `You are a focused healthcare assistant. A patient has reported a specific health concern that requires attention.
+    const prompt = `You are a supportive healthcare assistant. A patient has reported a health concern that may need attention.
 
 PRIMARY SYMPTOM: ${primarySymptom.symptom}
 FREQUENCY: ${primarySymptom.frequency} times
@@ -312,30 +478,36 @@ RECENT SYMPTOM HISTORY:
 ${logsText}
 
 CRITICAL REQUIREMENTS:
-1. Generate ONLY ONE recommendation specifically for "${primarySymptom.symptom}"
-2. Be direct and actionable - no generic wellness advice
-3. Focus on the specific symptom and its severity
-4. Provide clear, specific action items
-5. Only suggest medical evaluation if genuinely needed for this symptom
+1. Generate ONE supportive recommendation for "${primarySymptom.symptom}"
+2. Be helpful and informative, not alarming
+3. Focus on practical steps to address this specific symptom
+4. Provide clear, actionable guidance
+5. Only suggest medical evaluation if genuinely beneficial
 
-SYMPTOM-SPECIFIC GUIDELINES:
-- **Headache**: Consider triggers, duration, severity, associated symptoms
-- **Chest Pain**: Always evaluate for cardiac concerns
+TONE GUIDELINES:
+- Be supportive and informative, not scary
+- Use reassuring language while being realistic
+- Focus on practical solutions
+- Avoid medical jargon unless necessary
+
+SYMPTOM-SPECIFIC APPROACH:
+- **Headache**: Consider triggers, duration, severity, when to seek help
+- **Chest Pain**: Evaluate seriousness, when to get immediate attention
 - **Fever**: Consider duration, temperature, associated symptoms
-- **Abdominal Pain**: Consider location, severity, associated symptoms
-- **Mental Health**: Consider severity, duration, impact on daily life
+- **Abdominal Pain**: Consider location, severity, when to see a doctor
+- **Mental Health**: Consider impact on daily life, when to seek support
 - **Fatigue**: Consider duration, associated symptoms, impact on function
 
-Format response as a SINGLE JSON object (not array) with this structure:
+Format response as a SINGLE JSON object:
 {
   "priority": "HIGH|MEDIUM|LOW",
-  "title": "Specific title for ${primarySymptom.symptom}",
-  "description": "Direct, specific explanation about this symptom",
+  "title": "Supportive title for ${primarySymptom.symptom}",
+  "description": "Clear, helpful explanation about this symptom",
   "actionItems": [
     {
       "id": "unique_id",
-      "title": "Specific action for this symptom",
-      "description": "Clear, actionable description", 
+      "title": "Practical action for this symptom",
+      "description": "Clear, helpful description", 
       "type": "appointment|medication|exercise|diet|rest|monitoring|consultation|test",
       "isCompleted": false,
       "priority": "HIGH|MEDIUM|LOW"
@@ -343,11 +515,11 @@ Format response as a SINGLE JSON object (not array) with this structure:
   ],
   "urgency": "immediate|within days|within weeks",
   "category": "appointment|medication|lifestyle|monitoring|emergency",
-  "medicalRationale": "Specific medical reasoning for this symptom",
+  "medicalRationale": "Clear explanation of why this helps",
   "symptomsTriggering": ["${primarySymptom.symptom}"],
   "severityIndicators": ["specific indicators for this symptom"],
   "followUpRequired": boolean,
-  "followUpTimeline": "specific timeline for this symptom"
+  "followUpTimeline": "when to follow up"
 }`;
 
     const requestBody = {

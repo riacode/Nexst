@@ -11,7 +11,7 @@ interface AppointmentDetailScreenProps {
         id: string;
         title: string;
         date: string;
-        timestamp: string;
+        timestamp: string; 
       };
     };
   };
@@ -60,10 +60,23 @@ export default function AppointmentDetailScreen({ route, navigation }: Appointme
   const generateImportantQuestions = (appointmentTitle: string, symptoms: any[]) => {
     const title = appointmentTitle.toLowerCase();
     
+    // If no symptoms, provide general appointment questions
+    if (symptoms.length === 0) {
+      const generalQuestions = [
+        "What are the most important things I should know about my current health status?",
+        "Are there any preventive measures or screenings I should consider?",
+        "What follow-up care or monitoring do you recommend?",
+        "Are there any lifestyle changes that would benefit my health?",
+        "When should I schedule my next appointment?"
+      ];
+      setImportantQuestions(generalQuestions);
+      return;
+    }
+    
     // Analyze symptoms for specific patterns and details
     const symptomAnalysis = analyzeSymptomsForQuestions(symptoms);
     
-    // Generate highly specific questions based on actual symptoms
+    // Generate focused, specific questions based on actual symptoms
     let questions: string[] = [];
     
     // Add symptom-specific questions based on detailed analysis
@@ -105,9 +118,9 @@ export default function AppointmentDetailScreen({ route, navigation }: Appointme
     // Add follow-up and monitoring questions
     questions.push(...generateFollowUpQuestions(symptomAnalysis));
     
-    // Remove duplicates and limit to most important questions
+    // Remove duplicates and limit to most important questions (quality over quantity)
     const uniqueQuestions = [...new Set(questions)];
-    setImportantQuestions(uniqueQuestions.slice(0, 10));
+    setImportantQuestions(uniqueQuestions.slice(0, 6)); // Reduced from 10 to 6 for better focus
   };
 
   const analyzeSymptomsForQuestions = (symptoms: any[]) => {
@@ -128,7 +141,8 @@ export default function AppointmentDetailScreen({ route, navigation }: Appointme
       hasSkinIssues: false,
       skinDetails: { symptoms: '', location: '', appearance: '' },
       hasNeurologicalIssues: false,
-      neurologicalDetails: { symptoms: '', frequency: '', triggers: '' }
+      neurologicalDetails: { symptoms: '', frequency: '', triggers: '' },
+      symptomDates: symptoms.map(s => formatDate(new Date(s.timestamp)))
     };
 
     // Analyze pain patterns
@@ -194,30 +208,27 @@ export default function AppointmentDetailScreen({ route, navigation }: Appointme
     const questions = [];
     
     if (painDetails.location === 'head') {
-      questions.push("Could these headaches be related to my stress levels or sleep patterns?");
-      questions.push("Are there specific triggers I should be tracking in a headache diary?");
-      questions.push("Should I be concerned about any warning signs that would indicate a more serious condition?");
-      questions.push("What's the difference between tension headaches and migraines, and how does that affect treatment?");
+      questions.push("What's the most likely cause of my headaches based on my symptoms and timing?");
+      questions.push("Are there specific tests or imaging studies that would help identify the underlying cause?");
+      questions.push("What treatment approach would be most effective for my specific headache pattern?");
     }
     
     if (painDetails.location === 'chest') {
-      questions.push("How can I distinguish between heart-related chest pain and other causes like acid reflux or muscle strain?");
-      questions.push("Are there specific activities or positions that make the chest pain worse or better?");
-      questions.push("Should I be monitoring my blood pressure or heart rate at home?");
-      questions.push("What emergency symptoms would require immediate medical attention?");
+      questions.push("How can I distinguish between heart-related chest pain and other causes like acid reflux?");
+      questions.push("What specific tests would help determine if this is a cardiac issue?");
+      questions.push("What are the warning signs that would require immediate medical attention?");
     }
     
     if (painDetails.location === 'back') {
       questions.push("Could this be related to my posture, work environment, or recent activities?");
-      questions.push("What exercises or stretches would be safe to try, and which ones should I avoid?");
-      questions.push("Should I consider physical therapy, and if so, how do I find a qualified therapist?");
-      questions.push("Are there any red flags that would indicate nerve compression or other serious issues?");
+      questions.push("What exercises or treatments would be most effective for my specific back pain?");
+      questions.push("Are there any red flags that would indicate a more serious underlying condition?");
     }
     
     if (painDetails.type === 'sharp') {
-      questions.push("Sharp pain often indicates tissue damage - what specific tests would help identify the source?");
-      questions.push("Are there any immediate treatments I can try to reduce the sharp pain?");
-      questions.push("Should I be concerned about any complications if this sharp pain continues?");
+      questions.push("What could be causing this sharp pain, and what tests would help identify the source?");
+      questions.push("Are there any immediate treatments I can try to reduce the pain?");
+      questions.push("What complications should I watch for if this pain continues?");
     }
     
     return questions;
@@ -226,11 +237,9 @@ export default function AppointmentDetailScreen({ route, navigation }: Appointme
   const generateFeverQuestions = (feverDetails: any) => {
     const questions = [];
     
-    questions.push("What's the most accurate way to take my temperature, and how often should I monitor it?");
-    questions.push("Are there any over-the-counter medications I should avoid while having a fever?");
-    questions.push("Should I be concerned about dehydration, and what are the signs to watch for?");
-    questions.push("What's the difference between a viral and bacterial fever, and how does that affect treatment?");
-    questions.push("Are there any specific symptoms that would indicate the fever is serious enough for emergency care?");
+    questions.push("What's the most likely cause of my fever based on my symptoms and timing?");
+    questions.push("What specific tests would help identify if this is viral or bacterial?");
+    questions.push("What are the warning signs that would require immediate medical attention?");
     
     return questions;
   };
@@ -238,11 +247,9 @@ export default function AppointmentDetailScreen({ route, navigation }: Appointme
   const generateFatigueQuestions = (fatigueDetails: any) => {
     const questions = [];
     
-    questions.push("Could this fatigue be related to my sleep quality, stress levels, or underlying medical conditions?");
-    questions.push("What blood tests would help identify if this is due to anemia, thyroid issues, or other conditions?");
-    questions.push("Are there any medications I'm taking that could be contributing to my fatigue?");
-    questions.push("What lifestyle changes would be most effective for improving my energy levels?");
-    questions.push("Should I be concerned about depression or other mental health conditions that can cause fatigue?");
+    questions.push("What's the most likely cause of my fatigue based on my symptoms and timing?");
+    questions.push("What specific tests would help identify if this is due to an underlying medical condition?");
+    questions.push("What treatment approach would be most effective for improving my energy levels?");
     
     return questions;
   };
@@ -399,11 +406,14 @@ export default function AppointmentDetailScreen({ route, navigation }: Appointme
                 <View style={styles.symptomHeader}>
                   <Ionicons name="pulse" size={20} color="#ef4444" />
                   <Text style={styles.symptomDate}>
-                    {symptom.timestamp.toLocaleDateString()}
+                    {formatDate(symptom.timestamp)}
                   </Text>
                 </View>
                 <Text style={styles.symptomSummary}>{symptom.summary}</Text>
-                <Text style={styles.symptomDetails}>{symptom.transcript}</Text>
+                <Text style={styles.symptomDetails}>
+                  <Text style={styles.symptomDateInline}>Date: {formatDate(symptom.timestamp)}</Text>
+                  {'\n'}{symptom.transcript}
+                </Text>
               </View>
             ))
           ) : (
@@ -566,6 +576,11 @@ const styles = StyleSheet.create({
     ...fontStyles.body,
     color: '#6b7280',
     lineHeight: 20,
+  },
+  symptomDateInline: {
+    ...fontStyles.caption,
+    color: '#94a3b8',
+    fontWeight: '500',
   },
   emptyState: {
     alignItems: 'center',

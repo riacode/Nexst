@@ -3,7 +3,7 @@ import { View, Text, TouchableOpacity, StyleSheet, Alert, ScrollView, Animated} 
 import { Audio } from 'expo-av';
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { transcribeAudio, generateSummary, generateRecommendations } from '../utils/openai';
+import { transcribeAudio, generateSummary, generateRecommendations, generateFollowUpQuestions, checkForMissedPeriod } from '../utils/openai';
 import { SymptomLog, MedicalRecommendation, RecommendationAlert } from '../types/recommendations';
 import { useRecommendations } from '../contexts/RecommendationsContext';
 import { useSymptomLogs } from '../contexts/SymptomLogsContext';
@@ -19,6 +19,8 @@ export default function SymptomScreen({ navigation }: any) {
     const [activeAlert, setActiveAlert] = useState<RecommendationAlert | null>(null);
     const [hasRecordedToday, setHasRecordedToday] = useState<boolean>(false);
     const [status, setStatus] = useState('Tap to record your daily check-in');
+    const [followUpQuestion, setFollowUpQuestion] = useState<string | null>(null);
+    const [missedPeriodQuestion, setMissedPeriodQuestion] = useState<string | null>(null);
     
     const pulseAnim = useRef(new Animated.Value(1)).current;
     const spinAnim = useRef(new Animated.Value(0)).current;
@@ -58,7 +60,7 @@ export default function SymptomScreen({ navigation }: any) {
 
 
 
-    // generate recommendations when symptoms are added
+    // generate recommendations and follow-up questions when symptoms are added
     useEffect(() => {
         const checkForRecommendations = async () => {
             try {
@@ -90,6 +92,20 @@ export default function SymptomScreen({ navigation }: any) {
                             });
                             setAlertVisible(true);
                         }
+                    }
+                }
+                
+                // Check for follow-up questions for unresolved symptoms
+                if (symptomLogs.length >= 2) {
+                    const followUpQuestions = await generateFollowUpQuestions(symptomLogs);
+                    if (followUpQuestions.length > 0) {
+                        setFollowUpQuestion(followUpQuestions[0]);
+                    }
+                    
+                    // Check for missed period
+                    const missedPeriodQ = await checkForMissedPeriod(symptomLogs);
+                    if (missedPeriodQ) {
+                        setMissedPeriodQuestion(missedPeriodQ);
                     }
                 }
             } catch (error) {
@@ -265,6 +281,30 @@ export default function SymptomScreen({ navigation }: any) {
               <Ionicons name="arrow-forward" size={16} color="#00b4d8" />
             </TouchableOpacity>
           )}
+          
+          {followUpQuestion && (
+            <TouchableOpacity 
+              style={styles.followUpAlert} 
+              onPress={() => setFollowUpQuestion(null)}
+            >
+              <Text style={styles.followUpText}>
+                🤔 {followUpQuestion}
+              </Text>
+              <Ionicons name="close" size={16} color="#64748b" />
+            </TouchableOpacity>
+          )}
+          
+          {missedPeriodQuestion && (
+            <TouchableOpacity 
+              style={styles.followUpAlert} 
+              onPress={() => setMissedPeriodQuestion(null)}
+            >
+              <Text style={styles.followUpText}>
+                📅 {missedPeriodQuestion}
+              </Text>
+              <Ionicons name="close" size={16} color="#64748b" />
+            </TouchableOpacity>
+          )}
           <ScrollView contentContainerStyle={styles.logsContainer}>
             {symptomLogs.map(renderLog)}
           </ScrollView>
@@ -373,6 +413,24 @@ export default function SymptomScreen({ navigation }: any) {
       alertHigh: {
         backgroundColor: '#fff5f5',
         borderColor: '#ef4444',
+      },
+      followUpAlert: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        backgroundColor: '#f8fafc',
+        padding: 12,
+        margin: 16,
+        borderRadius: 8,
+        borderColor: '#e2e8f0',
+        borderWidth: 1,
+      },
+      followUpText: {
+        flex: 1,
+        color: '#475569',
+        marginRight: 8,
+        fontSize: 14,
+        lineHeight: 20,
       },
     });
     

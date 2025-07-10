@@ -82,7 +82,7 @@ export class NotificationService {
 }
 
 // Set up notification listeners
-export const setupNotificationListeners = (navigation: any) => {
+export const setupNotificationListeners = () => {
   const notificationListener = Notifications.addNotificationReceivedListener(notification => {
     console.log('Notification received:', notification);
   });
@@ -91,8 +91,8 @@ export const setupNotificationListeners = (navigation: any) => {
     const data = response.notification.request.content.data;
     
     if (data?.type === 'recommendation' || data?.type === 'high_priority_recommendation') {
-      // Navigate to recommendations screen when notification is tapped
-      navigation.navigate('Recommendations');
+      // Just log the notification tap - user can manually navigate to recommendations
+      console.log('Recommendation notification tapped:', data);
     }
   });
 
