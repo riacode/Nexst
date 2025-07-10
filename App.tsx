@@ -21,6 +21,8 @@ import { AppointmentsProvider, useAppointments } from './contexts/AppointmentsCo
 import { OnboardingProvider, useOnboarding } from './contexts/OnboardingContext';
 import { NotificationSettingsProvider, useNotificationSettings } from './contexts/NotificationSettingsContext';
 import { PrivacyProvider, usePrivacy } from './contexts/PrivacyContext';
+import { TutorialProvider, useTutorial } from './contexts/TutorialContext';
+import OnboardingTutorial from './components/OnboardingTutorial';
 
 const Tab = createBottomTabNavigator();
 const Stack = createStackNavigator();
@@ -138,6 +140,7 @@ function MainTabNavigator() {
 
 function AppContent() {
   const { hasSeenOnboarding } = useOnboarding();
+  const { tutorialState, completeOnboarding, hideOnboardingTutorial } = useTutorial();
 
   useEffect(() => {
     // Set up notification listeners when the app starts
@@ -145,6 +148,14 @@ function AppContent() {
     
     return cleanup;
   }, []);
+
+  const handleTutorialComplete = async () => {
+    await completeOnboarding();
+  };
+
+  const handleTutorialSkip = async () => {
+    await hideOnboardingTutorial();
+  };
 
   return (
     <>
@@ -178,7 +189,11 @@ function AppContent() {
         </Stack.Navigator>
       </NavigationContainer>
 
-
+      <OnboardingTutorial
+        visible={tutorialState.showOnboardingTutorial}
+        onComplete={handleTutorialComplete}
+        onSkip={handleTutorialSkip}
+      />
     </>
   );
 }
@@ -191,7 +206,9 @@ export default function App() {
           <AppointmentsProvider>
             <NotificationSettingsProvider>
               <PrivacyProvider>
-                <AppContent />
+                <TutorialProvider>
+                  <AppContent />
+                </TutorialProvider>
               </PrivacyProvider>
             </NotificationSettingsProvider>
           </AppointmentsProvider>

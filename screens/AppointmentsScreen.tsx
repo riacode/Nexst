@@ -4,6 +4,9 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 import { Ionicons } from '@expo/vector-icons';
 import { fontStyles } from '../utils/fonts';
 import { useAppointments } from '../contexts/AppointmentsContext';
+import { useTutorial } from '../contexts/TutorialContext';
+import FeatureTutorial from '../components/FeatureTutorial';
+import { featureTutorials } from '../utils/onboardingContent';
 
 interface Appointment {
     id: string;
@@ -14,6 +17,7 @@ interface Appointment {
 
 export default function AppointmentsScreen({ navigation }: any) {
   const { appointments, addAppointment: addAppointmentToContext } = useAppointments();
+  const { tutorialState, completeAppointmentTutorial } = useTutorial();
   const [showModal, setShowModal] = useState(false);
   const [titleInput, setTitleInput] = useState('');
   const [selectedDate, setSelectedDate] = useState(new Date());
@@ -146,6 +150,15 @@ export default function AppointmentsScreen({ navigation }: any) {
 
   return (
     <View style={styles.container}>
+      <FeatureTutorial
+        visible={!tutorialState.hasSeenAppointmentTutorial && appointments.length === 0}
+        title={featureTutorials.appointments.title}
+        description={featureTutorials.appointments.description}
+        position="center"
+        onComplete={completeAppointmentTutorial}
+        showSkip={false}
+      />
+      
       <FlatList
         data={[]}
         keyExtractor={(item) => item.id}

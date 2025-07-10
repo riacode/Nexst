@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Modal, Animated, Dimensions, Switch } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Modal, Animated, Dimensions, Switch, ScrollView } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import DateTimePicker from '@react-native-community/datetimepicker';
-import { usePrivacy } from '../contexts/PrivacyContext';
+import { useTutorial } from '../contexts/TutorialContext';
+import { clearOnboardingData, logStoredData } from '../utils/testUtils';
 
 interface SettingsModalProps {
   visible: boolean;
@@ -29,7 +30,7 @@ export default function SettingsModal({
   notificationTime,
   notificationFrequency
 }: SettingsModalProps) {
-  const { privacySettings, toggleAIProcessing, toggleDataSharing, toggleAnalytics } = usePrivacy();
+  const { resetTutorials } = useTutorial();
   const slideAnim = React.useRef(new Animated.Value(screenHeight)).current;
   const backdropAnim = React.useRef(new Animated.Value(0)).current;
   const [showTimePicker, setShowTimePicker] = useState(false);
@@ -154,7 +155,7 @@ export default function SettingsModal({
             </TouchableOpacity>
           </View>
 
-          <View style={styles.sections}>
+          <ScrollView style={styles.sections} showsVerticalScrollIndicator={false}>
             {/* Notification Settings */}
             <View style={styles.section}>
               <Text style={styles.sectionTitle}>Daily Reminders</Text>
@@ -223,59 +224,70 @@ export default function SettingsModal({
               )}
             </View>
 
-            {/* Privacy Settings */}
+            {/* App Settings */}
             <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Privacy & Security</Text>
+              <Text style={styles.sectionTitle}>App Settings</Text>
               
-              <View style={styles.settingRow}>
-                <View style={styles.settingContent}>
-                  <Text style={styles.settingTitle}>AI Processing</Text>
-                  <Text style={styles.settingDescription}>
-                    Allow AI analysis of your symptoms
+              <TouchableOpacity 
+                style={styles.option} 
+                onPress={resetTutorials}
+              >
+                <View style={styles.optionIcon}>
+                  <Ionicons name="school" size={24} color="#f59e0b" />
+                </View>
+                <View style={styles.optionContent}>
+                  <Text style={styles.optionTitle}>Reset Tutorials</Text>
+                  <Text style={styles.optionDescription}>
+                    Show onboarding and feature tutorials again
                   </Text>
                 </View>
-                <Switch
-                  value={privacySettings.aiProcessingEnabled}
-                  onValueChange={toggleAIProcessing}
-                  trackColor={{ false: '#e2e8f0', true: '#00b4d8' }}
-                  thumbColor={privacySettings.aiProcessingEnabled ? '#ffffff' : '#f4f3f4'}
-                />
-              </View>
+                <Ionicons name="chevron-forward" size={20} color="#cbd5e1" />
+              </TouchableOpacity>
 
-              <View style={styles.settingRow}>
-                <View style={styles.settingContent}>
-                  <Text style={styles.settingTitle}>Data Sharing</Text>
-                  <Text style={styles.settingDescription}>
-                    Allow sharing data with healthcare providers
-                  </Text>
-                </View>
-                <Switch
-                  value={privacySettings.dataSharingEnabled}
-                  onValueChange={toggleDataSharing}
-                  trackColor={{ false: '#e2e8f0', true: '#00b4d8' }}
-                  thumbColor={privacySettings.dataSharingEnabled ? '#ffffff' : '#f4f3f4'}
-                />
-              </View>
+              {/* Test Utilities - Only in development */}
+              {__DEV__ && (
+                <>
+                  <TouchableOpacity 
+                    style={styles.option} 
+                    onPress={clearOnboardingData}
+                  >
+                    <View style={styles.optionIcon}>
+                      <Ionicons name="refresh" size={24} color="#8b5cf6" />
+                    </View>
+                    <View style={styles.optionContent}>
+                      <Text style={styles.optionTitle}>🧪 Clear Onboarding Data</Text>
+                      <Text style={styles.optionDescription}>
+                        Reset to new user state (dev only)
+                      </Text>
+                    </View>
+                    <Ionicons name="chevron-forward" size={20} color="#cbd5e1" />
+                  </TouchableOpacity>
 
-              <View style={styles.settingRow}>
-                <View style={styles.settingContent}>
-                  <Text style={styles.settingTitle}>Analytics</Text>
-                  <Text style={styles.settingDescription}>
-                    Help improve the app with anonymous data
-                  </Text>
-                </View>
-                <Switch
-                  value={privacySettings.analyticsEnabled}
-                  onValueChange={toggleAnalytics}
-                  trackColor={{ false: '#e2e8f0', true: '#00b4d8' }}
-                  thumbColor={privacySettings.analyticsEnabled ? '#ffffff' : '#f4f3f4'}
-                />
-              </View>
+                  <TouchableOpacity 
+                    style={styles.option} 
+                    onPress={logStoredData}
+                  >
+                    <View style={styles.optionIcon}>
+                      <Ionicons name="document-text" size={24} color="#8b5cf6" />
+                    </View>
+                    <View style={styles.optionContent}>
+                      <Text style={styles.optionTitle}>🧪 Log Stored Data</Text>
+                      <Text style={styles.optionDescription}>
+                        Check current data in console (dev only)
+                      </Text>
+                    </View>
+                    <Ionicons name="chevron-forward" size={20} color="#cbd5e1" />
+                  </TouchableOpacity>
+                </>
+              )}
             </View>
 
-            {/* Data Management */}
+            {/* Delete Data */}
             <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Data Management</Text>
+              <Text style={styles.sectionTitle}>Delete Data</Text>
+              <Text style={styles.sectionDescription}>
+                These actions cannot be undone
+              </Text>
               
               <TouchableOpacity 
                 style={styles.option} 
@@ -325,7 +337,7 @@ export default function SettingsModal({
                 <Ionicons name="chevron-forward" size={20} color="#cbd5e1" />
               </TouchableOpacity>
             </View>
-          </View>
+          </ScrollView>
 
           {showTimePicker && (
             <DateTimePicker
@@ -401,6 +413,7 @@ const styles = StyleSheet.create({
   },
   sections: {
     paddingHorizontal: 20,
+    paddingBottom: 20,
   },
   section: {
     marginTop: 20,
@@ -410,6 +423,12 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#1e293b',
     marginBottom: 12,
+  },
+  sectionDescription: {
+    fontSize: 14,
+    color: '#64748b',
+    marginBottom: 16,
+    fontStyle: 'italic',
   },
   settingRow: {
     flexDirection: 'row',

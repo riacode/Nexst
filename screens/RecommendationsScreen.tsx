@@ -4,10 +4,14 @@ import { Ionicons } from '@expo/vector-icons';
 import { fontStyles } from '../utils/fonts';
 import { MedicalRecommendation, ActionItem } from '../types/recommendations';
 import { useRecommendations } from '../contexts/RecommendationsContext';
+import { useTutorial } from '../contexts/TutorialContext';
+import FeatureTutorial from '../components/FeatureTutorial';
+import { featureTutorials } from '../utils/onboardingContent';
 
 export default function RecommendationsScreen({ route, navigation }: any) {
   // Get recommendations from global context
   const { recommendations, completeRecommendation, cancelRecommendation, toggleActionItem } = useRecommendations();
+  const { tutorialState, completeRecommendationTutorial } = useTutorial();
   const activeAlert = route?.params?.activeAlert;
   const [completedCollapsed, setCompletedCollapsed] = useState(false);
   const [cancelledCollapsed, setCancelledCollapsed] = useState(false);
@@ -291,6 +295,15 @@ export default function RecommendationsScreen({ route, navigation }: any) {
 
   return (
     <View style={styles.container}>
+      <FeatureTutorial
+        visible={!tutorialState.hasSeenRecommendationTutorial && recommendations.length === 0}
+        title={featureTutorials.recommendations.title}
+        description={featureTutorials.recommendations.description}
+        position="center"
+        onComplete={completeRecommendationTutorial}
+        showSkip={false}
+      />
+      
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         {activeRecommendations.length > 0 && (
           <View style={styles.section}>

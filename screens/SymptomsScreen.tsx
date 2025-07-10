@@ -8,8 +8,11 @@ import { SymptomLog, MedicalRecommendation, RecommendationAlert } from '../types
 import { useRecommendations } from '../contexts/RecommendationsContext';
 import { useSymptomLogs } from '../contexts/SymptomLogsContext';
 import { useOnboarding } from '../contexts/OnboardingContext';
+import { useTutorial } from '../contexts/TutorialContext';
 import { NotificationService } from '../utils/notifications';
 import NotificationPermission from '../components/NotificationPermission';
+import FeatureTutorial from '../components/FeatureTutorial';
+import { featureTutorials } from '../utils/onboardingContent';
 
 export default function SymptomScreen({ navigation }: any) {
     const [audioURI, setAudioURI] = useState<string | null>(null);
@@ -29,6 +32,7 @@ export default function SymptomScreen({ navigation }: any) {
     const { recommendations, addRecommendations } = useRecommendations();
     const { symptomLogs, addSymptomLog } = useSymptomLogs();
     const { markOnboardingComplete } = useOnboarding();
+    const { tutorialState, completeSymptomTutorial } = useTutorial();
 
     // Audio recording state
     const [recording, setRecording] = useState<Audio.Recording | null>(null);
@@ -261,6 +265,15 @@ export default function SymptomScreen({ navigation }: any) {
         <View style={styles.container}>
           
           <NotificationPermission />
+          
+          <FeatureTutorial
+            visible={!tutorialState.hasSeenSymptomTutorial && symptomLogs.length === 0}
+            title={featureTutorials.symptoms.title}
+            description={featureTutorials.symptoms.description}
+            position="center"
+            onComplete={completeSymptomTutorial}
+            showSkip={false}
+          />
           
           {activeAlert && alertVisible && (
             <TouchableOpacity 
