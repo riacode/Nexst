@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Modal, Animated, Dimensions, Switch } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import DateTimePicker from '@react-native-community/datetimepicker';
+import { usePrivacy } from '../contexts/PrivacyContext';
 
 interface SettingsModalProps {
   visible: boolean;
@@ -28,6 +29,7 @@ export default function SettingsModal({
   notificationTime,
   notificationFrequency
 }: SettingsModalProps) {
+  const { privacySettings, toggleAIProcessing, toggleDataSharing, toggleAnalytics } = usePrivacy();
   const slideAnim = React.useRef(new Animated.Value(screenHeight)).current;
   const backdropAnim = React.useRef(new Animated.Value(0)).current;
   const [showTimePicker, setShowTimePicker] = useState(false);
@@ -219,6 +221,56 @@ export default function SettingsModal({
                   </View>
                 </>
               )}
+            </View>
+
+            {/* Privacy Settings */}
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>Privacy & Security</Text>
+              
+              <View style={styles.settingRow}>
+                <View style={styles.settingContent}>
+                  <Text style={styles.settingTitle}>AI Processing</Text>
+                  <Text style={styles.settingDescription}>
+                    Allow AI analysis of your symptoms
+                  </Text>
+                </View>
+                <Switch
+                  value={privacySettings.aiProcessingEnabled}
+                  onValueChange={toggleAIProcessing}
+                  trackColor={{ false: '#e2e8f0', true: '#00b4d8' }}
+                  thumbColor={privacySettings.aiProcessingEnabled ? '#ffffff' : '#f4f3f4'}
+                />
+              </View>
+
+              <View style={styles.settingRow}>
+                <View style={styles.settingContent}>
+                  <Text style={styles.settingTitle}>Data Sharing</Text>
+                  <Text style={styles.settingDescription}>
+                    Allow sharing data with healthcare providers
+                  </Text>
+                </View>
+                <Switch
+                  value={privacySettings.dataSharingEnabled}
+                  onValueChange={toggleDataSharing}
+                  trackColor={{ false: '#e2e8f0', true: '#00b4d8' }}
+                  thumbColor={privacySettings.dataSharingEnabled ? '#ffffff' : '#f4f3f4'}
+                />
+              </View>
+
+              <View style={styles.settingRow}>
+                <View style={styles.settingContent}>
+                  <Text style={styles.settingTitle}>Analytics</Text>
+                  <Text style={styles.settingDescription}>
+                    Help improve the app with anonymous data
+                  </Text>
+                </View>
+                <Switch
+                  value={privacySettings.analyticsEnabled}
+                  onValueChange={toggleAnalytics}
+                  trackColor={{ false: '#e2e8f0', true: '#00b4d8' }}
+                  thumbColor={privacySettings.analyticsEnabled ? '#ffffff' : '#f4f3f4'}
+                />
+              </View>
             </View>
 
             {/* Data Management */}

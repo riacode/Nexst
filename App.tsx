@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import PrivacySettingsScreen from './screens/PrivacySettingsScreen';
 import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createStackNavigator } from '@react-navigation/stack';
@@ -19,6 +20,7 @@ import { SymptomLogsProvider, useSymptomLogs } from './contexts/SymptomLogsConte
 import { AppointmentsProvider, useAppointments } from './contexts/AppointmentsContext';
 import { OnboardingProvider, useOnboarding } from './contexts/OnboardingContext';
 import { NotificationSettingsProvider, useNotificationSettings } from './contexts/NotificationSettingsContext';
+import { PrivacyProvider, usePrivacy } from './contexts/PrivacyContext';
 
 const Tab = createBottomTabNavigator();
 const Stack = createStackNavigator();
@@ -145,30 +147,39 @@ function AppContent() {
   }, []);
 
   return (
-    <NavigationContainer>
-      <Stack.Navigator initialRouteName={hasSeenOnboarding ? "MainTabs" : "Onboarding"}>
-        <Stack.Screen
-          name="Onboarding"
-          component={OnboardingScreen}
-          options={{ headerShown: false }}
-        />
-        <Stack.Screen
-          name="MainTabs"
-          component={MainTabNavigator}
-          options={{ headerShown: false }}
-        />
-        <Stack.Screen
-          name="RecordingDetail"
-          component={RecordingDetailScreen}
-          options={{ headerShown: false }}
-        />
-        <Stack.Screen
-          name="AppointmentDetail"
-          component={AppointmentDetailScreen}
-          options={{ headerShown: false }}
-        />
-      </Stack.Navigator>
-    </NavigationContainer>
+    <>
+      <NavigationContainer>
+        <Stack.Navigator initialRouteName={hasSeenOnboarding ? "MainTabs" : "Onboarding"}>
+          <Stack.Screen
+            name="Onboarding"
+            component={OnboardingScreen}
+            options={{ headerShown: false }}
+          />
+          <Stack.Screen
+            name="MainTabs"
+            component={MainTabNavigator}
+            options={{ headerShown: false }}
+          />
+          <Stack.Screen
+            name="RecordingDetail"
+            component={RecordingDetailScreen}
+            options={{ headerShown: false }}
+          />
+          <Stack.Screen
+            name="AppointmentDetail"
+            component={AppointmentDetailScreen}
+            options={{ headerShown: false }}
+          />
+          <Stack.Screen
+            name="PrivacySettings"
+            component={PrivacySettingsScreen}
+            options={{ headerShown: false }}
+          />
+        </Stack.Navigator>
+      </NavigationContainer>
+
+
+    </>
   );
 }
 
@@ -179,7 +190,9 @@ export default function App() {
         <RecommendationsProvider>
           <AppointmentsProvider>
             <NotificationSettingsProvider>
-              <AppContent />
+              <PrivacyProvider>
+                <AppContent />
+              </PrivacyProvider>
             </NotificationSettingsProvider>
           </AppointmentsProvider>
         </RecommendationsProvider>
