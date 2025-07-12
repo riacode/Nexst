@@ -10,7 +10,6 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useOnboarding } from '../contexts/OnboardingContext';
-import { useTutorial } from '../contexts/TutorialContext';
 
 
 const { width, height } = Dimensions.get('window');
@@ -21,7 +20,6 @@ interface OnboardingScreenProps {
 
 export default function OnboardingScreen({ navigation }: OnboardingScreenProps) {
   const { markOnboardingComplete } = useOnboarding();
-  const { showOnboardingTutorial } = useTutorial();
   const underlineAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
@@ -38,10 +36,14 @@ export default function OnboardingScreen({ navigation }: OnboardingScreenProps) 
   }, [underlineAnim]);
 
   const handleGetStarted = async () => {
-    // Mark onboarding as complete - navigation will happen automatically
-    await markOnboardingComplete();
-    // Show the tutorial after onboarding
-    await showOnboardingTutorial();
+    try {
+      console.log('Get Started button pressed');
+      // Mark onboarding as complete - navigation will happen automatically
+      await markOnboardingComplete();
+      console.log('Onboarding marked as complete');
+    } catch (error) {
+      console.error('Error in handleGetStarted:', error);
+    }
   };
 
   return (
@@ -241,6 +243,7 @@ const styles = StyleSheet.create({
     marginBottom: 32,
     paddingHorizontal: 20,
   },
+
   getStartedButton: {
     flexDirection: 'row',
     alignItems: 'center',

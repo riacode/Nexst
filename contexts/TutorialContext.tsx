@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useOnboarding } from './OnboardingContext';
 
 interface TutorialState {
   hasSeenOnboarding: boolean;
@@ -44,6 +45,7 @@ interface TutorialProviderProps {
 
 export const TutorialProvider: React.FC<TutorialProviderProps> = ({ children }) => {
   const [tutorialState, setTutorialState] = useState<TutorialState>(defaultTutorialState);
+  const { resetOnboarding } = useOnboarding();
 
   // Load tutorial state from storage
   useEffect(() => {
@@ -123,6 +125,7 @@ export const TutorialProvider: React.FC<TutorialProviderProps> = ({ children }) 
 
   const resetTutorials = async () => {
     await saveTutorialState(defaultTutorialState);
+    await resetOnboarding();
   };
 
   return (

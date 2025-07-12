@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Modal, Animated, Dimensions, Switch, ScrollView } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Modal, Animated, Dimensions, Switch, ScrollView, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { useTutorial } from '../contexts/TutorialContext';
-import { clearOnboardingData, logStoredData } from '../utils/testUtils';
+import { clearOnboardingData } from '../utils/testUtils';
 
 interface SettingsModalProps {
   visible: boolean;
@@ -32,11 +32,41 @@ export default function SettingsModal({
 }: SettingsModalProps) {
   const { resetTutorials } = useTutorial();
   const slideAnim = React.useRef(new Animated.Value(screenHeight)).current;
+
+  const handleRestartApp = () => {
+    Alert.alert(
+      'Restart App',
+      'This will reset the app to its initial state and clear all data. Are you sure?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Restart',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              // Reset all tutorials
+              await resetTutorials();
+              
+              // Clear all data
+              await clearOnboardingData();
+              
+              // Close the settings modal
+              handleClose();
+            } catch (error) {
+              console.error('Error restarting app:', error);
+              Alert.alert(
+                'Error',
+                'Failed to restart the app. Please try again.',
+                [{ text: 'OK' }]
+              );
+            }
+          }
+        }
+      ]
+    );
+  };
   const backdropAnim = React.useRef(new Animated.Value(0)).current;
   const [showTimePicker, setShowTimePicker] = useState(false);
-  const [localNotificationEnabled, setLocalNotificationEnabled] = useState(notificationEnabled);
-  const [localNotificationTime, setLocalNotificationTime] = useState(notificationTime);
-  const [localNotificationFrequency, setLocalNotificationFrequency] = useState(notificationFrequency);
 
   React.useEffect(() => {
     if (visible) {
@@ -70,11 +100,7 @@ export default function SettingsModal({
     }
   }, [visible, slideAnim, backdropAnim]);
 
-  React.useEffect(() => {
-    setLocalNotificationEnabled(notificationEnabled);
-    setLocalNotificationTime(notificationTime);
-    setLocalNotificationFrequency(notificationFrequency);
-  }, [notificationEnabled, notificationTime, notificationFrequency]);
+
 
   const handleClose = () => {
     Animated.parallel([
@@ -94,21 +120,18 @@ export default function SettingsModal({
   };
 
   const handleNotificationToggle = (value: boolean) => {
-    setLocalNotificationEnabled(value);
-    onUpdateNotificationSettings(value, localNotificationTime, localNotificationFrequency);
+    onUpdateNotificationSettings(value, notificationTime, notificationFrequency);
   };
 
   const handleTimeChange = (event: any, selectedTime?: Date) => {
     setShowTimePicker(false);
     if (selectedTime) {
-      setLocalNotificationTime(selectedTime);
-      onUpdateNotificationSettings(localNotificationEnabled, selectedTime, localNotificationFrequency);
+      onUpdateNotificationSettings(notificationEnabled, selectedTime, notificationFrequency);
     }
   };
 
   const handleFrequencyChange = (frequency: string) => {
-    setLocalNotificationFrequency(frequency);
-    onUpdateNotificationSettings(localNotificationEnabled, localNotificationTime, frequency);
+    onUpdateNotificationSettings(notificationEnabled, notificationTime, frequency);
   };
 
   const formatTime = (date: Date) => {
@@ -168,14 +191,14 @@ export default function SettingsModal({
                   </Text>
                 </View>
                 <Switch
-                  value={localNotificationEnabled}
+                  value={notificationEnabled}
                   onValueChange={handleNotificationToggle}
                   trackColor={{ false: '#e2e8f0', true: '#00b4d8' }}
-                  thumbColor={localNotificationEnabled ? '#ffffff' : '#f4f3f4'}
+                  thumbColor={notificationEnabled ? '#ffffff' : '#f4f3f4'}
                 />
               </View>
 
-              {localNotificationEnabled && (
+              {notificationEnabled && (
                 <>
                   <View style={styles.settingRow}>
                     <View style={styles.settingContent}>
@@ -188,7 +211,7 @@ export default function SettingsModal({
                       style={styles.timeButton}
                       onPress={() => setShowTimePicker(true)}
                     >
-                      <Text style={styles.timeText}>{formatTime(localNotificationTime)}</Text>
+                      <Text style={styles.timeText}>{formatTime(notificationTime)}</Text>
                       <Ionicons name="time" size={16} color="#64748b" />
                     </TouchableOpacity>
                   </View>
@@ -206,13 +229,13 @@ export default function SettingsModal({
                           key={freq}
                           style={[
                             styles.frequencyButton,
-                            localNotificationFrequency === freq && styles.frequencyButtonActive
+                            notificationFrequency === freq && styles.frequencyButtonActive
                           ]}
                           onPress={() => handleFrequencyChange(freq)}
                         >
                           <Text style={[
                             styles.frequencyText,
-                            localNotificationFrequency === freq && styles.frequencyTextActive
+                            notificationFrequency === freq && styles.frequencyTextActive
                           ]}>
                             {freq}
                           </Text>
@@ -230,56 +253,19 @@ export default function SettingsModal({
               
               <TouchableOpacity 
                 style={styles.option} 
-                onPress={resetTutorials}
+                onPress={handleRestartApp}
               >
                 <View style={styles.optionIcon}>
-                  <Ionicons name="school" size={24} color="#f59e0b" />
+                  <Ionicons name="refresh-circle" size={24} color="#00b4d8" />
                 </View>
                 <View style={styles.optionContent}>
-                  <Text style={styles.optionTitle}>Reset Tutorials</Text>
+                  <Text style={styles.optionTitle}>Restart App</Text>
                   <Text style={styles.optionDescription}>
-                    Show onboarding and feature tutorials again
+                    Reset everything and start fresh with onboarding
                   </Text>
                 </View>
                 <Ionicons name="chevron-forward" size={20} color="#cbd5e1" />
               </TouchableOpacity>
-
-              {/* Test Utilities - Only in development */}
-              {__DEV__ && (
-                <>
-                  <TouchableOpacity 
-                    style={styles.option} 
-                    onPress={clearOnboardingData}
-                  >
-                    <View style={styles.optionIcon}>
-                      <Ionicons name="refresh" size={24} color="#8b5cf6" />
-                    </View>
-                    <View style={styles.optionContent}>
-                      <Text style={styles.optionTitle}>🧪 Clear Onboarding Data</Text>
-                      <Text style={styles.optionDescription}>
-                        Reset to new user state (dev only)
-                      </Text>
-                    </View>
-                    <Ionicons name="chevron-forward" size={20} color="#cbd5e1" />
-                  </TouchableOpacity>
-
-                  <TouchableOpacity 
-                    style={styles.option} 
-                    onPress={logStoredData}
-                  >
-                    <View style={styles.optionIcon}>
-                      <Ionicons name="document-text" size={24} color="#8b5cf6" />
-                    </View>
-                    <View style={styles.optionContent}>
-                      <Text style={styles.optionTitle}>🧪 Log Stored Data</Text>
-                      <Text style={styles.optionDescription}>
-                        Check current data in console (dev only)
-                      </Text>
-                    </View>
-                    <Ionicons name="chevron-forward" size={20} color="#cbd5e1" />
-                  </TouchableOpacity>
-                </>
-              )}
             </View>
 
             {/* Delete Data */}
@@ -341,7 +327,7 @@ export default function SettingsModal({
 
           {showTimePicker && (
             <DateTimePicker
-              value={localNotificationTime}
+              value={notificationTime}
               mode="time"
               is24Hour={false}
               display="default"

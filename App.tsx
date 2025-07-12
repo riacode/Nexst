@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import PrivacySettingsScreen from './screens/PrivacySettingsScreen';
-import { NavigationContainer } from '@react-navigation/native';
+import { NavigationContainer, useNavigation } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createStackNavigator } from '@react-navigation/stack';
 import { Ionicons } from '@expo/vector-icons';
@@ -22,6 +22,7 @@ import { OnboardingProvider, useOnboarding } from './contexts/OnboardingContext'
 import { NotificationSettingsProvider, useNotificationSettings } from './contexts/NotificationSettingsContext';
 import { PrivacyProvider, usePrivacy } from './contexts/PrivacyContext';
 import { TutorialProvider, useTutorial } from './contexts/TutorialContext';
+import { NavigationProvider, useNavigationContext } from './contexts/NavigationContext';
 import OnboardingTutorial from './components/OnboardingTutorial';
 
 const Tab = createBottomTabNavigator();
@@ -139,8 +140,11 @@ function MainTabNavigator() {
 }
 
 function AppContent() {
-  const { hasSeenOnboarding } = useOnboarding();
+  const { hasSeenOnboarding, markOnboardingComplete } = useOnboarding();
   const { tutorialState, completeOnboarding, hideOnboardingTutorial } = useTutorial();
+  const { navigationRef } = useNavigationContext();
+
+  console.log('AppContent - hasSeenOnboarding:', hasSeenOnboarding);
 
   useEffect(() => {
     // Set up notification listeners when the app starts
@@ -151,6 +155,7 @@ function AppContent() {
 
   const handleTutorialComplete = async () => {
     await completeOnboarding();
+    await markOnboardingComplete();
   };
 
   const handleTutorialSkip = async () => {
@@ -159,33 +164,38 @@ function AppContent() {
 
   return (
     <>
-      <NavigationContainer>
-        <Stack.Navigator initialRouteName={hasSeenOnboarding ? "MainTabs" : "Onboarding"}>
-          <Stack.Screen
-            name="Onboarding"
-            component={OnboardingScreen}
-            options={{ headerShown: false }}
-          />
-          <Stack.Screen
-            name="MainTabs"
-            component={MainTabNavigator}
-            options={{ headerShown: false }}
-          />
-          <Stack.Screen
-            name="RecordingDetail"
-            component={RecordingDetailScreen}
-            options={{ headerShown: false }}
-          />
-          <Stack.Screen
-            name="AppointmentDetail"
-            component={AppointmentDetailScreen}
-            options={{ headerShown: false }}
-          />
-          <Stack.Screen
-            name="PrivacySettings"
-            component={PrivacySettingsScreen}
-            options={{ headerShown: false }}
-          />
+      <NavigationContainer ref={navigationRef}>
+        <Stack.Navigator>
+          {!hasSeenOnboarding ? (
+            <Stack.Screen
+              name="Onboarding"
+              component={OnboardingScreen}
+              options={{ headerShown: false }}
+            />
+          ) : (
+            <>
+              <Stack.Screen
+                name="MainTabs"
+                component={MainTabNavigator}
+                options={{ headerShown: false }}
+              />
+              <Stack.Screen
+                name="RecordingDetail"
+                component={RecordingDetailScreen}
+                options={{ headerShown: false }}
+              />
+              <Stack.Screen
+                name="AppointmentDetail"
+                component={AppointmentDetailScreen}
+                options={{ headerShown: false }}
+              />
+              <Stack.Screen
+                name="PrivacySettings"
+                component={PrivacySettingsScreen}
+                options={{ headerShown: false }}
+              />
+            </>
+          )}
         </Stack.Navigator>
       </NavigationContainer>
 
@@ -200,20 +210,22 @@ function AppContent() {
 
 export default function App() {
   return (
-    <OnboardingProvider>
-      <SymptomLogsProvider>
-        <RecommendationsProvider>
-          <AppointmentsProvider>
-            <NotificationSettingsProvider>
-              <PrivacyProvider>
-                <TutorialProvider>
-                  <AppContent />
-                </TutorialProvider>
-              </PrivacyProvider>
-            </NotificationSettingsProvider>
-          </AppointmentsProvider>
-        </RecommendationsProvider>
-      </SymptomLogsProvider>
-    </OnboardingProvider>
+    <NavigationProvider>
+      <OnboardingProvider>
+        <SymptomLogsProvider>
+          <RecommendationsProvider>
+            <AppointmentsProvider>
+              <NotificationSettingsProvider>
+                <PrivacyProvider>
+                  <TutorialProvider>
+                    <AppContent />
+                  </TutorialProvider>
+                </PrivacyProvider>
+              </NotificationSettingsProvider>
+            </AppointmentsProvider>
+          </RecommendationsProvider>
+        </SymptomLogsProvider>
+      </OnboardingProvider>
+    </NavigationProvider>
   );
 }

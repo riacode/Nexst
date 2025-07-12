@@ -576,3 +576,130 @@ Format response as a SINGLE JSON object:
     throw error;
   }
 }; 
+
+// Generate personalized appointment questions based on symptoms and appointment type
+export const generateAppointmentQuestions = async (
+  appointmentTitle: string,
+  symptoms: any[],
+  appointmentDate: Date
+): Promise<string[]> => {
+  try {
+    if (!OPENAI_API_KEY) {
+      throw new Error('OpenAI API key is not configured');
+    }
+
+    // If no symptoms, generate general annual appointment questions
+    if (symptoms.length === 0) {
+      const prompt = `Generate 5-6 specific questions for a general annual checkup that patients commonly forget to ask. Focus on questions about:
+
+1. Lab results and blood pressure trends
+2. Vaccination status and recommendations
+3. Medication and supplement reviews
+4. Preventive screenings based on age/risk factors
+5. Lifestyle changes with biggest health impact
+
+Make questions specific and actionable, not generic. Format as a JSON array of strings.`;
+
+      const requestBody = {
+        model: 'gpt-4',
+        messages: [
+          {
+            role: 'system',
+            content: 'You are a healthcare assistant. Generate specific, actionable questions for annual checkups that patients commonly forget to ask.'
+          },
+          {
+            role: 'user',
+            content: prompt
+          }
+        ],
+        temperature: 0.3,
+        max_tokens: 500,
+      };
+
+      const data: ChatCompletionResponse = await makeOpenAIRequest(requestBody);
+      const content = data.choices[0]?.message?.content;
+      
+      if (content) {
+        try {
+          const questions = JSON.parse(content);
+          return Array.isArray(questions) ? questions : [];
+        } catch (parseError) {
+          console.error('Failed to parse questions JSON:', parseError);
+          return [];
+        }
+      }
+      return [];
+    }
+
+    // For sick visits with symptoms, generate highly specific questions
+    const symptomsText = symptoms.map(s => 
+      `Date: ${s.timestamp.toLocaleDateString()}\nSummary: ${s.summary}\nDetails: ${s.transcript}`
+    ).join('\n\n');
+
+    const prompt = `Generate 6-8 highly specific questions for a medical appointment based on the patient's symptoms. These should be questions that patients commonly FORGET to ask but are crucial for their specific situation.
+
+PATIENT SYMPTOMS:
+${symptomsText}
+
+APPOINTMENT: ${appointmentTitle}
+APPOINTMENT DATE: ${appointmentDate.toLocaleDateString()}
+
+REQUIREMENTS:
+1. Questions must reference the patient's SPECIFIC symptoms
+2. Focus on historically forgotten questions (not obvious ones)
+3. Include practical concerns about work, daily activities, medication management
+4. Ask about specific timelines, side effects, and follow-up needs
+5. Consider the patient's unique situation and symptoms
+
+EXAMPLES OF GOOD QUESTIONS:
+- "Given my [specific symptom], could this affect my ability to [specific activity]?"
+- "With my [symptom pattern], what should I do if I miss a dose of medication?"
+- "How long should I expect [specific symptom] to last, and when should I worry?"
+
+EXAMPLES OF BAD QUESTIONS:
+- "What are my symptoms?" (too generic)
+- "Should I take medication?" (obvious)
+- "What tests do I need?" (too broad)
+
+Generate questions that are:
+- Specific to the patient's symptoms
+- Focused on practical daily life impact
+- About things patients commonly forget to ask
+- Actionable and time-sensitive
+
+Format as a JSON array of strings.`;
+
+    const requestBody = {
+      model: 'gpt-4',
+      messages: [
+        {
+          role: 'system',
+          content: 'You are a healthcare assistant. Generate highly specific, personalized questions for medical appointments based on the patient\'s actual symptoms. Focus on questions patients commonly forget to ask.'
+        },
+        {
+          role: 'user',
+          content: prompt
+        }
+      ],
+      temperature: 0.2,
+      max_tokens: 800,
+    };
+
+    const data: ChatCompletionResponse = await makeOpenAIRequest(requestBody);
+    const content = data.choices[0]?.message?.content;
+    
+    if (content) {
+      try {
+        const questions = JSON.parse(content);
+        return Array.isArray(questions) ? questions : [];
+      } catch (parseError) {
+        console.error('Failed to parse questions JSON:', parseError);
+        return [];
+      }
+    }
+    return [];
+  } catch (error) {
+    console.error('Error generating appointment questions:', error);
+    return [];
+  }
+}; 

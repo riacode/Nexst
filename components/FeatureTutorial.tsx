@@ -66,7 +66,7 @@ export default function FeatureTutorial({
   }, [visible, fadeAnim, scaleAnim]);
 
   const getPositionStyle = () => {
-    const containerHeight = 120; // Approximate height of the tutorial box
+    const containerHeight = 140; // Updated height to account for minHeight
     
     switch (position) {
       case 'top':
@@ -83,13 +83,13 @@ export default function FeatureTutorial({
         };
       case 'center':
         return {
-          top: Math.max(20, screenHeight / 2 - containerHeight / 2 - 100),
+          top: Math.max(20, screenHeight / 2 - containerHeight / 2 - 150),
           alignSelf: 'center' as const,
           width: screenWidth - 40,
         };
       default:
         return {
-          top: Math.max(20, screenHeight / 2 - containerHeight / 2 - 100),
+          top: Math.max(20, screenHeight / 2 - containerHeight / 2 - 150),
           alignSelf: 'center' as const,
           width: screenWidth - 40,
         };
@@ -145,7 +145,7 @@ const styles = StyleSheet.create({
   container: {
     backgroundColor: '#ffffff',
     borderRadius: 12,
-    padding: 14,
+    padding: 12,
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
@@ -154,9 +154,10 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.15,
     shadowRadius: 12,
     elevation: 8,
-    maxWidth: 240,
+    maxWidth: 260,
     alignSelf: 'center',
-    width: '85%',
+    width: '90%',
+    minHeight: 120,
   },
   header: {
     flexDirection: 'row',
@@ -179,14 +180,18 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     color: '#1e293b',
-    marginBottom: 6,
+    marginBottom: 8,
+    textAlign: 'left',
+    width: '100%',
   },
   description: {
     ...fontStyles.body,
     color: '#64748b',
     lineHeight: 18,
-    marginBottom: 12,
+    marginBottom: 16,
     fontSize: 13,
+    textAlign: 'left',
+    width: '100%',
   },
   gotItButton: {
     backgroundColor: '#00b4d8',

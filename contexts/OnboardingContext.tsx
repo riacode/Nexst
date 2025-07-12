@@ -4,6 +4,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 interface OnboardingContextType {
   hasSeenOnboarding: boolean;
   markOnboardingComplete: () => void;
+  resetOnboarding: () => void;
 }
 
 const OnboardingContext = createContext<OnboardingContextType | undefined>(undefined);
@@ -49,12 +50,21 @@ export const OnboardingProvider: React.FC<OnboardingProviderProps> = ({ children
     }
   };
 
+  const resetOnboarding = async () => {
+    try {
+      await AsyncStorage.removeItem('onboardingComplete');
+      setHasSeenOnboarding(false);
+    } catch (error) {
+      console.error('Error resetting onboarding:', error);
+    }
+  };
+
   if (isLoading) {
     return null; // Or a loading screen
   }
 
   return (
-    <OnboardingContext.Provider value={{ hasSeenOnboarding, markOnboardingComplete }}>
+    <OnboardingContext.Provider value={{ hasSeenOnboarding, markOnboardingComplete, resetOnboarding }}>
       {children}
     </OnboardingContext.Provider>
   );
