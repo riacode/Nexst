@@ -4,7 +4,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 // In a production app, you'd want to use more robust encryption libraries
 
 export class DataEncryption {
-  private static readonly ENCRYPTION_KEY = 'clynic_health_data_key_2024';
+  private static readonly ENCRYPTION_KEY = 'nexst_health_data_key_2024';
 
   // Generate a simple key for encryption
   static generateKey(): string {

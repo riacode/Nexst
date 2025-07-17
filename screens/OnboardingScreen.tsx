@@ -1,4 +1,5 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
+import { Easing } from 'react-native';
 import {
   View,
   Text,
@@ -9,8 +10,8 @@ import {
   Animated,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useOnboarding } from '../contexts/OnboardingContext';
 
+import { useOnboarding } from '../contexts/OnboardingContext';
 
 const { width, height } = Dimensions.get('window');
 
@@ -22,17 +23,69 @@ export default function OnboardingScreen({ navigation }: OnboardingScreenProps) 
   const { markOnboardingComplete } = useOnboarding();
   const underlineAnim = useRef(new Animated.Value(0)).current;
 
+  // Animation states for 3 icons and their texts
+  const iconScales = [useRef(new Animated.Value(1)).current, useRef(new Animated.Value(1)).current, useRef(new Animated.Value(1)).current];
+  const iconTranslates = [useRef(new Animated.Value(0)).current, useRef(new Animated.Value(0)).current, useRef(new Animated.Value(0)).current];
+  const textOpacities = [useRef(new Animated.Value(0)).current, useRef(new Animated.Value(0)).current, useRef(new Animated.Value(0)).current];
+
+  // Closing sentences
+  const closing1Opacity = useRef(new Animated.Value(0)).current;
+  const closing2Opacity = useRef(new Animated.Value(0)).current;
+  const buttonOpacity = useRef(new Animated.Value(0)).current;
+  const [showButton, setShowButton] = useState(false);
+
+  // Animation sequence
   useEffect(() => {
-    // Start the underline animation after 1.5 seconds
-    const timer = setTimeout(() => {
+    // Start underline animation after 0.5 seconds
+    const underlineTimer = setTimeout(() => {
       Animated.timing(underlineAnim, {
         toValue: 1,
         duration: 800,
         useNativeDriver: false,
       }).start();
-    }, 1500);
+    }, 500);
 
-    return () => clearTimeout(timer);
+    // Helper for each icon step
+    const animateIcon = async (i: number) => {
+      // Pulsate
+      await new Promise(res => {
+        Animated.sequence([
+          Animated.timing(iconScales[i], { toValue: 1.25, duration: 220, useNativeDriver: true }),
+          Animated.timing(iconScales[i], { toValue: 1, duration: 220, useNativeDriver: true })
+        ]).start(() => res(null));
+      });
+      // Glide to final position and fade in text
+      await new Promise(res => {
+        Animated.parallel([
+          Animated.timing(iconTranslates[i], { toValue: -90, duration: 500, easing: Easing.out(Easing.exp), useNativeDriver: true }),
+          Animated.timing(textOpacities[i], { toValue: 1, duration: 400, useNativeDriver: true })
+        ]).start(() => res(null));
+      });
+    };
+    
+    // Sequence for all icons - start after underline
+    const iconTimer = setTimeout(async () => {
+      for (let i = 0; i < 3; ++i) {
+        await animateIcon(i);
+        await new Promise(r => setTimeout(r, 180));
+      }
+      // Fade in closing sentences
+      Animated.timing(closing1Opacity, { toValue: 1, duration: 400, useNativeDriver: true }).start(() => {
+        setTimeout(() => {
+          Animated.timing(closing2Opacity, { toValue: 1, duration: 400, useNativeDriver: true }).start(() => {
+            setShowButton(true);
+            setTimeout(() => {
+              Animated.timing(buttonOpacity, { toValue: 1, duration: 600, useNativeDriver: true }).start();
+            }, 100);
+          });
+        }, 400);
+      });
+    }, 1300); // Start icon animation after underline completes
+
+    return () => {
+      clearTimeout(underlineTimer);
+      clearTimeout(iconTimer);
+    };
   }, [underlineAnim]);
 
   const handleGetStarted = async () => {
@@ -52,12 +105,11 @@ export default function OnboardingScreen({ navigation }: OnboardingScreenProps) 
         {/* Header */}
         <View style={styles.header}>
           <View style={styles.logoContainer}>
-            <Text style={styles.logoText}>CLYNIC</Text>
+            <Text style={styles.logoText}>NEXST</Text>
           </View>
           <View style={styles.taglineContainer}>
             <Text style={styles.tagline}>
-              <Text style={styles.boldText}>Reimagining</Text> how you{'\n'}
-              <Text style={styles.underlinedText}>manage your health</Text>.
+              <Text style={styles.boldText}>Reimagining</Text> how you{'\n'}<Text style={styles.underlinedText}>manage your health</Text>.
             </Text>
             <Animated.View 
               style={[
@@ -73,56 +125,103 @@ export default function OnboardingScreen({ navigation }: OnboardingScreenProps) 
           </View>
         </View>
 
-        {/* Features */}
+        {/* Features Container */}
         <View style={styles.featuresContainer}>
+          {/* Feature 1 */}
           <View style={styles.featureItem}>
-            <View style={styles.featureIcon}>
-              <Ionicons name="mic" size={32} color="#10b981" />
-            </View>
-            <View style={styles.featureText}>
+            <Animated.View
+              style={{
+                transform: [
+                  { scale: iconScales[0] },
+                  { translateX: iconTranslates[0] }
+                ],
+                zIndex: 10,
+              }}
+            >
+              <View style={[styles.featureIcon, { backgroundColor: '#e0f7ef' }]}>
+                <Ionicons name="mic" size={32} color="#10b981" />
+              </View>
+            </Animated.View>
+            <Animated.View style={[styles.featureText, { opacity: textOpacities[0] }]}>
               <Text style={styles.featureTitle}>Voice Symptom Tracking</Text>
-                              <Text style={styles.featureDescription}>
-                  Record your symptoms effortlessly in just 30 seconds.
-                </Text>
-            </View>
+              <Text style={styles.featureDescription}>
+                Record your symptoms effortlessly in just 30 seconds.
+              </Text>
+            </Animated.View>
           </View>
 
+          {/* Feature 2 */}
           <View style={styles.featureItem}>
-            <View style={styles.featureIcon}>
-              <Ionicons name="bulb" size={32} color="#f59e0b" />
-            </View>
-            <View style={styles.featureText}>
+            <Animated.View
+              style={{
+                transform: [
+                  { scale: iconScales[1] },
+                  { translateX: iconTranslates[1] }
+                ],
+                zIndex: 10,
+              }}
+            >
+              <View style={[styles.featureIcon, { backgroundColor: '#fff8e1' }]}>
+                <Ionicons name="bulb" size={32} color="#f59e0b" />
+              </View>
+            </Animated.View>
+            <Animated.View style={[styles.featureText, { opacity: textOpacities[1] }]}>
               <Text style={styles.featureTitle}>Personalized Action Items</Text>
               <Text style={styles.featureDescription}>
                 Get immediate recommended next steps based on your symptoms.
               </Text>
-            </View>
+            </Animated.View>
           </View>
 
+          {/* Feature 3 */}
           <View style={styles.featureItem}>
-            <View style={styles.featureIcon}>
-              <Ionicons name="calendar" size={32} color="#8b5cf6" />
-            </View>
-            <View style={styles.featureText}>
+            <Animated.View
+              style={{
+                transform: [
+                  { scale: iconScales[2] },
+                  { translateX: iconTranslates[2] }
+                ],
+                zIndex: 10,
+              }}
+            >
+              <View style={[styles.featureIcon, { backgroundColor: '#ede9fe' }]}>
+                <Ionicons name="calendar" size={32} color="#8b5cf6" />
+              </View>
+            </Animated.View>
+            <Animated.View style={[styles.featureText, { opacity: textOpacities[2] }]}>
               <Text style={styles.featureTitle}>Appointment Prep</Text>
               <Text style={styles.featureDescription}>
                 Walk into appointments with tailored questions and symptom history.
               </Text>
-            </View>
+            </Animated.View>
           </View>
         </View>
 
         {/* Bottom Section */}
         <View style={styles.bottomSection}>
-          <Text style={styles.bottomText}>
-            Your personal AI-powered clinic,{'\n'}always ready when you need it.
-          </Text>
-          
-          <TouchableOpacity style={styles.getStartedButton} onPress={handleGetStarted}>
-            <Text style={styles.getStartedText}>Get Started</Text>
-            <Ionicons name="arrow-forward" size={20} color="#ffffff" />
-          </TouchableOpacity>
+          <Animated.View style={{ opacity: closing1Opacity }}>
+            <Text style={styles.bottomText}>
+              You tell us what's happening now.
+            </Text>
+          </Animated.View>
+          <Animated.View style={{ opacity: closing2Opacity }}>
+            <Text style={styles.bottomText}>
+              We'll tell you what to do <Text style={{ fontWeight: 'bold' }}>nexst</Text>.
+            </Text>
+          </Animated.View>
         </View>
+
+        {/* Get Started Button - positioned absolutely so it doesn't shift content */}
+        {showButton && (
+          <View style={styles.buttonContainer}>
+            <Animated.View style={{ opacity: buttonOpacity }}>
+              <TouchableOpacity style={styles.getStartedButton} onPress={handleGetStarted}>
+                <Text style={styles.getStartedText}>Get Started</Text>
+                <Ionicons name="arrow-forward" size={20} color="#ffffff" />
+              </TouchableOpacity>
+            </Animated.View>
+          </View>
+        )}
       </View>
     </SafeAreaView>
   );
@@ -154,12 +253,6 @@ const styles = StyleSheet.create({
     color: '#00b4d8',
     letterSpacing: -1,
   },
-  appName: {
-    fontSize: 36,
-    fontWeight: 'bold',
-    color: '#1e293b',
-    marginLeft: 12,
-  },
   tagline: {
     fontSize: 18,
     color: '#64748b',
@@ -185,13 +278,6 @@ const styles = StyleSheet.create({
     marginTop: 4,
     alignSelf: 'center',
   },
-  subtitle: {
-    fontSize: 14,
-    color: '#94a3b8',
-    textAlign: 'center',
-    marginTop: 8,
-    fontWeight: '500',
-  },
   featuresContainer: {
     flex: 1,
     justifyContent: 'center',
@@ -205,7 +291,6 @@ const styles = StyleSheet.create({
     width: 64,
     height: 64,
     borderRadius: 32,
-    backgroundColor: '#f8fafc',
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 20,
@@ -234,16 +319,23 @@ const styles = StyleSheet.create({
   },
   bottomSection: {
     alignItems: 'center',
+    marginBottom: 80,
   },
   bottomText: {
     fontSize: 16,
     color: '#64748b',
     textAlign: 'center',
     lineHeight: 24,
-    marginBottom: 32,
+    marginBottom: 2,
     paddingHorizontal: 20,
   },
-
+  buttonContainer: {
+    position: 'absolute',
+    bottom: 40,
+    left: 32,
+    right: 32,
+    alignItems: 'center',
+  },
   getStartedButton: {
     flexDirection: 'row',
     alignItems: 'center',

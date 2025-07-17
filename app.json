@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "Clynic",
-    "slug": "Clynic",
+    "name": "Nexst",
+    "slug": "Nexst",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -29,7 +29,7 @@
       [
         "expo-av",
         {
-          "microphonePermission": "Allow Clynic to access your microphone for recording symptoms."
+          "microphonePermission": "Allow Nexst to access your microphone for recording symptoms."
         }
       ],
       "expo-font",

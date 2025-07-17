@@ -16,7 +16,7 @@ export interface FeatureTutorialContent {
 export const onboardingSteps: OnboardingStep[] = [
   {
     id: 'welcome',
-    title: 'Welcome to Clynic',
+    title: 'Welcome to Nexst',
     description: 'Your personal AI health companion. I\'ll help you track symptoms, get insights, and prepare for doctor visits.',
     icon: 'heart',
     color: '#00b4d8',

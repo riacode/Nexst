@@ -29,8 +29,8 @@ export default function PrivacySettingsScreen({ navigation }: any) {
       const data = await exportUserData();
       
       await Share.share({
-        message: 'My Clynic Health Data Export',
-        title: 'Clynic Health Data',
+        message: 'My Nexst Health Data Export',
+        title: 'Nexst Health Data',
         url: `data:application/json;base64,${Buffer.from(data).toString('base64')}`,
       });
     } catch (error) {
