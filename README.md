@@ -27,9 +27,14 @@ npm start
 
 ## Deployment
 
-### Website Deployment (nexst.app)
+### Landing Page Website (nexst.app)
 
-The website is deployed using Vercel and connected to the domain `nexst.app`.
+The website is a **static landing page** that showcases the Nexst mobile app and provides download links to app stores. It's deployed using Vercel and connected to the domain `nexst.app`.
+
+#### What the website does:
+- Introduces the Nexst app and its features
+- Provides download links to App Store and Google Play Store
+- Serves as a marketing/information page for potential users
 
 #### Deployment Steps:
 1. **Connect to Vercel:**
@@ -57,9 +62,11 @@ Value: cname.vercel-dns.com
 
 ### Mobile App Deployment
 
-The React Native app can be deployed to:
+The React Native app will be deployed to:
 - **iOS App Store** via Expo or React Native CLI
 - **Google Play Store** via Expo or React Native CLI
+
+Once the app is published, update the download links in `index.html` with the actual app store URLs.
 
 ## Project Structure
 

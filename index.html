@@ -408,24 +408,62 @@
             margin-bottom: 2rem;
         }
 
+        .download-buttons {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-bottom: 1rem;
+        }
+
         .download-button {
-            display: inline-block;
-            padding: 1.5rem 3rem;
+            display: flex;
+            align-items: center;
+            padding: 1rem 1.5rem;
             background: rgba(255, 255, 255, 0.1);
             color: white;
             text-decoration: none;
-            border-radius: 50px;
+            border-radius: 12px;
             font-weight: 600;
-            font-size: 1.2rem;
             border: 2px solid rgba(255, 255, 255, 0.3);
             transition: all 0.3s ease;
             backdrop-filter: blur(10px);
+            min-width: 200px;
         }
 
         .download-button:hover {
             background: rgba(255, 255, 255, 0.2);
             border-color: rgba(255, 255, 255, 0.5);
             transform: translateY(-3px);
+        }
+
+        .store-icon {
+            font-size: 1.5rem;
+            margin-right: 0.75rem;
+        }
+
+        .store-text {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .store-label {
+            font-size: 0.8rem;
+            opacity: 0.8;
+            font-weight: 400;
+        }
+
+        .store-name {
+            font-size: 1rem;
+            font-weight: 600;
+        }
+
+        .coming-soon {
+            color: #888;
+            font-size: 0.9rem;
+            margin-top: 1rem;
+            font-style: italic;
         }
 
         /* Responsive Design */
@@ -554,7 +592,23 @@
         <div class="final-cta-content">
             <h2 class="final-title">Ready to Transform Your Health?</h2>
             <p class="final-subtitle">Join thousands of users who are taking control of their wellness with AI-powered insights</p>
-            <a href="#" class="download-button">Download Nexst</a>
+            <div class="download-buttons">
+                <a href="#" class="download-button app-store">
+                    <span class="store-icon">🍎</span>
+                    <div class="store-text">
+                        <span class="store-label">Download on the</span>
+                        <span class="store-name">App Store</span>
+                    </div>
+                </a>
+                <a href="#" class="download-button google-play">
+                    <span class="store-icon">🤖</span>
+                    <div class="store-text">
+                        <span class="store-label">Get it on</span>
+                        <span class="store-name">Google Play</span>
+                    </div>
+                </a>
+            </div>
+            <p class="coming-soon">Coming Soon - Join our waitlist for early access!</p>
         </div>
     </section>
 
