@@ -54,10 +54,10 @@ export default function OnboardingScreen({ navigation }: OnboardingScreenProps) 
           Animated.timing(iconScales[i], { toValue: 1, duration: 220, useNativeDriver: true })
         ]).start(() => res(null));
       });
-      // Glide to final position and fade in text
+      // Glide to final position and fade in text together
       await new Promise(res => {
         Animated.parallel([
-          Animated.timing(iconTranslates[i], { toValue: -90, duration: 500, easing: Easing.out(Easing.exp), useNativeDriver: true }),
+          Animated.timing(iconTranslates[i], { toValue: -130, duration: 500, easing: Easing.out(Easing.exp), useNativeDriver: true }),
           Animated.timing(textOpacities[i], { toValue: 1, duration: 400, useNativeDriver: true })
         ]).start(() => res(null));
       });
@@ -65,10 +65,12 @@ export default function OnboardingScreen({ navigation }: OnboardingScreenProps) 
     
     // Sequence for all icons - start after underline
     const iconTimer = setTimeout(async () => {
+      // Animate icons and text together
       for (let i = 0; i < 3; ++i) {
         await animateIcon(i);
         await new Promise(r => setTimeout(r, 180));
       }
+      
       // Fade in closing sentences
       Animated.timing(closing1Opacity, { toValue: 1, duration: 400, useNativeDriver: true }).start(() => {
         setTimeout(() => {
@@ -136,18 +138,19 @@ export default function OnboardingScreen({ navigation }: OnboardingScreenProps) 
                   { translateX: iconTranslates[0] }
                 ],
                 zIndex: 10,
+                opacity: 0, // Hide the original icon
               }}
             >
               <View style={[styles.featureIcon, { backgroundColor: '#e0f7ef' }]}>
                 <Ionicons name="mic" size={32} color="#10b981" />
               </View>
             </Animated.View>
-            <Animated.View style={[styles.featureText, { opacity: textOpacities[0] }]}>
+            <View style={styles.featureText}>
               <Text style={styles.featureTitle}>Voice Symptom Tracking</Text>
               <Text style={styles.featureDescription}>
                 Record your symptoms effortlessly in just 30 seconds.
               </Text>
-            </Animated.View>
+            </View>
           </View>
 
           {/* Feature 2 */}
@@ -159,18 +162,19 @@ export default function OnboardingScreen({ navigation }: OnboardingScreenProps) 
                   { translateX: iconTranslates[1] }
                 ],
                 zIndex: 10,
+                opacity: 0, // Hide the original icon
               }}
             >
               <View style={[styles.featureIcon, { backgroundColor: '#fff8e1' }]}>
                 <Ionicons name="bulb" size={32} color="#f59e0b" />
               </View>
             </Animated.View>
-            <Animated.View style={[styles.featureText, { opacity: textOpacities[1] }]}>
+            <View style={styles.featureText}>
               <Text style={styles.featureTitle}>Personalized Action Items</Text>
               <Text style={styles.featureDescription}>
                 Get immediate recommended next steps based on your symptoms.
               </Text>
-            </Animated.View>
+            </View>
           </View>
 
           {/* Feature 3 */}
@@ -182,19 +186,85 @@ export default function OnboardingScreen({ navigation }: OnboardingScreenProps) 
                   { translateX: iconTranslates[2] }
                 ],
                 zIndex: 10,
+                opacity: 0, // Hide the original icon
               }}
             >
               <View style={[styles.featureIcon, { backgroundColor: '#ede9fe' }]}>
                 <Ionicons name="calendar" size={32} color="#8b5cf6" />
               </View>
             </Animated.View>
-            <Animated.View style={[styles.featureText, { opacity: textOpacities[2] }]}>
+            <View style={styles.featureText}>
               <Text style={styles.featureTitle}>Appointment Prep</Text>
               <Text style={styles.featureDescription}>
                 Walk into appointments with tailored questions and symptom history.
               </Text>
-            </Animated.View>
+            </View>
           </View>
+        </View>
+
+        {/* Independent Icons Section */}
+        <View style={styles.independentIconsContainer}>
+          <Animated.View
+            style={{
+              transform: [
+                { scale: iconScales[0] },
+                { translateX: iconTranslates[0] }
+              ],
+              zIndex: 10,
+            }}
+          >
+            <View style={[styles.independentIcon, { backgroundColor: '#e0f7ef' }]}>
+              <Ionicons name="mic" size={32} color="#10b981" />
+            </View>
+          </Animated.View>
+          <Animated.View
+            style={{
+              transform: [
+                { scale: iconScales[1] },
+                { translateX: iconTranslates[1] }
+              ],
+              zIndex: 10,
+            }}
+          >
+            <View style={[styles.independentIcon, { backgroundColor: '#fff8e1' }]}>
+              <Ionicons name="bulb" size={32} color="#f59e0b" />
+            </View>
+          </Animated.View>
+          <Animated.View
+            style={{
+              transform: [
+                { scale: iconScales[2] },
+                { translateX: iconTranslates[2] }
+              ],
+              zIndex: 10,
+            }}
+          >
+            <View style={[styles.independentIcon, { backgroundColor: '#ede9fe' }]}>
+              <Ionicons name="calendar" size={32} color="#8b5cf6" />
+            </View>
+          </Animated.View>
+        </View>
+
+        {/* Independent Text Section */}
+        <View style={styles.independentTextContainer}>
+          <Animated.View style={[styles.independentTextItem, { opacity: textOpacities[0] }]}>
+            <Text style={styles.featureTitle}>Voice Symptom Tracking</Text>
+            <Text style={styles.featureDescription}>
+              Record your symptoms effortlessly in just 30 seconds.
+            </Text>
+          </Animated.View>
+          <Animated.View style={[styles.independentTextItem, { opacity: textOpacities[1] }]}>
+            <Text style={styles.featureTitle}>Personalized Action Items</Text>
+            <Text style={styles.featureDescription}>
+              Get immediate next steps based on your symptoms.
+            </Text>
+          </Animated.View>
+          <Animated.View style={[styles.independentTextItem, { opacity: textOpacities[2] }]}>
+            <Text style={styles.featureTitle}>Appointment Prep</Text>
+            <Text style={styles.featureDescription}>
+              Walk into appointments with tailored questions and symptom history.
+            </Text>
+          </Animated.View>
         </View>
 
         {/* Bottom Section */}
@@ -357,5 +427,44 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#ffffff',
     marginRight: 8,
+  },
+  independentIconsContainer: {
+    flexDirection: 'column',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 40,
+    marginBottom: 80,
+    gap: 35,
+  },
+  independentIcon: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  independentTextContainer: {
+    flexDirection: 'column',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: -340,
+    marginBottom: 80,
+    gap: 35,
+  },
+  independentTextItem: {
+    alignItems: 'flex-start',
+    textAlign: 'left',
+    paddingHorizontal: 51,
+    marginLeft: 120,
+    marginRight: 50,
+    width: '100%',
   },
 }); 
