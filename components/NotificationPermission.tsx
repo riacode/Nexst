@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 import { NotificationService } from '../utils/notifications';
 
 interface NotificationPermissionProps {
@@ -60,8 +61,15 @@ export default function NotificationPermission({ onPermissionGranted }: Notifica
         <Text style={styles.description}>
           Enable notifications to receive important health recommendations and updates.
         </Text>
-        <TouchableOpacity style={styles.button} onPress={requestPermission}>
-          <Text style={styles.buttonText}>Enable Notifications</Text>
+        <TouchableOpacity onPress={requestPermission}>
+          <LinearGradient
+            colors={['#00b4d8', '#10b981']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
+            style={styles.button}
+          >
+            <Text style={styles.buttonText}>Enable Notifications</Text>
+          </LinearGradient>
         </TouchableOpacity>
       </View>
     </View>
@@ -95,7 +103,6 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   button: {
-    backgroundColor: '#00b4d8',
     paddingHorizontal: 24,
     paddingVertical: 12,
     borderRadius: 8,

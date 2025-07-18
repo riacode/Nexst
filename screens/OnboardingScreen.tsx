@@ -10,6 +10,7 @@ import {
   Animated,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 
 import { useOnboarding } from '../contexts/OnboardingContext';
 
@@ -142,7 +143,7 @@ export default function OnboardingScreen({ navigation }: OnboardingScreenProps) 
               }}
             >
               <View style={[styles.featureIcon, { backgroundColor: '#e0f7ef' }]}>
-                <Ionicons name="mic" size={32} color="#10b981" />
+                <Ionicons name="mic" size={32} color="#00b4d8" />
               </View>
             </Animated.View>
             <View style={styles.featureText}>
@@ -165,8 +166,8 @@ export default function OnboardingScreen({ navigation }: OnboardingScreenProps) 
                 opacity: 0, // Hide the original icon
               }}
             >
-              <View style={[styles.featureIcon, { backgroundColor: '#fff8e1' }]}>
-                <Ionicons name="bulb" size={32} color="#f59e0b" />
+              <View style={[styles.featureIcon, { backgroundColor: '#e0f7ef' }]}>
+                <Ionicons name="bulb" size={32} color="#10b981" />
               </View>
             </Animated.View>
             <View style={styles.featureText}>
@@ -189,8 +190,8 @@ export default function OnboardingScreen({ navigation }: OnboardingScreenProps) 
                 opacity: 0, // Hide the original icon
               }}
             >
-              <View style={[styles.featureIcon, { backgroundColor: '#ede9fe' }]}>
-                <Ionicons name="calendar" size={32} color="#8b5cf6" />
+              <View style={[styles.featureIcon, { backgroundColor: '#e0f7ef' }]}>
+                <Ionicons name="calendar" size={32} color="#00b4d8" />
               </View>
             </Animated.View>
             <View style={styles.featureText}>
@@ -214,7 +215,7 @@ export default function OnboardingScreen({ navigation }: OnboardingScreenProps) 
             }}
           >
             <View style={[styles.independentIcon, { backgroundColor: '#e0f7ef' }]}>
-              <Ionicons name="mic" size={32} color="#10b981" />
+              <Ionicons name="mic" size={32} color="#00b4d8" />
             </View>
           </Animated.View>
           <Animated.View
@@ -226,8 +227,8 @@ export default function OnboardingScreen({ navigation }: OnboardingScreenProps) 
               zIndex: 10,
             }}
           >
-            <View style={[styles.independentIcon, { backgroundColor: '#fff8e1' }]}>
-              <Ionicons name="bulb" size={32} color="#f59e0b" />
+            <View style={[styles.independentIcon, { backgroundColor: '#e0f7ef' }]}>
+              <Ionicons name="bulb" size={32} color="#10b981" />
             </View>
           </Animated.View>
           <Animated.View
@@ -239,8 +240,8 @@ export default function OnboardingScreen({ navigation }: OnboardingScreenProps) 
               zIndex: 10,
             }}
           >
-            <View style={[styles.independentIcon, { backgroundColor: '#ede9fe' }]}>
-              <Ionicons name="calendar" size={32} color="#8b5cf6" />
+            <View style={[styles.independentIcon, { backgroundColor: '#e0f7ef' }]}>
+              <Ionicons name="calendar" size={32} color="#00b4d8" />
             </View>
           </Animated.View>
         </View>
@@ -285,9 +286,16 @@ export default function OnboardingScreen({ navigation }: OnboardingScreenProps) 
         {showButton && (
           <View style={styles.buttonContainer}>
             <Animated.View style={{ opacity: buttonOpacity }}>
-              <TouchableOpacity style={styles.getStartedButton} onPress={handleGetStarted}>
-                <Text style={styles.getStartedText}>Get Started</Text>
-                <Ionicons name="arrow-forward" size={20} color="#ffffff" />
+              <TouchableOpacity onPress={handleGetStarted}>
+                <LinearGradient
+                  colors={['#00b4d8', '#10b981']}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 0 }}
+                  style={styles.getStartedButton}
+                >
+                  <Text style={styles.getStartedText}>Get Started</Text>
+                  <Ionicons name="arrow-forward" size={20} color="#ffffff" />
+                </LinearGradient>
               </TouchableOpacity>
             </Animated.View>
           </View>
@@ -409,7 +417,6 @@ const styles = StyleSheet.create({
   getStartedButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#00b4d8',
     paddingHorizontal: 32,
     paddingVertical: 16,
     borderRadius: 12,

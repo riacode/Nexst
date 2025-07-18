@@ -19,7 +19,7 @@ export default function RecommendationsScreen({ route, navigation }: any) {
   const getPriorityColor = (priority: string) => {
     switch (priority) {
       case 'HIGH': return '#ef4444';
-      case 'MEDIUM': return '#f59e0b';
+      case 'MEDIUM': return '#00b4d8';
       case 'LOW': return '#10b981';
       default: return '#6b7280';
     }
