@@ -7,6 +7,7 @@ import { useRecommendations } from '../contexts/RecommendationsContext';
 import { useTutorial } from '../contexts/TutorialContext';
 import FeatureTutorial from '../components/FeatureTutorial';
 import { featureTutorials } from '../utils/onboardingContent';
+import SharedBackground from '../components/SharedBackground';
 
 export default function RecommendationsScreen({ route, navigation }: any) {
   // Get recommendations from global context
@@ -294,7 +295,8 @@ export default function RecommendationsScreen({ route, navigation }: any) {
   const cancelledRecommendations = recommendations.filter(rec => rec.isCancelled);
 
   return (
-    <View style={styles.container}>
+    <SharedBackground>
+      <View style={styles.container}>
       <FeatureTutorial
         visible={!tutorialState.hasSeenRecommendationTutorial && recommendations.length === 0}
         title={featureTutorials.recommendations.title}
@@ -344,14 +346,14 @@ export default function RecommendationsScreen({ route, navigation }: any) {
           </View>
         )}
       </ScrollView>
-    </View>
+      </View>
+    </SharedBackground>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f8fafc',
     paddingTop: 50,
   },
   content: {
@@ -363,13 +365,13 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     ...fontStyles.h3,
-    color: '#1e293b',
+    color: '#ffffff',
     marginBottom: 12,
     marginRight: 8,
   },
   sectionHeaderTitle: {
     ...fontStyles.h3,
-    color: '#1e293b',
+    color: '#ffffff',
     marginRight: 8,
   },
   sectionHeader: {
@@ -386,16 +388,16 @@ const styles = StyleSheet.create({
   },
   sectionCount: {
     ...fontStyles.h3,
-    color: '#94a3b8',
+    color: '#888888',
     fontWeight: '400',
   },
   recommendationCard: {
-    backgroundColor: '#ffffff',
+    backgroundColor: '#1a1a1a',
     borderRadius: 16,
     padding: 20,
     marginBottom: 16,
     shadowColor: '#000',
-    shadowOpacity: 0.1,
+    shadowOpacity: 0.3,
     shadowRadius: 8,
     elevation: 4,
     borderLeftWidth: 4,
@@ -425,7 +427,7 @@ const styles = StyleSheet.create({
   },
   problemTitle: {
     ...fontStyles.h3,
-    color: '#1e293b',
+    color: '#ffffff',
     marginBottom: 8,
   },
   problemTitleCompleted: {
@@ -436,7 +438,7 @@ const styles = StyleSheet.create({
   },
   problemDescription: {
     ...fontStyles.body,
-    color: '#374151',
+    color: '#cccccc',
     lineHeight: 22,
   },
   problemDescriptionCompleted: {
@@ -452,7 +454,7 @@ const styles = StyleSheet.create({
   },
   solutionsTitle: {
     ...fontStyles.h3,
-    color: '#1e293b',
+    color: '#ffffff',
     marginBottom: 12,
     fontWeight: '600',
   },
@@ -460,11 +462,11 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   actionItem: {
-    backgroundColor: '#f8fafc',
+    backgroundColor: '#2a2a2a',
     borderRadius: 12,
     padding: 16,
     borderWidth: 1,
-    borderColor: '#e2e8f0',
+    borderColor: '#404040',
   },
   actionItemCompleted: {
     backgroundColor: '#f0fdf4',
@@ -477,7 +479,7 @@ const styles = StyleSheet.create({
   },
   actionItemTitle: {
     ...fontStyles.bodyMedium,
-    color: '#1e293b',
+    color: '#ffffff',
     flex: 1,
     marginLeft: 12,
     fontWeight: '600',
@@ -487,7 +489,7 @@ const styles = StyleSheet.create({
   },
   actionItemDescription: {
     ...fontStyles.body,
-    color: '#64748b',
+    color: '#cccccc',
     marginLeft: 32,
     lineHeight: 20,
   },

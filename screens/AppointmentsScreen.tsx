@@ -2,11 +2,13 @@ import React, { useState } from 'react';
 import { View, Text, FlatList, StyleSheet, Platform, TouchableOpacity, TextInput, Alert, Modal} from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { Ionicons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 import { fontStyles } from '../utils/fonts';
 import { useAppointments } from '../contexts/AppointmentsContext';
 import { useTutorial } from '../contexts/TutorialContext';
 import FeatureTutorial from '../components/FeatureTutorial';
 import { featureTutorials } from '../utils/onboardingContent';
+import SharedBackground from '../components/SharedBackground';
 
 interface Appointment {
     id: string;
@@ -149,7 +151,8 @@ export default function AppointmentsScreen({ navigation }: any) {
   );
 
   return (
-    <View style={styles.container}>
+    <SharedBackground>
+      <View style={styles.container}>
       <FeatureTutorial
         visible={!tutorialState.hasSeenAppointmentTutorial && appointments.length === 0}
         title={featureTutorials.appointments.title}
@@ -282,22 +285,30 @@ export default function AppointmentsScreen({ navigation }: any) {
       {/* Date/Time Pickers */}
       {/* These are now handled inline within the modal */}
       
-      <TouchableOpacity
-        style={[styles.recordButton, appointments.length > 0 && styles.recordButtonSmall]}
-        onPress={() => setShowModal(true)}
+      <LinearGradient
+        colors={['#00b4d8', '#10b981']}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={[styles.recordButton, appointments.length > 0 && styles.recordButtonSmall, { borderRadius: appointments.length > 0 ? 35 : 50 }]}
       >
-        <Ionicons 
-          name="add" 
-          size={appointments.length === 0 ? 48 : 32} 
-          color="#fff" 
-        />
-      </TouchableOpacity>
-    </View>
+        <TouchableOpacity
+          style={styles.recordButtonInner}
+          onPress={() => setShowModal(true)}
+        >
+          <Ionicons 
+            name="add" 
+            size={appointments.length === 0 ? 48 : 32} 
+            color="#fff" 
+          />
+        </TouchableOpacity>
+      </LinearGradient>
+      </View>
+    </SharedBackground>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#fafafa' },
+  container: { flex: 1 },
   list: { padding: 12, paddingTop: 16, paddingBottom: 140 },
   section: {
     marginBottom: 24,
@@ -349,7 +360,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 32,
   },
   appItem: { 
-    backgroundColor: '#ffffff', 
+    backgroundColor: 'rgba(255, 255, 255, 0.02)', 
     padding: 16, 
     borderRadius: 12, 
     marginBottom: 12,
@@ -359,6 +370,8 @@ const styles = StyleSheet.create({
     elevation: 2,
     borderLeftWidth: 4, 
     borderLeftColor: '#00b4d8',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.1)',
   },
   appHeader: { 
     flexDirection: 'row', 
@@ -372,7 +385,7 @@ const styles = StyleSheet.create({
   },
   appTitle: { 
     ...fontStyles.bodyMedium,
-    color: '#1e293b',
+    color: '#ffffff',
     marginBottom: 4,
   },
   appScheduledDate: {
@@ -382,13 +395,14 @@ const styles = StyleSheet.create({
 
   titleInput: {
     borderWidth: 1,
-    borderColor: '#e2e8f0',
+    borderColor: 'rgba(255, 255, 255, 0.1)',
     borderRadius: 12,
     padding: 16,
     marginBottom: 20,
-    backgroundColor: '#f8fafc',
+    backgroundColor: 'rgba(255, 255, 255, 0.02)',
     ...fontStyles.body,
     textAlign: 'center',
+    color: '#ffffff',
   },
   dateTimeContainer: {
     flexDirection: 'row',
@@ -401,9 +415,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
-    borderColor: '#e2e8f0',
+    borderColor: 'rgba(255, 255, 255, 0.1)',
     borderRadius: 12,
-    backgroundColor: '#f8fafc',
+    backgroundColor: 'rgba(255, 255, 255, 0.02)',
     padding: 12,
   },
   dateTimeLabel: {
@@ -436,7 +450,7 @@ const styles = StyleSheet.create({
     padding: 20,
   },
   modalContent: {
-    backgroundColor: '#ffffff',
+    backgroundColor: '#111111',
     borderRadius: 20,
     padding: 24,
     width: '100%',
@@ -445,6 +459,8 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.25,
     shadowRadius: 20,
     elevation: 10,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.1)',
   },
   modalHeader: {
     flexDirection: 'row',
@@ -454,7 +470,7 @@ const styles = StyleSheet.create({
   },
   modalTitle: {
     ...fontStyles.h3,
-    color: '#1e293b',
+    color: '#ffffff',
   },
   modalClose: {
     ...fontStyles.button,
@@ -472,9 +488,10 @@ const styles = StyleSheet.create({
     marginRight: 8,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: '#e2e8f0',
+    borderColor: 'rgba(255, 255, 255, 0.1)',
     alignItems: 'center',
     justifyContent: 'center',
+    backgroundColor: 'rgba(255, 255, 255, 0.02)',
   },
   cancelButtonText: {
     ...fontStyles.button,
@@ -515,5 +532,11 @@ const styles = StyleSheet.create({
     height: 70, 
     borderRadius: 35, 
     bottom: 20,
+  },
+  recordButtonInner: {
+    width: '100%',
+    height: '100%',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 });

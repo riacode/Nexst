@@ -62,7 +62,7 @@ export default function CustomTabBar({ state, descriptors, navigation }: BottomT
               <Ionicons 
                 name={iconName} 
                 size={28} 
-                color={isFocused ? '#00b4d8' : '#64748b'} 
+                color={isFocused ? (isRecommendations ? '#10b981' : '#00b4d8') : '#64748b'} 
               />
             </View>
 
@@ -76,9 +76,9 @@ export default function CustomTabBar({ state, descriptors, navigation }: BottomT
 const styles = StyleSheet.create({
   tabBar: {
     flexDirection: 'row',
-    backgroundColor: '#ffffff',
+    backgroundColor: '#000000',
     borderTopWidth: 1,
-    borderTopColor: '#e2e8f0',
+    borderTopColor: 'rgba(255, 255, 255, 0.1)',
     paddingBottom: 20,
     paddingTop: 12,
     height: 100,
@@ -91,16 +91,18 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
   },
   recommendationsTab: {
-    backgroundColor: '#f1f5f9',
+    backgroundColor: 'rgba(255, 255, 255, 0.02)',
     borderRadius: 20,
     marginHorizontal: 4,
     paddingVertical: 12,
     paddingHorizontal: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.1)',
   },
   recommendationsTabActive: {
-    backgroundColor: '#e0f7ff',
+    backgroundColor: '#f0fdf4',
     borderWidth: 2,
-    borderColor: '#00b4d8',
+    borderColor: '#10b981',
   },
 
 }); 

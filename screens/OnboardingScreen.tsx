@@ -13,6 +13,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 
 import { useOnboarding } from '../contexts/OnboardingContext';
+import SharedBackground from '../components/SharedBackground';
 
 const { width, height } = Dimensions.get('window');
 
@@ -23,6 +24,11 @@ interface OnboardingScreenProps {
 export default function OnboardingScreen({ navigation }: OnboardingScreenProps) {
   const { markOnboardingComplete } = useOnboarding();
   const underlineAnim = useRef(new Animated.Value(0)).current;
+
+
+
+  // Logo glow animation
+  const logoGlowAnim = useRef(new Animated.Value(0)).current;
 
   // Animation states for 3 icons and their texts
   const iconScales = [useRef(new Animated.Value(1)).current, useRef(new Animated.Value(1)).current, useRef(new Animated.Value(1)).current];
@@ -85,11 +91,29 @@ export default function OnboardingScreen({ navigation }: OnboardingScreenProps) 
       });
     }, 1300); // Start icon animation after underline completes
 
+
+
+    // Logo glow animation - matching website exactly
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(logoGlowAnim, {
+          toValue: 1,
+          duration: 3000,
+          useNativeDriver: false,
+        }),
+        Animated.timing(logoGlowAnim, {
+          toValue: 0,
+          duration: 3000,
+          useNativeDriver: false,
+        }),
+      ])
+    ).start();
+
     return () => {
       clearTimeout(underlineTimer);
       clearTimeout(iconTimer);
     };
-  }, [underlineAnim]);
+  }, [underlineAnim, logoGlowAnim]);
 
   const handleGetStarted = async () => {
     try {
@@ -103,12 +127,39 @@ export default function OnboardingScreen({ navigation }: OnboardingScreenProps) 
   };
 
   return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.content}>
+    <SharedBackground>
+      <SafeAreaView style={styles.container}>
+        <View style={styles.content}>
         {/* Header */}
         <View style={styles.header}>
           <View style={styles.logoContainer}>
-            <Text style={styles.logoText}>NEXST</Text>
+            <Animated.View
+              style={[
+                styles.logoGlowContainer,
+                {
+                  shadowColor: logoGlowAnim.interpolate({
+                    inputRange: [0, 0.5, 1],
+                    outputRange: ['#00b4d8', '#10b981', '#00b4d8'],
+                  }),
+                  shadowOpacity: logoGlowAnim.interpolate({
+                    inputRange: [0, 1],
+                    outputRange: [0.5, 0.5],
+                  }),
+                  shadowRadius: logoGlowAnim.interpolate({
+                    inputRange: [0, 1],
+                    outputRange: [20, 30],
+                  }),
+                },
+              ]}
+            >
+              <Text style={styles.logoText}>
+                <Text style={[styles.logoText, { color: '#00b4d8' }]}>N</Text>
+                <Text style={[styles.logoText, { color: '#00b4d8' }]}>e</Text>
+                <Text style={[styles.logoText, { color: '#00b4d8' }]}>x</Text>
+                <Text style={[styles.logoText, { color: '#10b981' }]}>s</Text>
+                <Text style={[styles.logoText, { color: '#10b981' }]}>t</Text>
+              </Text>
+            </Animated.View>
           </View>
           <View style={styles.taglineContainer}>
             <Text style={styles.tagline}>
@@ -142,9 +193,14 @@ export default function OnboardingScreen({ navigation }: OnboardingScreenProps) 
                 opacity: 0, // Hide the original icon
               }}
             >
-              <View style={[styles.featureIcon, { backgroundColor: '#e0f7ef' }]}>
-                <Ionicons name="mic" size={32} color="#00b4d8" />
-              </View>
+              <LinearGradient
+                colors={['#00b4d8', '#10b981']}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={styles.featureIcon}
+              >
+                <Ionicons name="mic" size={32} color="#ffffff" />
+              </LinearGradient>
             </Animated.View>
             <View style={styles.featureText}>
               <Text style={styles.featureTitle}>Voice Symptom Tracking</Text>
@@ -190,9 +246,14 @@ export default function OnboardingScreen({ navigation }: OnboardingScreenProps) 
                 opacity: 0, // Hide the original icon
               }}
             >
-              <View style={[styles.featureIcon, { backgroundColor: '#e0f7ef' }]}>
-                <Ionicons name="calendar" size={32} color="#00b4d8" />
-              </View>
+              <LinearGradient
+                colors={['#00b4d8', '#10b981']}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={styles.featureIcon}
+              >
+                <Ionicons name="calendar" size={32} color="#ffffff" />
+              </LinearGradient>
             </Animated.View>
             <View style={styles.featureText}>
               <Text style={styles.featureTitle}>Appointment Prep</Text>
@@ -214,9 +275,14 @@ export default function OnboardingScreen({ navigation }: OnboardingScreenProps) 
               zIndex: 10,
             }}
           >
-            <View style={[styles.independentIcon, { backgroundColor: '#e0f7ef' }]}>
-              <Ionicons name="mic" size={32} color="#00b4d8" />
-            </View>
+            <LinearGradient
+              colors={['#00b4d8', '#10b981']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={styles.independentIcon}
+            >
+              <Ionicons name="mic" size={32} color="#ffffff" />
+            </LinearGradient>
           </Animated.View>
           <Animated.View
             style={{
@@ -240,9 +306,14 @@ export default function OnboardingScreen({ navigation }: OnboardingScreenProps) 
               zIndex: 10,
             }}
           >
-            <View style={[styles.independentIcon, { backgroundColor: '#e0f7ef' }]}>
-              <Ionicons name="calendar" size={32} color="#00b4d8" />
-            </View>
+            <LinearGradient
+              colors={['#00b4d8', '#10b981']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={styles.independentIcon}
+            >
+              <Ionicons name="calendar" size={32} color="#ffffff" />
+            </LinearGradient>
           </Animated.View>
         </View>
 
@@ -301,15 +372,15 @@ export default function OnboardingScreen({ navigation }: OnboardingScreenProps) 
           </View>
         )}
       </View>
-    </SafeAreaView>
+      </SafeAreaView>
+    </SharedBackground>
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#ffffff',
-  },
+  const styles = StyleSheet.create({
+    container: {
+      flex: 1,
+    },
   content: {
     flex: 1,
     paddingHorizontal: 32,
@@ -328,18 +399,18 @@ const styles = StyleSheet.create({
   logoText: {
     fontSize: 38,
     fontWeight: '900',
-    color: '#00b4d8',
     letterSpacing: -1,
+    color: '#ffffff',
   },
   tagline: {
     fontSize: 18,
-    color: '#64748b',
+    color: '#888888',
     textAlign: 'center',
     lineHeight: 24,
   },
   boldText: {
     fontWeight: '700',
-    color: '#1e293b',
+    color: '#ffffff',
   },
   taglineContainer: {
     alignItems: 'center',
@@ -347,7 +418,7 @@ const styles = StyleSheet.create({
   },
   underlinedText: {
     fontWeight: '600',
-    color: '#1e293b',
+    color: '#ffffff',
   },
   cursiveUnderline: {
     height: 2,
@@ -387,12 +458,12 @@ const styles = StyleSheet.create({
   featureTitle: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#1e293b',
+    color: '#ffffff',
     marginBottom: 4,
   },
   featureDescription: {
     fontSize: 14,
-    color: '#64748b',
+    color: '#888888',
     lineHeight: 20,
   },
   bottomSection: {
@@ -401,7 +472,7 @@ const styles = StyleSheet.create({
   },
   bottomText: {
     fontSize: 16,
-    color: '#64748b',
+    color: '#888888',
     textAlign: 'center',
     lineHeight: 24,
     marginBottom: 2,
@@ -473,5 +544,65 @@ const styles = StyleSheet.create({
     marginLeft: 120,
     marginRight: 50,
     width: '100%',
+  },
+
+  logoGradient: {
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  logoGradientContainer: {
+    position: 'relative',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  logoGradientBackground: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+  },
+  logoTextMask: {
+    fontSize: 38,
+    fontWeight: '900',
+    letterSpacing: -1,
+    color: 'transparent',
+  },
+  logoTextOverlay: {
+    fontSize: 38,
+    fontWeight: '900',
+    letterSpacing: -1,
+    color: 'transparent',
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    textAlign: 'center',
+    textAlignVertical: 'center',
+  },
+  logoGlowContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#00b4d8',
+    shadowOffset: {
+      width: 0,
+      height: 0,
+    },
+    shadowOpacity: 0.5,
+    shadowRadius: 20,
+    elevation: 10,
+  },
+  logoGradientText: {
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  logoTextGradient: {
+    fontSize: 38,
+    fontWeight: '900',
+    letterSpacing: -1,
+    color: 'transparent',
+    textAlign: 'center',
+    textAlignVertical: 'center',
   },
 }); 

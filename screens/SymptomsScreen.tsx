@@ -3,6 +3,7 @@ import { View, Text, TouchableOpacity, StyleSheet, Alert, ScrollView, Animated} 
 import { Audio } from 'expo-av';
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { LinearGradient } from 'expo-linear-gradient';
 import { transcribeAudio, generateSummary, generateRecommendations, generateFollowUpQuestions, checkForMissedPeriod } from '../utils/openai';
 import { SymptomLog, MedicalRecommendation, RecommendationAlert } from '../types/recommendations';
 import { useRecommendations } from '../contexts/RecommendationsContext';
@@ -13,6 +14,7 @@ import { NotificationService } from '../utils/notifications';
 import NotificationPermission from '../components/NotificationPermission';
 import FeatureTutorial from '../components/FeatureTutorial';
 import { featureTutorials } from '../utils/onboardingContent';
+import SharedBackground from '../components/SharedBackground';
 
 export default function SymptomScreen({ navigation }: any) {
     const [audioURI, setAudioURI] = useState<string | null>(null);
@@ -261,8 +263,9 @@ export default function SymptomScreen({ navigation }: any) {
         </TouchableOpacity>
       );
 
-      return (
-        <View style={styles.container}>
+        return (
+    <SharedBackground>
+      <View style={styles.container}>
           
           <NotificationPermission />
           
@@ -348,26 +351,34 @@ export default function SymptomScreen({ navigation }: any) {
                 { transform: [{ scale: pulseAnim }] }
               ]}
             >
-              <TouchableOpacity
-                style={styles.recordButtonInner}
-                onPress={handleRecord}
-                disabled={isProcessing}
+              <LinearGradient
+                colors={['#00b4d8', '#10b981']}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={[styles.recordButtonInner, { borderRadius: symptomLogs.length > 0 ? 35 : 50 }]}
               >
-                <Ionicons 
-                  name={isRecording ? 'stop' : 'mic'} 
-                  size={symptomLogs.length === 0 ? 48 : 32} 
-                  color="#fff" 
-                />
-              </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.recordButtonInner}
+                  onPress={handleRecord}
+                  disabled={isProcessing}
+                >
+                  <Ionicons 
+                    name={isRecording ? 'stop' : 'mic'} 
+                    size={symptomLogs.length === 0 ? 48 : 32} 
+                    color="#fff" 
+                  />
+                </TouchableOpacity>
+              </LinearGradient>
             </Animated.View>
           )}
-        </View>
-      );
-    }
+              </View>
+    </SharedBackground>
+  );
+}
 
 
     const styles = StyleSheet.create({
-      container: { flex: 1, backgroundColor: '#f8fafc' },
+      container: { flex: 1 },
       alert: {
         flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
         backgroundColor: '#e0f7ff', padding: 12, margin: 12, borderRadius: 8,
@@ -376,13 +387,14 @@ export default function SymptomScreen({ navigation }: any) {
       alertText: { flex: 1, color: '#00b4d8' },
       logsContainer: { padding: 12, paddingBottom: 140 },
       logCard: {
-        backgroundColor: '#ffffff', padding: 16, borderRadius: 12, marginBottom: 12,
+        backgroundColor: 'rgba(255, 255, 255, 0.02)', padding: 16, borderRadius: 12, marginBottom: 12,
         shadowColor: '#000', shadowOpacity: 0.08, shadowRadius: 6, elevation: 3,
         borderLeftWidth: 4, borderLeftColor: '#00b4d8',
+        borderWidth: 1, borderColor: 'rgba(255, 255, 255, 0.1)',
       },
       logHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 8 },
       logDate: { color: '#64748b', fontSize: 12, fontWeight: '500' },
-      logTitle: { fontSize: 18, color: '#1e293b', fontWeight: '600' },
+      logTitle: { fontSize: 18, color: '#ffffff', fontWeight: '600' },
       recordButton: {
         position: 'absolute', bottom: 24, alignSelf: 'center',
         backgroundColor: '#00b4d8', width: 100, height: 100, borderRadius: 50,
@@ -404,7 +416,7 @@ export default function SymptomScreen({ navigation }: any) {
         alignSelf: 'center',
         alignItems: 'center',
         justifyContent: 'center',
-        backgroundColor: '#ffffff',
+        backgroundColor: 'rgba(255, 255, 255, 0.05)',
         paddingHorizontal: 24,
         paddingVertical: 16,
         borderRadius: 25,
@@ -413,7 +425,7 @@ export default function SymptomScreen({ navigation }: any) {
         shadowRadius: 8,
         elevation: 3,
         borderWidth: 1,
-        borderColor: '#e2e8f0',
+        borderColor: 'rgba(255, 255, 255, 0.1)',
       },
       processingSpinner: {
         marginBottom: 8,
@@ -431,11 +443,11 @@ export default function SymptomScreen({ navigation }: any) {
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
-        backgroundColor: '#f8fafc',
+        backgroundColor: 'rgba(255, 255, 255, 0.02)',
         padding: 12,
         margin: 16,
         borderRadius: 8,
-        borderColor: '#e2e8f0',
+        borderColor: 'rgba(255, 255, 255, 0.1)',
         borderWidth: 1,
       },
       followUpText: {
