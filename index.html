@@ -14,8 +14,8 @@
       --bg: #FAFBFC;
     }
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    html, body { height: 100%; font-family: 'Inter', sans-serif; color: var(--text); background: var(--bg); scroll-behavior: smooth; }
-    body {
+    html, body { height: 100%; font-family: 'Inter', sans-serif; color: var(--text); scroll-behavior: smooth; }
+    html {
       background-image:
         /* vibrant green blend */
         radial-gradient(circle at 15% 25%, rgba(0,179,159,0.4) 0%, transparent 70%),
@@ -32,6 +32,11 @@
       background-repeat: no-repeat;
       background-attachment: scroll;
       background-size: 200% 200%;
+      min-height: 100%;
+    }
+    
+    body {
+      background: transparent;
       min-height: 100vh;
     }
     section { min-height: 100vh; display: flex; align-items: center; padding: 4rem 6vw; }
