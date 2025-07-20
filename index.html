@@ -23,21 +23,29 @@
     * { box-sizing: border-box; }
     html,body { margin:0; padding:0; font-family:"Inter",sans-serif; color:var(--col-text); scroll-behavior:smooth; }
 
-    /* Tall fixed background ribbon */
+    /* Gradient background that changes with scroll */
     body {
-      background: linear-gradient(to bottom, var(--col-bg-1) 0%, var(--col-bg-2) 20%, var(--col-bg-3) 40%, var(--col-bg-4) 60%, #f8f4ff 80%, #f0f8ff 100%);
-      background-attachment: fixed; /* appears to stay put; user scrolls over it */
-      background-size: 100% 400vh; /* extra tall so colour changes are felt */
+      background: linear-gradient(to bottom, 
+        #e8f5e8 0%, 
+        #d4f0e0 16.66%, 
+        #e0f0f8 33.33%, 
+        #f0e8f8 50%, 
+        #f8f4ff 66.66%, 
+        #f0f8ff 83.33%, 
+        #e8f5e8 100%
+      );
+      background-size: 100% 600vh;
+      background-repeat: no-repeat;
       min-height: 100vh;
     }
 
     section {
-      min-height: 100vh;
+      min-height: 120vh;
       display: flex;
       align-items: center;
       justify-content: center;
-      padding: 8vh 6vw;
-      margin-bottom: 2vh;
+      padding: 10vh 6vw;
+      margin-bottom: 0;
     }
 
     .container { max-width: 1040px; width:100%; display:flex; gap:4rem; flex-wrap:wrap; }
