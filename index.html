@@ -10,10 +10,10 @@
   <style>
     /* -------- Colour Tokens -------- */
     :root {
-      --col-bg-1: #a6c8b2; /* sage */
-      --col-bg-2: #c3e3d4; /* mint */
-      --col-bg-3: #c8ddf1; /* powder blue */
-      --col-bg-4: #d8cef5; /* lilac */
+      --col-bg-1: #e8f5e8; /* light sage */
+      --col-bg-2: #d4f0e0; /* light mint */
+      --col-bg-3: #e0f0f8; /* light powder blue */
+      --col-bg-4: #f0e8f8; /* light lilac */
       --col-text: #102a43; /* near‑black */
       --col-accent: #00b39f; /* Nexst teal */
       --section-gap: 18vh;
@@ -25,9 +25,10 @@
 
     /* Tall fixed background ribbon */
     body {
-      background: linear-gradient(to bottom, var(--col-bg-1) 0%, var(--col-bg-2) 25%, var(--col-bg-3) 50%, var(--col-bg-4) 75%, #eae5f9 100%);
+      background: linear-gradient(to bottom, var(--col-bg-1) 0%, var(--col-bg-2) 20%, var(--col-bg-3) 40%, var(--col-bg-4) 60%, #f8f4ff 80%, #f0f8ff 100%);
       background-attachment: fixed; /* appears to stay put; user scrolls over it */
-      background-size: 100% 500vh; /* extra tall so colour changes are felt */
+      background-size: 100% 400vh; /* extra tall so colour changes are felt */
+      min-height: 100vh;
     }
 
     section {
@@ -35,7 +36,8 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      padding: 0 6vw;
+      padding: 8vh 6vw;
+      margin-bottom: 2vh;
     }
 
     .container { max-width: 1040px; width:100%; display:flex; gap:4rem; flex-wrap:wrap; }
