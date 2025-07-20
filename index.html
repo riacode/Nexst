@@ -25,55 +25,69 @@
 
     /* Organic, flowing, unbounded background */
     body {
-      background-color: #fafbfc;
+      background-color: #f8fafc;
       min-height: 100vh;
       position: relative;
       overflow-x: hidden;
     }
 
-    /* Floating organic blobs */
+    /* Main floating blob */
     body::before {
       content: '';
       position: fixed;
-      top: -50%;
-      left: -20%;
-      width: 140%;
-      height: 200%;
-      background: 
-        radial-gradient(ellipse 400px 200px at 30% 20%, rgba(0, 179, 159, 0.12) 0%, transparent 70%),
-        radial-gradient(ellipse 300px 150px at 70% 80%, rgba(0, 179, 159, 0.08) 0%, transparent 60%),
-        radial-gradient(ellipse 250px 300px at 10% 60%, rgba(0, 179, 159, 0.06) 0%, transparent 50%);
-      filter: blur(1px);
+      top: 10%;
+      left: 10%;
+      width: 300px;
+      height: 400px;
+      background: radial-gradient(ellipse 300px 400px at center, rgba(0, 179, 159, 0.15) 0%, rgba(0, 179, 159, 0.05) 50%, transparent 70%);
+      border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
       z-index: -1;
-      animation: float 20s ease-in-out infinite;
+      animation: float1 25s ease-in-out infinite;
     }
 
-    /* Weird flowing shapes */
+    /* Secondary floating blob */
     body::after {
       content: '';
       position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: 
-        radial-gradient(circle 150px at 85% 15%, rgba(0, 179, 159, 0.04) 0%, transparent 50%),
-        radial-gradient(circle 200px at 15% 85%, rgba(0, 179, 159, 0.03) 0%, transparent 50%),
-        radial-gradient(circle 100px at 50% 50%, rgba(0, 179, 159, 0.02) 0%, transparent 50%);
+      top: 60%;
+      right: 15%;
+      width: 250px;
+      height: 300px;
+      background: radial-gradient(ellipse 250px 300px at center, rgba(0, 179, 159, 0.12) 0%, rgba(0, 179, 159, 0.04) 50%, transparent 70%);
+      border-radius: 40% 60% 60% 40% / 50% 50% 50% 50%;
       z-index: -1;
-      animation: pulse 15s ease-in-out infinite;
+      animation: float2 30s ease-in-out infinite reverse;
     }
 
-    @keyframes float {
-      0%, 100% { transform: translate(0, 0) rotate(0deg); }
-      25% { transform: translate(-20px, -30px) rotate(1deg); }
-      50% { transform: translate(10px, -20px) rotate(-1deg); }
-      75% { transform: translate(-15px, -10px) rotate(0.5deg); }
+    /* Additional floating element */
+    .floating-element {
+      position: fixed;
+      top: 30%;
+      right: 30%;
+      width: 150px;
+      height: 150px;
+      background: radial-gradient(circle 150px at center, rgba(0, 179, 159, 0.08) 0%, transparent 60%);
+      border-radius: 50%;
+      z-index: -1;
+      animation: float3 20s ease-in-out infinite;
     }
 
-    @keyframes pulse {
-      0%, 100% { opacity: 0.8; transform: scale(1); }
-      50% { opacity: 1; transform: scale(1.05); }
+    @keyframes float1 {
+      0%, 100% { transform: translate(0, 0) rotate(0deg) scale(1); }
+      25% { transform: translate(30px, -40px) rotate(5deg) scale(1.1); }
+      50% { transform: translate(-20px, -20px) rotate(-3deg) scale(0.9); }
+      75% { transform: translate(40px, 20px) rotate(2deg) scale(1.05); }
+    }
+
+    @keyframes float2 {
+      0%, 100% { transform: translate(0, 0) rotate(0deg) scale(1); }
+      33% { transform: translate(-25px, -30px) rotate(-4deg) scale(1.15); }
+      66% { transform: translate(20px, -15px) rotate(3deg) scale(0.85); }
+    }
+
+    @keyframes float3 {
+      0%, 100% { transform: translate(0, 0) scale(1); opacity: 0.8; }
+      50% { transform: translate(-15px, -25px) scale(1.2); opacity: 1; }
     }
 
     section {
@@ -126,6 +140,7 @@
   </style>
 </head>
 <body>
+  <div class="floating-element"></div>
 
   <!-- HERO -->
   <section class="hero">
