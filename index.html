@@ -17,17 +17,22 @@
     html, body { height: 100%; font-family: 'Inter', sans-serif; color: var(--text); background: var(--bg); scroll-behavior: smooth; }
     body {
       background-image:
-        /* top-left splotch */
-        radial-gradient(circle at 20% 20%, rgba(0,179,159,0.2) 15%, transparent 40%),
-        /* top-right lavender tech blotch */
-        radial-gradient(circle at 80% 15%, rgba(178,152,255,0.18) 20%, transparent 50%),
-        /* mid-left warm accent */
-        radial-gradient(circle at 30% 60%, rgba(255,188,117,0.2) 18%, transparent 45%),
-        /* bottom-right sage echo */
-        radial-gradient(circle at 70% 75%, rgba(0,179,159,0.15) 22%, transparent 50%);
+        /* vibrant green blend */
+        radial-gradient(circle at 15% 25%, rgba(0,179,159,0.4) 0%, transparent 70%),
+        /* soft lavender tech */
+        radial-gradient(circle at 85% 20%, rgba(178,152,255,0.35) 0%, transparent 65%),
+        /* warm orange accent */
+        radial-gradient(circle at 25% 65%, rgba(255,188,117,0.4) 0%, transparent 60%),
+        /* deep blue blend */
+        radial-gradient(circle at 75% 80%, rgba(100,150,255,0.3) 0%, transparent 55%),
+        /* soft pink touch */
+        radial-gradient(circle at 90% 60%, rgba(255,150,200,0.25) 0%, transparent 50%),
+        /* mint green echo */
+        radial-gradient(circle at 10% 85%, rgba(120,200,150,0.3) 0%, transparent 45%);
       background-repeat: no-repeat;
       background-attachment: scroll;
-      background-size: cover;
+      background-size: 200% 200%;
+      min-height: 100vh;
     }
     section { min-height: 100vh; display: flex; align-items: center; padding: 4rem 6vw; }
     .content { flex: 1 1 40%; max-width: 40%; }
@@ -38,7 +43,13 @@
     p { font-size: 1.125rem; line-height: 1.6; }
     .btn { display: inline-block; margin-top: 2rem; padding: 0.75rem 1.5rem; background: var(--accent); color: #fff; text-decoration: none; border-radius: 8px; font-weight: 700; transition: opacity .25s; }
     .btn:hover { opacity: 0.85; }
-    .cta-strip { background: rgba(16,42,67,0.05); text-align: center; padding: 3rem 2rem; }
+    .cta-strip { 
+      background: rgba(255,255,255,0.1); 
+      backdrop-filter: blur(10px);
+      text-align: center; 
+      padding: 3rem 2rem; 
+      border-top: 1px solid rgba(255,255,255,0.1);
+    }
     @media (max-width: 820px) {
       section { flex-direction: column; }
       .content, .image { max-width: 100%; text-align: center; }
