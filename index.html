@@ -8,167 +8,141 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet" />
   <style>
+    /* -------- Colour Tokens -------- */
     :root {
-      --accent: #00B39F;
-      --text: #102A43;
-      --bg: #FAFBFC;
+      --col-bg-base: #fafbfc;
+      --col-text: #102a43;
+      --col-accent: #00b39f;
+      --section-gap: 18vh;
     }
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    html, body { height: 100%; font-family: 'Inter', sans-serif; color: var(--text); scroll-behavior: smooth; }
-    html { height: auto; }
-    html {
-      background-image:
-        /* main app green - emphasized */
-        radial-gradient(circle at 20% 30%, rgba(0,179,159,0.5) 0%, transparent 60%),
-        /* secondary green accent */
-        radial-gradient(circle at 80% 25%, rgba(0,179,159,0.3) 0%, transparent 55%),
-        /* soft lavender tech */
-        radial-gradient(circle at 85% 20%, rgba(178,152,255,0.25) 0%, transparent 65%),
-        /* warm orange accent */
-        radial-gradient(circle at 25% 65%, rgba(255,188,117,0.35) 0%, transparent 60%),
-        /* deep blue blend */
-        radial-gradient(circle at 75% 80%, rgba(100,150,255,0.25) 0%, transparent 55%),
-        /* mint green echo - emphasized */
-        radial-gradient(circle at 10% 85%, rgba(0,179,159,0.4) 0%, transparent 45%);
+
+    /* -------- Base Styles -------- */
+    * { box-sizing: border-box; }
+    html, body { margin:0; padding:0; font-family:"Inter",sans-serif; color:var(--col-text); scroll-behavior:smooth; }
+    body { background: var(--col-bg-base); min-height:100vh; position:relative; overflow-x:hidden; }
+
+    /* Large, static paint blotches spanning sections */
+    body::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%;
+      height: 600vh; /* total scroll height */
       background-repeat: no-repeat;
-      background-attachment: scroll;
-      background-size: 100% 600%;
-      min-height: 100%;
-      height: 100%;
+      background-size: 100% 100vh;
+      background-image:
+        /* Blob 1: spans first two viewports */
+        radial-gradient(ellipse 1200px 900px at 40% 30%, rgba(0,179,159,0.08) 0%, transparent 60%),
+        /* Blob 2: spans viewports 2-4 */
+        radial-gradient(ellipse 1400px 1000px at 60% 60%, rgba(0,179,159,0.07) 0%, transparent 55%),
+        /* Blob 3: spans viewports 4-6 */
+        radial-gradient(ellipse 1300px 950px at 30% 80%, rgba(0,179,159,0.06) 0%, transparent 65%),
+        /* Blob 4: lower-mid spanning viewports 3-5 */
+        radial-gradient(ellipse 1100px 850px at 75% 40%, rgba(0,179,159,0.05) 0%, transparent 70%);
+      background-position:
+        0 0vh,
+        0 200vh,
+        0 400vh,
+        0 100vh;
+      z-index: -1;
     }
-    
-    body {
-      background: transparent;
-      min-height: 100vh;
-      height: auto;
+
+    /* Gentle overlay texture */
+    body::after {
+      content:'';
+      position:fixed; top:0; left:0;
+      width:100%; height:100%;
+      background:
+        radial-gradient(circle 200px at 90% 10%, rgba(0,179,159,0.03) 0%, transparent 50%),
+        radial-gradient(circle 150px at 10% 90%, rgba(0,179,159,0.02) 0%, transparent 50%);
+      pointer-events:none;
+      z-index:-1;
     }
-    section { min-height: 100vh; display: flex; align-items: center; padding: 4rem 15vw; }
-    #hero { padding-top: 6rem; }
-    .content { flex: 1 1 40%; max-width: 40%; text-align: left; }
-    .image { flex: 1 1 50%; display: flex; justify-content: center; }
-    .image img { width: 60%; border-radius: 16px; box-shadow: 0 4px 16px rgba(0,0,0,0.1); }
-    h1 { font-size: clamp(2.5rem, 5vw, 4rem); margin-bottom: 1rem; line-height: 1.2; }
-    h2 { font-size: clamp(1.75rem, 3vw, 2.5rem); margin-bottom: 0.75rem; line-height: 1.3; color: var(--accent); }
-    p { font-size: 1.125rem; line-height: 1.6; }
-    .btn { display: inline-block; margin-top: 2rem; padding: 0.75rem 1.5rem; background: var(--accent); color: #fff; text-decoration: none; border-radius: 8px; font-weight: 700; transition: opacity .25s; }
-    .btn:hover { opacity: 0.85; }
-    .header {
-      position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      padding: 1.5rem 15vw;
-      display: flex;
-      align-items: center;
-      gap: 0.75rem;
-      z-index: 10;
-      background: rgba(255,255,255,0.05);
-      backdrop-filter: blur(10px);
-      border-bottom: 1px solid rgba(255,255,255,0.1);
-    }
-    
-    .logo-placeholder {
-      width: 32px;
-      height: 32px;
-      background: var(--accent);
-      border-radius: 8px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: white;
-      font-weight: bold;
-      font-size: 14px;
-    }
-    
-    .app-name {
-      font-size: 1.25rem;
-      font-weight: 700;
-      color: var(--text);
-    }
-    
-    .cta-strip { 
-      background: rgba(255,255,255,0.05); 
-      backdrop-filter: blur(10px);
-      text-align: center; 
-      padding: 3rem 2rem; 
-      border-top: 1px solid rgba(255,255,255,0.1);
-      position: relative;
-      z-index: 1;
-    }
-    @media (max-width: 820px) {
-      section { flex-direction: column; }
-      .content, .image { max-width: 100%; text-align: center; }
-      .image { margin-top: 2rem; }
+
+    section { min-height:100vh; display:flex; align-items:center; justify-content:center; padding:8vh 6vw; }
+    .container { max-width:1040px; width:100%; display:flex; gap:4rem; flex-wrap:wrap; }
+    h1,h2 { margin:0; line-height:1.1; }
+    h1 { font-size:clamp(2.5rem,4vw+1rem,4rem); font-weight:700; }
+    h2 { font-size:clamp(1.75rem,2.2vw+1rem,2.5rem); font-weight:700; color:var(--col-accent); }
+    p { font-size:1.125rem; margin-top:0.75rem; max-width:560px; }
+
+    /* Hero */
+    .hero .container { flex-direction:column; text-align:center; align-items:center; }
+    .store-btn { margin-top:2.5rem; display:inline-block; padding:0.85rem 2.25rem; background:var(--col-accent); color:#fff; border-radius:8px; text-decoration:none; font-weight:700; transition:opacity .25s; }
+    .store-btn:hover { opacity:.85; }
+
+    /* Features */
+    .feature { flex-direction:row; }
+    .feature:nth-of-type(even) { flex-direction:row-reverse; }
+    .text-col { flex:1 1 45%; }
+    .img-col { flex:1 1 45%; display:flex; align-items:center; justify-content:center; }
+    .device-frame { width:clamp(240px,30vw,340px); aspect-ratio:9/19.5; border:8px solid #fff; border-radius:28px; box-shadow:0 4px 16px rgba(0,0,0,.15); background:#000 url("https://dummyimage.com/640x1336/ffffff/000000&text=Screenshot") center/cover no-repeat; }
+
+    /* Privacy card */
+    .privacy { flex-direction:column; background:rgba(255,255,255,0.65); backdrop-filter:blur(6px); border-radius:24px; padding:4rem 6vw; text-align:center; }
+
+    /* CTA */
+    .cta { text-align:center; }
+
+    @media(max-width:820px) {
+      .feature { flex-direction:column !important; }
+      .text-col, .img-col { flex:1 1 100%; text-align:center; }
+      .img-col { margin-top:2rem; }
     }
   </style>
 </head>
 <body>
-  <!-- Header -->
-  <header class="header">
-    <div class="logo-placeholder">N</div>
-    <div class="app-name">Nexst</div>
-  </header>
-  
-  <!-- Hero Section -->
-  <section id="hero">
-    <div class="content">
+  <section class="hero">
+    <div class="container">
       <h1>Know Your Nexst Step.</h1>
-      <p>From symptom record to doctor-ready plan—right on your phone.</p>
-      <a href="#" class="btn">Download on the App Store</a>
-    </div>
-    <div class="image">
-      <img src="https://via.placeholder.com/300x600" alt="App hero mockup">
+      <p>From symptom record to doctor‑ready plan — right on your phone.</p>
+      <a class="store-btn" href="#">Download on the App Store</a>
     </div>
   </section>
 
-  <!-- Feature: Capture -->
   <section>
-    <div class="image">
-      <img src="https://via.placeholder.com/300x600" alt="Capture feature mockup">
-    </div>
-    <div class="content">
-      <h2>Tap. Talk. Logged.</h2>
-      <p>Record symptoms hands-free in seconds—Nexst transcribes and timestamps automatically.</p>
+    <div class="container feature">
+      <div class="text-col">
+        <h2>Tap. Talk. Logged.</h2>
+        <p>Record symptoms hands‑free in seconds—Nexst transcribes and timestamps automatically.</p>
+      </div>
+      <div class="img-col"><div class="device-frame"></div></div>
     </div>
   </section>
 
-  <!-- Feature: Decode -->
   <section>
-    <div class="image">
-      <img src="https://via.placeholder.com/300x600" alt="Decode feature mockup">
-    </div>
-    <div class="content">
-      <h2>Patterns, Not Guesswork.</h2>
-      <p>On-device AI spots trends and severity you might miss—no cloud processing required.</p>
+    <div class="container feature">
+      <div class="text-col">
+        <h2>Patterns, Not Guesswork.</h2>
+        <p>On‑device AI spots trends and severity you might miss—no cloud processing required.</p>
+      </div>
+      <div class="img-col"><div class="device-frame"></div></div>
     </div>
   </section>
 
-  <!-- Feature: Act -->
   <section>
-    <div class="image">
-      <img src="https://via.placeholder.com/300x600" alt="Act feature mockup">
-    </div>
-    <div class="content">
-      <h2>Always Walk In Ready.</h2>
-      <p>Nexst writes your priority questions and next-step checklist—so appointments are all signal, no scramble.</p>
+    <div class="container feature">
+      <div class="text-col">
+        <h2>Always Walk In Ready.</h2>
+        <p>Nexst writes your priority questions and next‑step checklist—so appointments are all signal, no scramble.</p>
+      </div>
+      <div class="img-col"><div class="device-frame"></div></div>
     </div>
   </section>
 
-  <!-- Privacy Section -->
   <section>
-    <div class="image">
-      <img src="https://via.placeholder.com/300x600" alt="Privacy feature mockup">
-    </div>
-    <div class="content">
+    <div class="container privacy">
       <h2>Your Data Stays With You.</h2>
-      <p>Everything you log is end-to-end encrypted and processed locally. You choose what to share.</p>
+      <p>Everything you log is end‑to‑end encrypted and processed locally. You choose if, when, and what to share.</p>
     </div>
   </section>
 
-  <!-- Final CTA Strip -->
-  <div class="cta-strip">
-    <h2>Ready to take your next step?</h2>
-    <a href="#" class="btn">Download Nexst for iPhone</a>
-  </div>
+  <section class="cta" style="padding-bottom:8rem;">
+    <div class="container" style="flex-direction:column;">
+      <h2>Ready to take your next step?</h2>
+      <a class="store-btn" href="#">Get Nexst for iPhone</a>
+      <p style="margin-top:1.5rem; font-size:1rem;">Or <a href="#" style="color:var(--col-accent); text-decoration:underline;">join our TestFlight beta</a> to shape future features.</p>
+    </div>
+  </section>
 </body>
 </html>
