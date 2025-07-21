@@ -18,18 +18,18 @@
     html { height: auto; }
     html {
       background-image:
-        /* vibrant green blend */
-        radial-gradient(circle at 15% 25%, rgba(0,179,159,0.4) 0%, transparent 70%),
+        /* main app green - emphasized */
+        radial-gradient(circle at 20% 30%, rgba(0,179,159,0.5) 0%, transparent 60%),
+        /* secondary green accent */
+        radial-gradient(circle at 80% 25%, rgba(0,179,159,0.3) 0%, transparent 55%),
         /* soft lavender tech */
-        radial-gradient(circle at 85% 20%, rgba(178,152,255,0.35) 0%, transparent 65%),
+        radial-gradient(circle at 85% 20%, rgba(178,152,255,0.25) 0%, transparent 65%),
         /* warm orange accent */
-        radial-gradient(circle at 25% 65%, rgba(255,188,117,0.4) 0%, transparent 60%),
+        radial-gradient(circle at 25% 65%, rgba(255,188,117,0.35) 0%, transparent 60%),
         /* deep blue blend */
-        radial-gradient(circle at 75% 80%, rgba(100,150,255,0.3) 0%, transparent 55%),
-        /* soft pink touch */
-        radial-gradient(circle at 90% 60%, rgba(255,150,200,0.25) 0%, transparent 50%),
-        /* mint green echo */
-        radial-gradient(circle at 10% 85%, rgba(120,200,150,0.3) 0%, transparent 45%);
+        radial-gradient(circle at 75% 80%, rgba(100,150,255,0.25) 0%, transparent 55%),
+        /* mint green echo - emphasized */
+        radial-gradient(circle at 10% 85%, rgba(0,179,159,0.4) 0%, transparent 45%);
       background-repeat: no-repeat;
       background-attachment: scroll;
       background-size: 100% 400%;
@@ -42,8 +42,8 @@
       min-height: 100vh;
       height: auto;
     }
-    section { min-height: 100vh; display: flex; align-items: center; padding: 4rem 6vw; }
-    .content { flex: 1 1 40%; max-width: 40%; }
+    section { min-height: 100vh; display: flex; align-items: center; padding: 4rem 15vw; }
+    .content { flex: 1 1 40%; max-width: 40%; text-align: left; }
     .image { flex: 1 1 50%; display: flex; justify-content: center; }
     .image img { width: 60%; border-radius: 16px; box-shadow: 0 4px 16px rgba(0,0,0,0.1); }
     h1 { font-size: clamp(2.5rem, 5vw, 4rem); margin-bottom: 1rem; line-height: 1.2; }
@@ -82,34 +82,34 @@
 
   <!-- Feature: Capture -->
   <section>
+    <div class="image">
+      <img src="https://via.placeholder.com/300x600" alt="Capture feature mockup">
+    </div>
     <div class="content">
       <h2>Tap. Talk. Logged.</h2>
       <p>Record symptoms hands-free in seconds—Nexst transcribes and timestamps automatically.</p>
-    </div>
-    <div class="image">
-      <img src="https://via.placeholder.com/300x600" alt="Capture feature mockup">
     </div>
   </section>
 
   <!-- Feature: Decode -->
   <section>
+    <div class="image">
+      <img src="https://via.placeholder.com/300x600" alt="Decode feature mockup">
+    </div>
     <div class="content">
       <h2>Patterns, Not Guesswork.</h2>
       <p>On-device AI spots trends and severity you might miss—no cloud processing required.</p>
-    </div>
-    <div class="image">
-      <img src="https://via.placeholder.com/300x600" alt="Decode feature mockup">
     </div>
   </section>
 
   <!-- Feature: Act -->
   <section>
+    <div class="image">
+      <img src="https://via.placeholder.com/300x600" alt="Act feature mockup">
+    </div>
     <div class="content">
       <h2>Always Walk In Ready.</h2>
       <p>Nexst writes your priority questions and next-step checklist—so appointments are all signal, no scramble.</p>
-    </div>
-    <div class="image">
-      <img src="https://via.placeholder.com/300x600" alt="Act feature mockup">
     </div>
   </section>
 
