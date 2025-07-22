@@ -26,26 +26,32 @@
       position:relative;
       overflow-x:hidden;
     }
-    /* Single static oversized blobs spanning main sections */
+    /* Bold color shift background spanning entire page */
     body::before {
       content:'';
       position:absolute;
       top:0;
-      left:50%;
-      width:250vw;
+      left:0;
+      width:100%;
       height:600vh;
-      transform:translateX(-50%);
       background:
-        /* Blob 1 */
-        radial-gradient(circle at 30% 10%, rgba(0,179,159,0.45) 0%, transparent 40%),
-        /* Blob 2 */
-        radial-gradient(circle at 75% 25%, rgba(178,152,255,0.40) 0%, transparent 45%),
-        /* Blob 3 */
-        radial-gradient(circle at 20% 50%, rgba(255,188,117,0.35) 0%, transparent 50%),
-        /* Blob 4 */
-        radial-gradient(circle at 80% 70%, rgba(100,150,255,0.38) 0%, transparent 50%);
+        /* Main app green - bold */
+        linear-gradient(135deg, rgba(0,179,159,0.8) 0%, rgba(0,179,159,0.6) 15%, transparent 30%),
+        /* Secondary teal */
+        linear-gradient(45deg, rgba(0,200,180,0.7) 10%, rgba(0,200,180,0.5) 25%, transparent 40%),
+        /* Warm coral accent */
+        linear-gradient(225deg, rgba(255,140,100,0.75) 20%, rgba(255,140,100,0.55) 35%, transparent 50%),
+        /* Soft lavender */
+        linear-gradient(315deg, rgba(178,152,255,0.7) 30%, rgba(178,152,255,0.5) 45%, transparent 60%),
+        /* Deep blue */
+        linear-gradient(90deg, rgba(100,150,255,0.65) 40%, rgba(100,150,255,0.45) 55%, transparent 70%),
+        /* Mint green */
+        linear-gradient(180deg, rgba(120,200,150,0.6) 50%, rgba(120,200,150,0.4) 65%, transparent 80%),
+        /* Peach accent */
+        linear-gradient(270deg, rgba(255,180,140,0.55) 60%, rgba(255,180,140,0.35) 75%, transparent 90%);
       background-repeat:no-repeat;
-      background-size:cover;
+      background-size:100% 100vh;
+      background-attachment:scroll;
       z-index:-1;
     }
 
