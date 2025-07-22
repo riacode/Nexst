@@ -194,7 +194,7 @@ const styles = StyleSheet.create({
     width: '100%',
   },
   gotItButton: {
-    backgroundColor: '#00b4d8',
+    backgroundColor: '#00B39F',
     paddingVertical: 12,
     paddingHorizontal: 20,
     borderRadius: 8,

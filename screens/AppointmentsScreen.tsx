@@ -450,7 +450,7 @@ const styles = StyleSheet.create({
     padding: 20,
   },
   modalContent: {
-    backgroundColor: '#111111',
+    backgroundColor: '#ffffff',
     borderRadius: 20,
     padding: 24,
     width: '100%',
@@ -460,7 +460,7 @@ const styles = StyleSheet.create({
     shadowRadius: 20,
     elevation: 10,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.1)',
+    borderColor: '#E2E8F0',
   },
   modalHeader: {
     flexDirection: 'row',
@@ -470,7 +470,7 @@ const styles = StyleSheet.create({
   },
   modalTitle: {
     ...fontStyles.h3,
-    color: '#ffffff',
+    color: '#1e293b',
   },
   modalClose: {
     ...fontStyles.button,
@@ -488,10 +488,10 @@ const styles = StyleSheet.create({
     marginRight: 8,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.1)',
+    borderColor: '#E2E8F0',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: 'rgba(255, 255, 255, 0.02)',
+    backgroundColor: '#F7FAFC',
   },
   cancelButtonText: {
     ...fontStyles.button,

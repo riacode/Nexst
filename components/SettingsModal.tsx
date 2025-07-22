@@ -463,7 +463,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#f1f5f9',
   },
   frequencyButtonActive: {
-    backgroundColor: '#00b4d8',
+    backgroundColor: '#00B39F',
   },
   frequencyText: {
     fontSize: 14,

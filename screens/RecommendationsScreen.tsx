@@ -392,7 +392,7 @@ const styles = StyleSheet.create({
     fontWeight: '400',
   },
   recommendationCard: {
-    backgroundColor: '#1a1a1a',
+    backgroundColor: '#ffffff',
     borderRadius: 16,
     padding: 20,
     marginBottom: 16,
@@ -427,7 +427,7 @@ const styles = StyleSheet.create({
   },
   problemTitle: {
     ...fontStyles.h3,
-    color: '#ffffff',
+    color: '#1e293b',
     marginBottom: 8,
   },
   problemTitleCompleted: {
@@ -438,7 +438,7 @@ const styles = StyleSheet.create({
   },
   problemDescription: {
     ...fontStyles.body,
-    color: '#cccccc',
+    color: '#64748b',
     lineHeight: 22,
   },
   problemDescriptionCompleted: {
@@ -454,7 +454,7 @@ const styles = StyleSheet.create({
   },
   solutionsTitle: {
     ...fontStyles.h3,
-    color: '#ffffff',
+    color: '#1e293b',
     marginBottom: 12,
     fontWeight: '600',
   },
@@ -462,11 +462,11 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   actionItem: {
-    backgroundColor: '#2a2a2a',
+    backgroundColor: '#F7FAFC',
     borderRadius: 12,
     padding: 16,
     borderWidth: 1,
-    borderColor: '#404040',
+    borderColor: '#E2E8F0',
   },
   actionItemCompleted: {
     backgroundColor: '#f0fdf4',
@@ -479,7 +479,7 @@ const styles = StyleSheet.create({
   },
   actionItemTitle: {
     ...fontStyles.bodyMedium,
-    color: '#ffffff',
+    color: '#1e293b',
     flex: 1,
     marginLeft: 12,
     fontWeight: '600',
@@ -489,7 +489,7 @@ const styles = StyleSheet.create({
   },
   actionItemDescription: {
     ...fontStyles.body,
-    color: '#cccccc',
+    color: '#64748b',
     marginLeft: 32,
     lineHeight: 20,
   },
@@ -503,12 +503,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   checkboxCompleted: {
-    backgroundColor: '#10b981',
-    borderColor: '#10b981',
+    backgroundColor: '#00B39F',
+    borderColor: '#00B39F',
   },
   completedDate: {
     ...fontStyles.caption,
-    color: '#10b981',
+    color: '#00B39F',
     marginLeft: 32,
     fontWeight: '500',
   },

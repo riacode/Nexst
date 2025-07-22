@@ -202,7 +202,7 @@ export default function RecordingDetailScreen({ route, navigation }: any) {
         {/* Appointment Info */}
         <View style={styles.recordingCard}>
           <View style={styles.recordingHeader}>
-            <Ionicons name="mic" size={32} color="#00b4d8" />
+            <Ionicons name="mic" size={32} color="#00B39F" />
             <Text style={styles.recordingTitle}>Symptom Recording</Text>
           </View>
           
@@ -260,7 +260,7 @@ export default function RecordingDetailScreen({ route, navigation }: any) {
                   style={styles.restartButton} 
                   onPress={restartPlayback}
                 >
-                  <Ionicons name="refresh" size={20} color="#00b4d8" />
+                  <Ionicons name="refresh" size={20} color="#00B39F" />
                 </TouchableOpacity>
               )}
             </View>
@@ -358,7 +358,7 @@ const styles = StyleSheet.create({
     width: 64,
     height: 64,
     borderRadius: 32,
-    backgroundColor: '#00b4d8',
+    backgroundColor: '#00B39F',
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 16,
@@ -394,7 +394,7 @@ const styles = StyleSheet.create({
   },
   errorText: {
     ...fontStyles.caption,
-    color: '#ef4444',
+    color: 'rgb(231, 151, 110)',
     marginLeft: 6,
     flex: 1,
   },

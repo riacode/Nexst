@@ -163,7 +163,7 @@ export default function AppointmentDetailScreen({ route, navigation }: Appointme
         {/* Appointment Info */}
         <View style={styles.appointmentCard}>
           <View style={styles.appointmentHeader}>
-            <Ionicons name="calendar" size={32} color="#00b4d8" />
+            <Ionicons name="calendar" size={32} color="#00B39F" />
                       <Text style={styles.appointmentTitle}>{appointmentWithDates.title}</Text>
         </View>
         <Text style={styles.appointmentDate}>
@@ -225,7 +225,7 @@ export default function AppointmentDetailScreen({ route, navigation }: Appointme
                     }
                   ]}
                 >
-                  <Ionicons name="sync" size={24} color="#00b4d8" />
+                  <Ionicons name="sync" size={24} color="#00B39F" />
                 </Animated.View>
                 <Text style={styles.loadingText}>Generating personalized questions...</Text>
                 <Text style={styles.loadingSubtext}>Analyzing your symptoms and appointment details</Text>
@@ -299,7 +299,7 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     elevation: 4,
     borderLeftWidth: 4,
-    borderLeftColor: '#00b4d8',
+    borderLeftColor: '#00B39F',
   },
   appointmentHeader: {
     flexDirection: 'row',
@@ -403,7 +403,7 @@ const styles = StyleSheet.create({
     width: 24,
     height: 24,
     borderRadius: 12,
-    backgroundColor: '#00b4d8',
+    backgroundColor: '#00B39F',
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 12,
