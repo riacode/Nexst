@@ -90,11 +90,11 @@ export const generateSummary = async (transcript: string): Promise<string> => {
       messages: [
         {
           role: 'system',
-          content: 'You are a healthcare assistant. Summarize patient symptoms in exactly 5 words or less. Focus on the main symptoms or concerns, but since the patient is reading this summary, make sure it is empathetic. If the user mentions good things as well, include that as well (not just negative things).Be concise and medical but understandable.'
+          content: 'You are a comprehensive healthcare assistant. Summarize patient health concerns in exactly 5 words or less. Focus on the main health issue (symptoms, injuries, mental health, stress, etc.), but since the patient is reading this summary, make sure it is empathetic. If the user mentions good things as well, include that as well (not just negative things). Be concise and medical but understandable.'
         },
         {
           role: 'user',
-          content: `Summarize this patient symptom description in exactly 5 words or less: "${transcript}"`
+          content: `Summarize this patient health concern description in exactly 5 words or less: "${transcript}"`
         }
       ],
       max_tokens: 20,
@@ -234,7 +234,51 @@ const hasHealthConcerns = (transcript: string): boolean => {
     'hearing problems', 'ringing in ears', 'ear pain', 'ear infection',
     'dental pain', 'toothache', 'gum problems', 'mouth sores',
     'skin problems', 'acne', 'eczema', 'psoriasis', 'mole changes',
-    'lump', 'bump', 'growth', 'tumor', 'cancer', 'cancerous'
+    'lump', 'bump', 'growth', 'tumor', 'cancer', 'cancerous',
+    
+    // Injuries and trauma
+    'injury', 'injured', 'sprain', 'strain', 'fracture', 'broken', 'dislocation',
+    'concussion', 'whiplash', 'burn', 'scald', 'frostbite', 'heat stroke',
+    'dehydration', 'sunburn', 'blister', 'callus', 'corn', 'bunion',
+    
+    // Bug bites and stings
+    'bug bite', 'insect bite', 'mosquito bite', 'tick bite', 'bee sting', 'wasp sting',
+    'spider bite', 'snake bite', 'allergic reaction', 'anaphylaxis', 'hives',
+    
+    // Mental health and emotional
+    'mental health', 'emotional', 'mood', 'irritable', 'angry', 'frustrated',
+    'lonely', 'isolated', 'grief', 'loss', 'trauma', 'ptsd', 'ocd', 'adhd',
+    'bipolar', 'manic', 'suicidal', 'self-harm', 'eating disorder', 'body image',
+    
+    // Physical symptoms and conditions
+    'allergy', 'asthma', 'diabetes', 'hypertension', 'arthritis', 'fibromyalgia',
+    'migraine', 'cluster headache', 'tension headache', 'sinus', 'bronchitis',
+    'pneumonia', 'flu', 'cold', 'covid', 'mono', 'strep throat', 'tonsillitis',
+    'appendicitis', 'gallbladder', 'kidney stone', 'uti', 'bladder infection',
+    'yeast infection', 'std', 'sti', 'pregnancy', 'miscarriage', 'menopause',
+    
+    // Lifestyle and wellness concerns
+    'poor sleep', 'sleep deprived', 'jet lag', 'circadian rhythm', 'work stress',
+    'burnout', 'work-life balance', 'relationship stress', 'family stress',
+    'financial stress', 'caregiver stress', 'postpartum', 'baby blues',
+    'exercise injury', 'sports injury', 'workout pain', 'muscle soreness',
+    'stiffness', 'limited mobility', 'balance problems', 'coordination issues',
+    
+    // Environmental and occupational
+    'workplace injury', 'ergonomic', 'repetitive strain', 'carpal tunnel',
+    'eye strain', 'computer vision', 'back strain', 'lifting injury',
+    'chemical exposure', 'allergen', 'mold', 'dust', 'pollen', 'pet allergy',
+    'food allergy', 'food poisoning', 'intolerance', 'celiac', 'gluten',
+    
+    // Chronic conditions and management
+    'chronic pain', 'flare up', 'exacerbation', 'remission', 'relapse',
+    'medication side effect', 'drug interaction', 'withdrawal', 'addiction',
+    'substance abuse', 'alcohol', 'smoking', 'vaping', 'nicotine',
+    
+    // Preventive and monitoring
+    'check up', 'screening', 'preventive', 'vaccination', 'immunization',
+    'blood pressure', 'cholesterol', 'blood sugar', 'heart rate', 'pulse',
+    'temperature', 'oxygen', 'saturation', 'respiratory rate'
   ];
 
   const positiveKeywords = [
@@ -310,16 +354,17 @@ export const generateFollowUpQuestions = async (symptomLogs: SymptomLog[]): Prom
       `Date: ${log.timestamp.toLocaleDateString()}\nSummary: ${log.summary}\nDescription: ${log.transcript}`
     ).join('\n\n');
     
-    const prompt = `A patient mentioned "${primarySymptom.symptom}" but hasn't provided an update. Generate a gentle, supportive follow-up question to check if they're still experiencing this symptom.
+    const prompt = `A patient mentioned "${primarySymptom.symptom}" but hasn't provided an update. Generate a gentle, supportive follow-up question to check if they're still experiencing this health concern.
 
-SYMPTOM HISTORY:
+HEALTH HISTORY:
 ${logsText}
 
 GENERATE ONE FOLLOW-UP QUESTION that:
 1. Is gentle and supportive, not pushy
-2. Asks if they're still experiencing the symptom
+2. Asks if they're still experiencing the health concern
 3. Offers to help if they need it
 4. Uses warm, caring language
+5. Is appropriate for the type of health concern (physical, mental, injury, etc.)
 
 Format as a simple string, no JSON.`;
 
@@ -328,7 +373,7 @@ Format as a simple string, no JSON.`;
       messages: [
         {
           role: 'system',
-          content: 'You are a caring healthcare assistant. Generate gentle follow-up questions to check on unresolved symptoms. Be supportive and helpful.'
+          content: 'You are a caring healthcare assistant covering all health concerns. Generate gentle follow-up questions to check on unresolved health issues. Be supportive and helpful.'
         },
         {
           role: 'user',
@@ -467,20 +512,20 @@ export const generateRecommendations = async (
       `Date: ${log.timestamp.toLocaleDateString()} ${log.timestamp.toLocaleTimeString()}\nSummary: ${log.summary}\nFull description: ${log.transcript}`
     ).join('\n\n');
 
-    const prompt = `You are a supportive healthcare assistant. A patient has reported a health concern that may need attention.
+    const prompt = `You are a comprehensive healthcare assistant. A patient has reported a health concern that may need attention.
 
-PRIMARY SYMPTOM: ${primarySymptom.symptom}
+PRIMARY HEALTH CONCERN: ${primarySymptom.symptom}
 FREQUENCY: ${primarySymptom.frequency} times
 FIRST OCCURRENCE: ${primarySymptom.firstOccurrence.toLocaleDateString()}
 LAST OCCURRENCE: ${primarySymptom.lastOccurrence.toLocaleDateString()}
 
-RECENT SYMPTOM HISTORY:
+RECENT HEALTH HISTORY:
 ${logsText}
 
 CRITICAL REQUIREMENTS:
 1. Generate ONE supportive recommendation for "${primarySymptom.symptom}"
 2. Be helpful and informative, not alarming
-3. Focus on practical steps to address this specific symptom
+3. Focus on practical steps to address this specific health concern
 4. Provide clear, actionable guidance
 5. Only suggest medical evaluation if genuinely beneficial
 
@@ -490,13 +535,23 @@ TONE GUIDELINES:
 - Focus on practical solutions
 - Avoid medical jargon unless necessary
 
-SYMPTOM-SPECIFIC APPROACH:
-- **Headache**: Consider triggers, duration, severity, when to seek help
-- **Chest Pain**: Evaluate seriousness, when to get immediate attention
-- **Fever**: Consider duration, temperature, associated symptoms
-- **Abdominal Pain**: Consider location, severity, when to see a doctor
+COMPREHENSIVE HEALTH APPROACH:
+- **Physical Injuries**: Consider severity, mobility impact, when to seek care
+- **Bug Bites/Stings**: Consider allergic reactions, infection risk, when to worry
 - **Mental Health**: Consider impact on daily life, when to seek support
-- **Fatigue**: Consider duration, associated symptoms, impact on function
+- **Stress/Burnout**: Consider work-life balance, coping strategies, professional help
+- **Chronic Pain**: Consider triggers, management strategies, quality of life
+- **Sleep Issues**: Consider sleep hygiene, underlying causes, when to investigate
+- **Digestive Issues**: Consider diet, stress, when to see specialist
+- **Respiratory**: Consider severity, triggers, when to seek immediate care
+- **Skin Issues**: Consider infection risk, allergic reactions, when to see dermatologist
+- **Women's Health**: Consider hormonal factors, reproductive health, when to see OBGYN
+- **Men's Health**: Consider age-appropriate screenings, when to see urologist
+- **Pediatric**: Consider age-appropriate concerns, growth, development
+- **Geriatric**: Consider age-related changes, medication interactions, fall risk
+- **Occupational**: Consider workplace safety, ergonomics, workers' comp
+- **Environmental**: Consider allergen exposure, chemical sensitivity, air quality
+- **Lifestyle**: Consider exercise, diet, stress management, preventive care
 
 Format response as a SINGLE JSON object:
 {
@@ -527,7 +582,7 @@ Format response as a SINGLE JSON object:
       messages: [
         {
           role: 'system',
-          content: 'You are a focused healthcare assistant. Generate ONE specific, actionable recommendation for the primary symptom. Be direct and avoid generic wellness advice. Only suggest medical evaluation when genuinely needed for the specific symptom.'
+          content: 'You are a comprehensive healthcare assistant covering all health concerns - physical, mental, emotional, occupational, environmental, and lifestyle. Generate ONE specific, actionable recommendation for the primary health concern. Be direct and avoid generic wellness advice. Only suggest medical evaluation when genuinely needed for the specific health concern.'
         },
         {
           role: 'user',
@@ -597,6 +652,11 @@ export const generateAppointmentQuestions = async (
 3. Medication and supplement reviews
 4. Preventive screenings based on age/risk factors
 5. Lifestyle changes with biggest health impact
+6. Mental health and stress management
+7. Sleep quality and patterns
+8. Work-related health concerns
+9. Environmental health factors
+10. Chronic condition management
 
 Make questions specific and actionable, not generic. Format as a JSON array of strings.`;
 
@@ -631,30 +691,33 @@ Make questions specific and actionable, not generic. Format as a JSON array of s
       return [];
     }
 
-    // For sick visits with symptoms, generate highly specific questions
+    // For health visits with concerns, generate highly specific questions
     const symptomsText = symptoms.map(s => 
       `Date: ${s.timestamp.toLocaleDateString()}\nSummary: ${s.summary}\nDetails: ${s.transcript}`
     ).join('\n\n');
 
-    const prompt = `Generate 6-8 highly specific questions for a medical appointment based on the patient's symptoms. These should be questions that patients commonly FORGET to ask but are crucial for their specific situation.
+    const prompt = `Generate 6-8 highly specific questions for a medical appointment based on the patient's health concerns. These should be questions that patients commonly FORGET to ask but are crucial for their specific situation.
 
-PATIENT SYMPTOMS:
+PATIENT HEALTH CONCERNS:
 ${symptomsText}
 
 APPOINTMENT: ${appointmentTitle}
 APPOINTMENT DATE: ${appointmentDate.toLocaleDateString()}
 
 REQUIREMENTS:
-1. Questions must reference the patient's SPECIFIC symptoms
+1. Questions must reference the patient's SPECIFIC health concerns
 2. Focus on historically forgotten questions (not obvious ones)
 3. Include practical concerns about work, daily activities, medication management
 4. Ask about specific timelines, side effects, and follow-up needs
-5. Consider the patient's unique situation and symptoms
+5. Consider the patient's unique situation and health concerns
+6. Cover all types of health issues: physical, mental, emotional, occupational, environmental
 
 EXAMPLES OF GOOD QUESTIONS:
-- "Given my [specific symptom], could this affect my ability to [specific activity]?"
-- "With my [symptom pattern], what should I do if I miss a dose of medication?"
-- "How long should I expect [specific symptom] to last, and when should I worry?"
+- "Given my [specific health concern], could this affect my ability to [specific activity]?"
+- "With my [health concern pattern], what should I do if I miss a dose of medication?"
+- "How long should I expect [specific health concern] to last, and when should I worry?"
+- "Could my [work stress/mental health] be contributing to my [physical symptoms]?"
+- "What environmental factors should I consider with my [allergies/sensitivities]?"
 
 EXAMPLES OF BAD QUESTIONS:
 - "What are my symptoms?" (too generic)
@@ -662,10 +725,11 @@ EXAMPLES OF BAD QUESTIONS:
 - "What tests do I need?" (too broad)
 
 Generate questions that are:
-- Specific to the patient's symptoms
+- Specific to the patient's health concerns
 - Focused on practical daily life impact
 - About things patients commonly forget to ask
 - Actionable and time-sensitive
+- Comprehensive (physical, mental, environmental, occupational)
 
 Format as a JSON array of strings.`;
 
@@ -674,7 +738,7 @@ Format as a JSON array of strings.`;
       messages: [
         {
           role: 'system',
-          content: 'You are a healthcare assistant. Generate highly specific, personalized questions for medical appointments based on the patient\'s actual symptoms. Focus on questions patients commonly forget to ask.'
+          content: 'You are a comprehensive healthcare assistant. Generate highly specific, personalized questions for medical appointments based on the patient\'s actual health concerns. Focus on questions patients commonly forget to ask, covering all health aspects.'
         },
         {
           role: 'user',
