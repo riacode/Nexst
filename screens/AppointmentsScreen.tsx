@@ -251,6 +251,7 @@ export default function AppointmentsScreen({ navigation }: any) {
                       onChange={handleDateChange}
                       minimumDate={new Date()}
                       style={styles.inlinePicker}
+                      textColor="#1e293b"
                     />
                   </View>
                 </View>
@@ -264,6 +265,7 @@ export default function AppointmentsScreen({ navigation }: any) {
                       display="default"
                       onChange={handleTimeChange}
                       style={styles.inlinePicker}
+                      textColor="#1e293b"
                     />
                   </View>
                 </View>
@@ -395,14 +397,14 @@ const styles = StyleSheet.create({
 
   titleInput: {
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.1)',
+    borderColor: '#E2E8F0',
     borderRadius: 12,
     padding: 16,
     marginBottom: 20,
-    backgroundColor: 'rgba(255, 255, 255, 0.02)',
+    backgroundColor: '#ffffff',
     ...fontStyles.body,
     textAlign: 'center',
-    color: '#ffffff',
+    color: '#1e293b',
   },
   dateTimeContainer: {
     flexDirection: 'row',
@@ -415,9 +417,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.1)',
+    borderColor: '#E2E8F0',
     borderRadius: 12,
-    backgroundColor: 'rgba(255, 255, 255, 0.02)',
+    backgroundColor: '#ffffff',
     padding: 12,
   },
   dateTimeLabel: {
@@ -438,6 +440,7 @@ const styles = StyleSheet.create({
     borderWidth: 0,
     alignItems: 'center',
     justifyContent: 'center',
+    color: '#1e293b',
   },
 
 
