@@ -194,7 +194,7 @@ export default function OnboardingScreen({ navigation }: OnboardingScreenProps) 
               }}
             >
               <LinearGradient
-                colors={['#00b4d8', '#10b981']}
+                colors={['#00B39F', '#00B39F']}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 1 }}
                 style={styles.featureIcon}
@@ -222,8 +222,8 @@ export default function OnboardingScreen({ navigation }: OnboardingScreenProps) 
                 opacity: 0, // Hide the original icon
               }}
             >
-              <View style={[styles.featureIcon, { backgroundColor: '#e0f7ef' }]}>
-                <Ionicons name="bulb" size={32} color="#10b981" />
+              <View style={[styles.featureIcon, { backgroundColor: 'rgb(231, 151, 110)' }]}>
+                <Ionicons name="bulb" size={32} color="#ffffff" />
               </View>
             </Animated.View>
             <View style={styles.featureText}>
@@ -247,7 +247,7 @@ export default function OnboardingScreen({ navigation }: OnboardingScreenProps) 
               }}
             >
               <LinearGradient
-                colors={['#00b4d8', '#10b981']}
+                colors={['#00B39F', '#00B39F']}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 1 }}
                 style={styles.featureIcon}
@@ -276,7 +276,7 @@ export default function OnboardingScreen({ navigation }: OnboardingScreenProps) 
             }}
           >
             <LinearGradient
-              colors={['#00b4d8', '#10b981']}
+              colors={['#00B39F', '#00B39F']}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 1 }}
               style={styles.independentIcon}
@@ -293,8 +293,8 @@ export default function OnboardingScreen({ navigation }: OnboardingScreenProps) 
               zIndex: 10,
             }}
           >
-            <View style={[styles.independentIcon, { backgroundColor: '#e0f7ef' }]}>
-              <Ionicons name="bulb" size={32} color="#10b981" />
+            <View style={[styles.independentIcon, { backgroundColor: 'rgb(231, 151, 110)' }]}>
+              <Ionicons name="bulb" size={32} color="#ffffff" />
             </View>
           </Animated.View>
           <Animated.View
@@ -307,7 +307,7 @@ export default function OnboardingScreen({ navigation }: OnboardingScreenProps) 
             }}
           >
             <LinearGradient
-              colors={['#00b4d8', '#10b981']}
+              colors={['#00B39F', '#00B39F']}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 1 }}
               style={styles.independentIcon}
@@ -359,7 +359,7 @@ export default function OnboardingScreen({ navigation }: OnboardingScreenProps) 
             <Animated.View style={{ opacity: buttonOpacity }}>
               <TouchableOpacity onPress={handleGetStarted}>
                 <LinearGradient
-                  colors={['#00b4d8', '#10b981']}
+                  colors={['#00B39F', '#00B39F']}
                   start={{ x: 0, y: 0 }}
                   end={{ x: 1, y: 0 }}
                   style={styles.getStartedButton}
@@ -400,17 +400,17 @@ export default function OnboardingScreen({ navigation }: OnboardingScreenProps) 
     fontSize: 38,
     fontWeight: '900',
     letterSpacing: -1,
-    color: '#ffffff',
+    color: '#102A43',
   },
   tagline: {
     fontSize: 18,
-    color: '#888888',
+    color: '#102A43',
     textAlign: 'center',
     lineHeight: 24,
   },
   boldText: {
     fontWeight: '700',
-    color: '#ffffff',
+    color: '#00B39F',
   },
   taglineContainer: {
     alignItems: 'center',
@@ -418,11 +418,11 @@ export default function OnboardingScreen({ navigation }: OnboardingScreenProps) 
   },
   underlinedText: {
     fontWeight: '600',
-    color: '#ffffff',
+    color: '#102A43',
   },
   cursiveUnderline: {
     height: 2,
-    backgroundColor: '#00b4d8',
+    backgroundColor: '#00B39F',
     borderRadius: 1,
     marginTop: 4,
     alignSelf: 'center',
@@ -458,12 +458,12 @@ export default function OnboardingScreen({ navigation }: OnboardingScreenProps) 
   featureTitle: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#ffffff',
+    color: '#102A43',
     marginBottom: 4,
   },
   featureDescription: {
     fontSize: 14,
-    color: '#888888',
+    color: '#102A43',
     lineHeight: 20,
   },
   bottomSection: {
@@ -472,7 +472,7 @@ export default function OnboardingScreen({ navigation }: OnboardingScreenProps) 
   },
   bottomText: {
     fontSize: 16,
-    color: '#888888',
+    color: '#102A43',
     textAlign: 'center',
     lineHeight: 24,
     marginBottom: 2,
