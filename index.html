@@ -20,11 +20,7 @@
     html {
       background: none;
     }
-    body {
-      margin:0;
-      background-color:var(--bg);
-      position:relative;
-      overflow-x:hidden;
+    html {
       background-image:
         /* Main app green - bold */
         linear-gradient(135deg, rgba(0,179,159,0.8) 0%, rgba(0,179,159,0.6) 15%, transparent 30%),
@@ -43,6 +39,14 @@
       background-repeat: no-repeat;
       background-attachment: scroll;
       background-size: 100% 100%;
+      min-height: 100%;
+    }
+    
+    body {
+      margin:0;
+      background: transparent;
+      position:relative;
+      overflow-x:hidden;
     }
 
 
