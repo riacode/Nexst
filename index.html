@@ -52,7 +52,7 @@
 
     section { min-height:100vh; display:flex; align-items:center; padding:4rem 15vw; }
     #hero { padding-top:6rem; }
-    .content { flex:1 1 40%; max-width:40%; }
+    .content { flex:1 1 40%; max-width:40%; text-align: left; }
     .image { flex:1 1 50%; display:flex; justify-content:center; }
     .image img { width:60%; border-radius:16px; box-shadow:0 4px 16px rgba(0,0,0,0.1); }
     h1 { font-size:clamp(2.5rem,5vw,4rem); margin-bottom:1rem; line-height:1.2; }
@@ -82,13 +82,12 @@
 <body>
   <!-- Header -->
   <header class="header">
-    <div class="logo-placeholder">N</ndiv>
     <div class="app-name">Nexst</div>
   </header>
   <!-- Hero Section -->
   <section id="hero">
     <div class="content">
-      <h1>Know Your Nexst Step.</h1>
+      <h1>Know Your <span style="color: var(--accent); font-weight: 800;">Nexst</span> Step.</h1>
       <p>From symptom record to doctor-ready plan—right on your phone.</p>
       <a href="#" class="btn">Download on the App Store</a>
     </div>
@@ -96,33 +95,33 @@
   </section>
   <!-- Features -->
   <section>
+    <div class="image"><img src="https://via.placeholder.com/300x600" alt="Capture feature mockup"></div>
     <div class="content">
       <h2>Tap. Talk. Logged.</h2>
       <p>Record symptoms hands-free in seconds—Nexst transcribes and timestamps automatically.</p>
     </div>
-    <div class="image"><img src="https://via.placeholder.com/300x600" alt="Capture feature mockup"></div>
   </section>
   <section>
+    <div class="image"><img src="https://via.placeholder.com/300x600" alt="Decode feature mockup"></div>
     <div class="content">
       <h2>Patterns, Not Guesswork.</h2>
       <p>On-device AI spots trends and severity you might miss—no cloud processing required.</p>
     </div>
-    <div class="image"><img src="https://via.placeholder.com/300x600" alt="Decode feature mockup"></div>
   </section>
   <section>
+    <div class="image"><img src="https://via.placeholder.com/300x600" alt="Act feature mockup"></div>
     <div class="content">
       <h2>Always Walk In Ready.</h2>
       <p>Nexst writes your priority questions and next-step checklist—so appointments are all signal, no scramble.</p>
     </div>
-    <div class="image"><img src="https://via.placeholder.com/300x600" alt="Act feature mockup"></div>
   </section>
   <!-- Privacy -->
   <section>
+    <div class="image"><img src="https://via.placeholder.com/300x600" alt="Privacy feature mockup"></div>
     <div class="content">
       <h2>Your Data Stays With You.</h2>
       <p>Everything you log is end-to-end encrypted and processed locally. You choose what to share.</p>
     </div>
-    <div class="image"><img src="https://via.placeholder.com/300x600" alt="Privacy feature mockup"></div>
   </section>
   <!-- Final CTA Strip -->
   <div class="cta-strip">
