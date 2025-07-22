@@ -286,7 +286,7 @@ export default function AppointmentsScreen({ navigation }: any) {
       {/* These are now handled inline within the modal */}
       
       <LinearGradient
-        colors={['#00b4d8', '#10b981']}
+                        colors={['#00B39F', '#00B39F']}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         style={[styles.recordButton, appointments.length > 0 && styles.recordButtonSmall, { borderRadius: appointments.length > 0 ? 35 : 50 }]}
@@ -369,7 +369,7 @@ const styles = StyleSheet.create({
     shadowRadius: 4, 
     elevation: 2,
     borderLeftWidth: 4, 
-    borderLeftColor: '#00b4d8',
+            borderLeftColor: '#00B39F',
     borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.1)',
   },
@@ -474,7 +474,7 @@ const styles = StyleSheet.create({
   },
   modalClose: {
     ...fontStyles.button,
-    color: '#00b4d8',
+            color: '#00B39F',
   },
 
   pickerButtons: {
@@ -503,7 +503,7 @@ const styles = StyleSheet.create({
     padding: 16,
     marginLeft: 8,
     borderRadius: 12,
-    backgroundColor: '#00b4d8',
+    backgroundColor: '#00B39F',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -516,7 +516,7 @@ const styles = StyleSheet.create({
     position: 'absolute', 
     bottom: 24, 
     alignSelf: 'center',
-    backgroundColor: '#00b4d8', 
+    backgroundColor: '#00B39F', 
     width: 100, 
     height: 100, 
     borderRadius: 50,

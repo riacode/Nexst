@@ -193,7 +193,7 @@ export default function SettingsModal({
                 <Switch
                   value={notificationEnabled}
                   onValueChange={handleNotificationToggle}
-                  trackColor={{ false: '#e2e8f0', true: '#00b4d8' }}
+                  trackColor={{ false: '#e2e8f0', true: '#00B39F' }}
                   thumbColor={notificationEnabled ? '#ffffff' : '#f4f3f4'}
                 />
               </View>
@@ -256,7 +256,7 @@ export default function SettingsModal({
                 onPress={handleRestartApp}
               >
                 <View style={styles.optionIcon}>
-                  <Ionicons name="refresh-circle" size={24} color="#00b4d8" />
+                  <Ionicons name="refresh-circle" size={24} color="#00B39F" />
                 </View>
                 <View style={styles.optionContent}>
                   <Text style={styles.optionTitle}>Restart App</Text>
@@ -280,7 +280,7 @@ export default function SettingsModal({
                 onPress={onClearSymptomLogs}
               >
                 <View style={styles.optionIcon}>
-                  <Ionicons name="pulse" size={24} color="#ef4444" />
+                  <Ionicons name="pulse" size={24} color="#00B39F" />
                 </View>
                 <View style={styles.optionContent}>
                   <Text style={styles.optionTitle}>Clear All Symptom Logs</Text>
@@ -296,7 +296,7 @@ export default function SettingsModal({
                 onPress={onClearAppointments}
               >
                 <View style={styles.optionIcon}>
-                  <Ionicons name="calendar" size={24} color="#ef4444" />
+                  <Ionicons name="calendar" size={24} color="rgb(231, 151, 110)" />
                 </View>
                 <View style={styles.optionContent}>
                   <Text style={styles.optionTitle}>Clear All Appointments</Text>

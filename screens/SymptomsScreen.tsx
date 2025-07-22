@@ -294,7 +294,7 @@ export default function SymptomScreen({ navigation }: any) {
                 {activeAlert.recommendation.priority === 'HIGH' ? '🚨 ' : '💡 '}
                 {activeAlert.recommendation.title}
               </Text>
-              <Ionicons name="arrow-forward" size={16} color="#00b4d8" />
+              <Ionicons name="arrow-forward" size={16} color="#00B39F" />
             </TouchableOpacity>
           )}
           
@@ -339,7 +339,7 @@ export default function SymptomScreen({ navigation }: any) {
                   }
                 ]}
               >
-                <Ionicons name="sync" size={32} color="#00b4d8" />
+                <Ionicons name="sync" size={32} color="#00B39F" />
               </Animated.View>
               <Text style={styles.processingText}>Processing your recording...</Text>
             </View>
@@ -352,7 +352,7 @@ export default function SymptomScreen({ navigation }: any) {
               ]}
             >
               <LinearGradient
-                colors={['#00b4d8', '#10b981']}
+                colors={['#00B39F', '#00B39F']}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 1 }}
                 style={[styles.recordButtonInner, { borderRadius: symptomLogs.length > 0 ? 35 : 50 }]}
@@ -382,14 +382,14 @@ export default function SymptomScreen({ navigation }: any) {
       alert: {
         flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
         backgroundColor: '#e0f7ff', padding: 12, margin: 12, borderRadius: 8,
-        borderColor: '#00b4d8', borderWidth: 1,
+        borderColor: '#00B39F', borderWidth: 1,
       },
-      alertText: { flex: 1, color: '#00b4d8' },
+      alertText: { flex: 1, color: '#00B39F' },
       logsContainer: { padding: 12, paddingBottom: 140 },
       logCard: {
         backgroundColor: 'rgba(255, 255, 255, 0.02)', padding: 16, borderRadius: 12, marginBottom: 12,
         shadowColor: '#000', shadowOpacity: 0.08, shadowRadius: 6, elevation: 3,
-        borderLeftWidth: 4, borderLeftColor: '#00b4d8',
+        borderLeftWidth: 4, borderLeftColor: '#00B39F',
         borderWidth: 1, borderColor: 'rgba(255, 255, 255, 0.1)',
       },
       logHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 8 },
@@ -397,7 +397,7 @@ export default function SymptomScreen({ navigation }: any) {
       logTitle: { fontSize: 18, color: '#ffffff', fontWeight: '600' },
       recordButton: {
         position: 'absolute', bottom: 24, alignSelf: 'center',
-        backgroundColor: '#00b4d8', width: 100, height: 100, borderRadius: 50,
+        backgroundColor: '#00B39F', width: 100, height: 100, borderRadius: 50,
         justifyContent: 'center', alignItems: 'center',
         shadowColor: '#000', shadowOpacity: 0.2, shadowRadius: 8, elevation: 5,
       },

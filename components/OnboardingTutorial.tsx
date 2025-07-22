@@ -223,7 +223,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#e2e8f0',
   },
   progressDotActive: {
-    backgroundColor: '#00b4d8',
+    backgroundColor: '#00B39F',
     width: 24,
   },
   scrollView: {
@@ -297,14 +297,14 @@ const styles = StyleSheet.create({
   nextButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#00b4d8',
+    backgroundColor: '#00B39F',
     paddingVertical: 16,
     paddingHorizontal: 24,
     borderRadius: 12,
     gap: 8,
   },
   completeButton: {
-    backgroundColor: '#10b981',
+    backgroundColor: 'rgb(231, 151, 110)',
   },
   nextButtonText: {
     ...fontStyles.button,

@@ -19,10 +19,10 @@ export default function RecommendationsScreen({ route, navigation }: any) {
 
   const getPriorityColor = (priority: string) => {
     switch (priority) {
-      case 'HIGH': return '#ef4444';
-      case 'MEDIUM': return '#00b4d8';
-      case 'LOW': return '#10b981';
-      default: return '#6b7280';
+        case 'HIGH': return '#00B39F';
+  case 'MEDIUM': return '#00B39F';
+  case 'LOW': return 'rgb(231, 151, 110)';
+  default: return '#6b7280';
     }
   };
 
@@ -156,7 +156,7 @@ export default function RecommendationsScreen({ route, navigation }: any) {
         <Ionicons 
           name={getActionTypeIcon(action.type)} 
           size={20} 
-          color={action.isCompleted ? '#10b981' : '#6b7280'} 
+          color={action.isCompleted ? '#00B39F' : '#6b7280'} 
         />
         <Text style={[
           styles.actionItemTitle,
@@ -267,7 +267,7 @@ export default function RecommendationsScreen({ route, navigation }: any) {
       {/* Status info */}
       {recommendation.isCompleted && recommendation.completedAt && (
         <View style={styles.completedInfo}>
-          <Ionicons name="checkmark-circle" size={16} color="#10b981" />
+          <Ionicons name="checkmark-circle" size={16} color="#00B39F" />
           <Text style={styles.completedText}>
             Completed on {recommendation.completedAt.toLocaleDateString()}
           </Text>
@@ -276,7 +276,7 @@ export default function RecommendationsScreen({ route, navigation }: any) {
 
       {recommendation.isCancelled && recommendation.cancelledAt && (
         <View style={styles.cancelledInfo}>
-          <Ionicons name="close-circle" size={16} color="#ef4444" />
+          <Ionicons name="close-circle" size={16} color="rgb(231, 151, 110)" />
           <Text style={styles.cancelledText}>
             Cancelled on {recommendation.cancelledAt.toLocaleDateString()}
           </Text>
@@ -401,14 +401,14 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     elevation: 4,
     borderLeftWidth: 4,
-    borderLeftColor: '#00b4d8',
+    borderLeftColor: '#00B39F',
   },
   recommendationCardCompleted: {
-    borderLeftColor: '#10b981',
+    borderLeftColor: '#00B39F',
     opacity: 0.7,
   },
   recommendationCardCancelled: {
-    borderLeftColor: '#ef4444',
+    borderLeftColor: 'rgb(231, 151, 110)',
     opacity: 0.7,
   },
   
@@ -431,10 +431,10 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   problemTitleCompleted: {
-    color: '#10b981',
+    color: '#00B39F',
   },
   problemTitleCancelled: {
-    color: '#ef4444',
+    color: 'rgb(231, 151, 110)',
   },
   problemDescription: {
     ...fontStyles.body,
@@ -442,10 +442,10 @@ const styles = StyleSheet.create({
     lineHeight: 22,
   },
   problemDescriptionCompleted: {
-    color: '#10b981',
+    color: '#00B39F',
   },
   problemDescriptionCancelled: {
-    color: '#ef4444',
+    color: 'rgb(231, 151, 110)',
   },
   
   // Solutions Section
@@ -470,7 +470,7 @@ const styles = StyleSheet.create({
   },
   actionItemCompleted: {
     backgroundColor: '#f0fdf4',
-    borderColor: '#10b981',
+    borderColor: '#00B39F',
   },
   actionItemHeader: {
     flexDirection: 'row',
@@ -485,7 +485,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   actionItemTitleCompleted: {
-    color: '#10b981',
+    color: '#00B39F',
   },
   actionItemDescription: {
     ...fontStyles.body,
@@ -520,7 +520,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#f0f9ff',
     borderRadius: 8,
     borderLeftWidth: 3,
-    borderLeftColor: '#00b4d8',
+    borderLeftColor: '#00B39F',
   },
   whyTitle: {
     ...fontStyles.bodyMedium,
@@ -544,7 +544,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#10b981',
+    backgroundColor: '#00B39F',
     paddingVertical: 12,
     paddingHorizontal: 16,
     borderRadius: 8,
@@ -570,7 +570,7 @@ const styles = StyleSheet.create({
   },
   cancelButtonText: {
     ...fontStyles.bodyMedium,
-    color: '#ef4444',
+    color: 'rgb(231, 151, 110)',
     fontWeight: '600',
   },
   
@@ -598,7 +598,7 @@ const styles = StyleSheet.create({
   },
   completedText: {
     ...fontStyles.body,
-    color: '#10b981',
+    color: '#00B39F',
     fontWeight: '500',
   },
   cancelledInfo: {
@@ -611,12 +611,12 @@ const styles = StyleSheet.create({
   },
   cancelledText: {
     ...fontStyles.body,
-    color: '#ef4444',
+    color: 'rgb(231, 151, 110)',
     fontWeight: '500',
   },
   cancelledReason: {
     ...fontStyles.caption,
-    color: '#ef4444',
+    color: 'rgb(231, 151, 110)',
     marginTop: 4,
   },
   

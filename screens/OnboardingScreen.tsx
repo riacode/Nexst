@@ -139,7 +139,7 @@ export default function OnboardingScreen({ navigation }: OnboardingScreenProps) 
                 {
                   shadowColor: logoGlowAnim.interpolate({
                     inputRange: [0, 0.5, 1],
-                    outputRange: ['#00b4d8', '#10b981', '#00b4d8'],
+                    outputRange: ['#00B39F', '#00B39F', '#00B39F'],
                   }),
                   shadowOpacity: logoGlowAnim.interpolate({
                     inputRange: [0, 1],
@@ -153,11 +153,11 @@ export default function OnboardingScreen({ navigation }: OnboardingScreenProps) 
               ]}
             >
               <Text style={styles.logoText}>
-                <Text style={[styles.logoText, { color: '#00b4d8' }]}>N</Text>
-                <Text style={[styles.logoText, { color: '#00b4d8' }]}>e</Text>
-                <Text style={[styles.logoText, { color: '#00b4d8' }]}>x</Text>
-                <Text style={[styles.logoText, { color: '#10b981' }]}>s</Text>
-                <Text style={[styles.logoText, { color: '#10b981' }]}>t</Text>
+                        <Text style={[styles.logoText, { color: '#00B39F' }]}>N</Text>
+        <Text style={[styles.logoText, { color: '#00B39F' }]}>e</Text>
+        <Text style={[styles.logoText, { color: '#00B39F' }]}>x</Text>
+        <Text style={[styles.logoText, { color: 'rgb(231, 151, 110)' }]}>s</Text>
+        <Text style={[styles.logoText, { color: 'rgb(231, 151, 110)' }]}>t</Text>
               </Text>
             </Animated.View>
           </View>
@@ -491,7 +491,7 @@ export default function OnboardingScreen({ navigation }: OnboardingScreenProps) 
     paddingHorizontal: 32,
     paddingVertical: 16,
     borderRadius: 12,
-    shadowColor: '#00b4d8',
+    shadowColor: '#00B39F',
     shadowOffset: {
       width: 0,
       height: 4,
@@ -584,7 +584,7 @@ export default function OnboardingScreen({ navigation }: OnboardingScreenProps) 
   logoGlowContainer: {
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: '#00b4d8',
+    shadowColor: '#00B39F',
     shadowOffset: {
       width: 0,
       height: 0,
