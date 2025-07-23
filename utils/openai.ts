@@ -1,6 +1,127 @@
 import { OPENAI_API_KEY } from '@env';
 import { SymptomLog, MedicalRecommendation, ActionItem, SymptomPattern } from '../types/recommendations';
 
+// Simple cache for common health concerns
+const recommendationCache = new Map<string, MedicalRecommendation>();
+
+// Pre-generated templates for common health concerns (instant response)
+const commonHealthTemplates: Record<string, MedicalRecommendation> = {
+  'headache': {
+    priority: 'MEDIUM',
+    title: 'Managing Your Headache',
+    description: 'Headaches can be caused by stress, dehydration, poor sleep, or underlying conditions. Let\'s address this systematically.',
+    actionItems: [
+      {
+        id: 'headache_rest',
+        title: 'Rest in a quiet, dark room',
+        description: 'Find a comfortable, quiet space and rest for 15-20 minutes',
+        type: 'rest',
+        isCompleted: false,
+        priority: 'HIGH'
+      },
+             {
+         id: 'headache_hydrate',
+         title: 'Stay hydrated',
+         description: 'Drink water throughout the day, aim for 8 glasses',
+         type: 'diet',
+         isCompleted: false,
+         priority: 'HIGH'
+       },
+      {
+        id: 'headache_monitor',
+        title: 'Track headache patterns',
+        description: 'Note frequency, triggers, and severity for 1 week',
+        type: 'monitoring',
+        isCompleted: false,
+        priority: 'MEDIUM'
+      }
+    ],
+    urgency: 'within days',
+    category: 'lifestyle',
+    medicalRationale: 'Most headaches are tension-related and respond well to rest and hydration',
+    symptomsTriggering: ['headache'],
+    severityIndicators: ['severe pain', 'vomiting', 'vision changes'],
+    followUpRequired: false,
+    followUpTimeline: '1 week'
+  },
+  'stress': {
+    priority: 'MEDIUM',
+    title: 'Managing Stress and Anxiety',
+    description: 'Stress affects both mental and physical health. Let\'s develop healthy coping strategies.',
+    actionItems: [
+      {
+        id: 'stress_breathing',
+        title: 'Practice deep breathing',
+        description: '5-10 minutes of deep breathing exercises daily',
+        type: 'exercise',
+        isCompleted: false,
+        priority: 'HIGH'
+      },
+             {
+         id: 'stress_schedule',
+         title: 'Create a daily routine',
+         description: 'Establish consistent sleep, meal, and work schedules',
+         type: 'exercise',
+         isCompleted: false,
+         priority: 'MEDIUM'
+       },
+      {
+        id: 'stress_activity',
+        title: 'Physical activity',
+        description: '30 minutes of moderate exercise 3-4 times per week',
+        type: 'exercise',
+        isCompleted: false,
+        priority: 'MEDIUM'
+      }
+    ],
+    urgency: 'within days',
+    category: 'lifestyle',
+    medicalRationale: 'Regular stress management reduces cortisol levels and improves overall health',
+    symptomsTriggering: ['stress'],
+    severityIndicators: ['panic attacks', 'severe anxiety', 'depression'],
+    followUpRequired: false,
+    followUpTimeline: '2 weeks'
+  },
+  'fatigue': {
+    priority: 'MEDIUM',
+    title: 'Addressing Fatigue and Low Energy',
+    description: 'Fatigue can stem from poor sleep, stress, or underlying health issues. Let\'s identify the cause.',
+    actionItems: [
+             {
+         id: 'fatigue_sleep',
+         title: 'Improve sleep hygiene',
+         description: '7-9 hours of sleep, consistent bedtime, no screens 1 hour before bed',
+         type: 'rest',
+         isCompleted: false,
+         priority: 'HIGH'
+       },
+      {
+        id: 'fatigue_nutrition',
+        title: 'Balanced nutrition',
+        description: 'Regular meals with protein, complex carbs, and healthy fats',
+        type: 'diet',
+        isCompleted: false,
+        priority: 'MEDIUM'
+      },
+      {
+        id: 'fatigue_activity',
+        title: 'Gentle physical activity',
+        description: 'Start with 10-15 minutes of walking daily',
+        type: 'exercise',
+        isCompleted: false,
+        priority: 'MEDIUM'
+      }
+    ],
+    urgency: 'within days',
+    category: 'lifestyle',
+    medicalRationale: 'Addressing sleep and nutrition often resolves fatigue',
+    symptomsTriggering: ['fatigue'],
+    severityIndicators: ['extreme exhaustion', 'weight loss', 'fever'],
+    followUpRequired: false,
+    followUpTimeline: '1 week'
+  }
+};
+
 const OPENAI_API_URL = 'https://api.openai.com/v1';
 
 interface TranscriptionResponse {
@@ -166,8 +287,8 @@ const setLastRecommendationTime = async (): Promise<void> => {
 
 // Helper function to make API request with retry logic
 const makeOpenAIRequest = async (requestBody: any, maxRetries: number = 3): Promise<ChatCompletionResponse> => {
-  // Add a smaller delay before each request to prevent rate limiting
-  await new Promise(resolve => setTimeout(resolve, 500));
+  // Reduced delay to improve speed
+  await new Promise(resolve => setTimeout(resolve, 100));
   
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
     try {
@@ -474,10 +595,10 @@ export const generateRecommendations = async (
       return []; // Need at least 1 log to generate recommendations
     }
 
-    // Rate limiting: Only generate recommendations every 5 minutes
+    // Rate limiting: Only generate recommendations every 2 minutes
     const lastRecommendationTime = await getLastRecommendationTime();
     const timeSinceLastRecommendation = Date.now() - lastRecommendationTime;
-    const minInterval = 5 * 60 * 1000; // 5 minutes
+    const minInterval = 2 * 60 * 1000; // 2 minutes
     
     if (timeSinceLastRecommendation < minInterval) {
       console.log(`Skipping recommendation generation - too soon since last one (${Math.round(timeSinceLastRecommendation / 1000)}s ago)`);
@@ -508,6 +629,44 @@ export const generateRecommendations = async (
     // Focus on the most recent symptom that needs attention
     const primarySymptom = newSymptoms[0];
     
+    // Check templates first for instant response
+    const templateKey = primarySymptom.symptom.toLowerCase().trim();
+    if (commonHealthTemplates[templateKey]) {
+      console.log('Using template for:', primarySymptom.symptom);
+      const template = commonHealthTemplates[templateKey];
+      return [{
+        ...template,
+        id: `rec_${Date.now()}_${primarySymptom.symptom}`,
+        createdAt: new Date(),
+        isCompleted: false,
+        isCancelled: false,
+        actionItems: template.actionItems.map((item: any, itemIndex: number) => ({
+          ...item,
+          id: `action_${Date.now()}_${primarySymptom.symptom}_${itemIndex}`,
+          isCompleted: false
+        }))
+      }];
+    }
+    
+    // Check cache for faster response
+    const cacheKey = primarySymptom.symptom.toLowerCase().trim();
+    if (recommendationCache.has(cacheKey)) {
+      console.log('Using cached recommendation for:', primarySymptom.symptom);
+      const cachedRecommendation = recommendationCache.get(cacheKey)!;
+      return [{
+        ...cachedRecommendation,
+        id: `rec_${Date.now()}_${primarySymptom.symptom}`,
+        createdAt: new Date(),
+        isCompleted: false,
+        isCancelled: false,
+        actionItems: cachedRecommendation.actionItems.map((item: any, itemIndex: number) => ({
+          ...item,
+          id: `action_${Date.now()}_${primarySymptom.symptom}_${itemIndex}`,
+          isCompleted: false
+        }))
+      }];
+    }
+    
     const logsText = symptomLogs.slice(0, 3).map(log => 
       `Date: ${log.timestamp.toLocaleDateString()} ${log.timestamp.toLocaleTimeString()}\nSummary: ${log.summary}\nFull description: ${log.transcript}`
     ).join('\n\n');
@@ -535,23 +694,11 @@ TONE GUIDELINES:
 - Focus on practical solutions
 - Avoid medical jargon unless necessary
 
-COMPREHENSIVE HEALTH APPROACH:
-- **Physical Injuries**: Consider severity, mobility impact, when to seek care
-- **Bug Bites/Stings**: Consider allergic reactions, infection risk, when to worry
-- **Mental Health**: Consider impact on daily life, when to seek support
-- **Stress/Burnout**: Consider work-life balance, coping strategies, professional help
-- **Chronic Pain**: Consider triggers, management strategies, quality of life
-- **Sleep Issues**: Consider sleep hygiene, underlying causes, when to investigate
-- **Digestive Issues**: Consider diet, stress, when to see specialist
-- **Respiratory**: Consider severity, triggers, when to seek immediate care
-- **Skin Issues**: Consider infection risk, allergic reactions, when to see dermatologist
-- **Women's Health**: Consider hormonal factors, reproductive health, when to see OBGYN
-- **Men's Health**: Consider age-appropriate screenings, when to see urologist
-- **Pediatric**: Consider age-appropriate concerns, growth, development
-- **Geriatric**: Consider age-related changes, medication interactions, fall risk
-- **Occupational**: Consider workplace safety, ergonomics, workers' comp
-- **Environmental**: Consider allergen exposure, chemical sensitivity, air quality
-- **Lifestyle**: Consider exercise, diet, stress management, preventive care
+HEALTH APPROACH:
+- **Physical**: Consider severity, impact on daily life, when to seek care
+- **Mental**: Consider impact on daily life, when to seek support
+- **Lifestyle**: Consider practical solutions, stress management, preventive care
+- **Environmental**: Consider triggers, allergens, workplace factors
 
 Format response as a SINGLE JSON object:
 {
@@ -578,7 +725,7 @@ Format response as a SINGLE JSON object:
 }`;
 
     const requestBody = {
-      model: 'gpt-4',
+      model: 'gpt-3.5-turbo',
       messages: [
         {
           role: 'system',
@@ -590,7 +737,7 @@ Format response as a SINGLE JSON object:
         }
       ],
       temperature: 0.1,
-      max_tokens: 1500,
+      max_tokens: 1000,
     };
 
     console.log('Generating symptom-specific recommendation for:', primarySymptom.symptom);
@@ -604,6 +751,10 @@ Format response as a SINGLE JSON object:
 
     try {
       const recommendation = JSON.parse(content);
+      
+      // Cache the recommendation for future use
+      const cacheKey = primarySymptom.symptom.toLowerCase().trim();
+      recommendationCache.set(cacheKey, recommendation);
       
       // Update last recommendation time
       await setLastRecommendationTime();
