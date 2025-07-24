@@ -1,84 +1,60 @@
-# Nexst - Your AI Health Companion
+# Nexst
 
-A React Native app that helps you manage your health through voice symptom tracking, personalized recommendations, and appointment preparation.
-
-## Features
-
-- 🎤 **Voice Symptom Tracking** - Record symptoms in 30 seconds
-- 💡 **Personalized Action Items** - Get immediate recommended next steps
-- 📅 **Appointment Prep** - Walk into appointments with tailored questions and symptom history
-
-## Development
-
-### Prerequisites
-- Node.js (v16 or higher)
-- npm or yarn
-- React Native development environment
-
-### Installation
-```bash
-npm install
-```
-
-### Running the App
-```bash
-npm start
-```
-
-## Deployment
-
-### Landing Page Website (nexst.app)
-
-The website is a **static landing page** that showcases the Nexst mobile app and provides download links to app stores. It's deployed using Vercel and connected to the domain `nexst.app`.
-
-#### What the website does:
-- Introduces the Nexst app and its features
-- Provides download links to App Store and Google Play Store
-- Serves as a marketing/information page for potential users
-
-#### Deployment Steps:
-1. **Connect to Vercel:**
-   - Install Vercel CLI: `npm i -g vercel`
-   - Login: `vercel login`
-   - Deploy: `vercel --prod`
-
-2. **Domain Configuration:**
-   - In Vercel dashboard, go to your project settings
-   - Add custom domain: `nexst.app`
-   - Update DNS records in Namecheap (see DNS Configuration below)
-
-#### DNS Configuration (Namecheap):
-Add these records in your Namecheap DNS settings:
-
-```
-Type: A
-Name: @
-Value: 76.76.19.19
-
-Type: CNAME
-Name: www
-Value: cname.vercel-dns.com
-```
-
-### Mobile App Deployment
-
-The React Native app will be deployed to:
-- **iOS App Store** via Expo or React Native CLI
-- **Google Play Store** via Expo or React Native CLI
-
-Once the app is published, update the download links in `index.html` with the actual app store URLs.
+A comprehensive health companion app that helps users track symptoms and get AI-powered recommendations.
 
 ## Project Structure
 
+This workspace contains **two separate projects**:
+
+### 📱 React Native App (Mobile App)
+- **Location**: Root directory (all files except `website/` and `vercel.json`)
+- **Purpose**: The actual mobile app built with Expo/React Native
+- **Key Files**:
+  - `App.tsx` - Main app component
+  - `app.json` - Expo configuration
+  - `package.json` - React Native dependencies
+  - `components/` - React Native components
+  - `screens/` - App screens
+  - `utils/` - App utilities (including AI integration)
+  - `assets/` - App assets (icons, images for the mobile app)
+
+### 🌐 Static Website (Informational Site)
+- **Location**: `website/` directory
+- **Purpose**: Informational website about the app (marketing site)
+- **Key Files**:
+  - `website/index.html` - Main website page
+  - `website/website_icon.png` - Website logo and favicon
+- **Deployment**: Served by Vercel via `vercel.json` configuration
+
+## Development
+
+### For the Mobile App:
+```bash
+npm start          # Start Expo development server
+npm run ios        # Run on iOS simulator
+npm run android    # Run on Android emulator
+```
+
+### For the Website:
+The website is automatically deployed to Vercel when you push to the main branch.
+
+## Deployment
+
+- **Mobile App**: Deploy to TestFlight/App Store using EAS Build
+- **Website**: Automatically deployed to Vercel via `vercel.json` configuration
+
+## File Organization
+
 ```
 Nexst/
-├── screens/           # App screens
-├── components/        # Reusable components
-├── contexts/          # React contexts
-├── utils/            # Utility functions
-├── types/            # TypeScript type definitions
-├── index.html        # Website landing page
-└── vercel.json       # Vercel deployment config
+├── website/                 # Static website files
+│   ├── index.html          # Main website page
+│   └── website_icon.png    # Website logo/favicon
+├── App.tsx                 # React Native app entry point
+├── app.json               # Expo configuration
+├── package.json           # React Native dependencies
+├── vercel.json           # Website deployment config
+└── ... (other React Native files)
 ```
 
 ## Contributing
