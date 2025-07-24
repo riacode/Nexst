@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Nexst – Know Your Nexst Step</title>
+  <link rel="icon" type="image/png" href="./assets/icon.png" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet" />
@@ -78,18 +79,46 @@
       .image { margin-top:2rem; }
     }
   </style>
+  <script>
+    function openTestFlight() {
+      // TestFlight app URL scheme
+      const testFlightApp = 'testflight://';
+      
+      // App Store link for TestFlight app
+      const appStoreLink = 'https://apps.apple.com/app/testflight/id899247664';
+      
+      // Check if user is on iOS
+      const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+      
+      if (isIOS) {
+        // Try to open TestFlight app directly
+        // If TestFlight is installed, it will open
+        // If not, it will fail silently and we'll redirect to App Store
+        window.location.href = testFlightApp;
+        
+        // Fallback: if TestFlight doesn't open, redirect to App Store after a short delay
+        setTimeout(() => {
+          window.location.href = appStoreLink;
+        }, 1000);
+      } else {
+        // For non-iOS devices, show a message and redirect to App Store
+        alert('TestFlight is only available on iOS devices. Please visit the App Store to download TestFlight.');
+        window.open(appStoreLink, '_blank');
+      }
+    }
+  </script>
 </head>
 <body>
   <!-- Header -->
   <header class="header">
-    <div class="app-name">Nexst</div>
+    <img src="./assets/icon_no_background.png" alt="Nexst Logo" style="width: 32px; height: 32px; filter: brightness(0) invert(1);" />
   </header>
   <!-- Hero Section -->
   <section id="hero">
     <div class="content">
-      <h1>Know Your <span style="color: rgb(231, 151, 110); font-weight: 800;">Nexst</span> Step.</h1>
+      <h1>Know Your <span style="color: white; font-weight: 800;">Nexst</span> Step.</h1>
       <p>Log your symptoms and let Nexst’s AI engine translate them into precise next‑step actions and doctor‑prep questions—fast, accurate, and private.</p>
-      <a href="#" class="btn">Join Beta</a>
+      <a href="#" class="btn" onclick="openTestFlight()">Join Beta</a>
     </div>
     <div class="image"><img src="https://via.placeholder.com/300x600" alt="App hero mockup"></div>
   </section>
@@ -126,7 +155,7 @@
   <!-- Final CTA Strip -->
   <div class="cta-strip">
     <h2>Ready to take your next step?</h2>
-    <a href="#" class="btn">Join Beta</a>
+    <a href="#" class="btn" onclick="openTestFlight()">Join Beta</a>
   </div>
 </body>
 </html>
