@@ -12,8 +12,12 @@
       "dest": "/website/website_icon.png"
     },
     {
+      "src": "/favicon\\.ico",
+      "dest": "/website/favicon.ico"
+    },
+    {
       "src": "/(.*)",
       "dest": "/website/index.html"
     }
   ]
-} 
+}
