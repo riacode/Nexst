@@ -4,9 +4,9 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Nexst – Know Your Nexst Step</title>
-  <link rel="icon" type="image/png" href="assets/icon.png" />
-  <link rel="apple-touch-icon" href="assets/icon.png" />
-  <link rel="shortcut icon" href="assets/icon.png" />
+  <link rel="icon" type="image/png" href="website_icon.png" />
+  <link rel="apple-touch-icon" href="website_icon.png" />
+  <link rel="shortcut icon" href="website_icon.png" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet" />
@@ -108,12 +108,36 @@
         window.open(appStoreLink, '_blank');
       }
     }
+    
+    // Debug image loading
+    window.addEventListener('load', function() {
+      const logo = document.querySelector('.header img');
+      if (logo) {
+        logo.addEventListener('error', function() {
+          console.error('Logo failed to load:', this.src);
+          // Fallback to text if image fails
+          this.style.display = 'none';
+          const header = document.querySelector('.header');
+          if (header) {
+            const textLogo = document.createElement('div');
+            textLogo.textContent = 'Nexst';
+            textLogo.style.color = 'white';
+            textLogo.style.fontWeight = 'bold';
+            textLogo.style.fontSize = '1.25rem';
+            header.appendChild(textLogo);
+          }
+        });
+        logo.addEventListener('load', function() {
+          console.log('Logo loaded successfully:', this.src);
+        });
+      }
+    });
   </script>
 </head>
 <body>
   <!-- Header -->
   <header class="header">
-    <img src="assets/icon_no_background.png" alt="Nexst Logo" style="width: 32px; height: 32px; filter: brightness(0) invert(1);" />
+    <img src="website_icon.png" alt="Nexst Logo" style="width: 32px; height: 32px; filter: brightness(0) invert(1);" />
   </header>
   <!-- Hero Section -->
   <section id="hero">
