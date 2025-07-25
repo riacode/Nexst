@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Nexst – Know Your Nexst Step</title>
+  <title>Nexst</title>
   <!-- favicon -->
   <link rel="icon" href="/favicon.png" type="image/png" />
   <link rel="shortcut icon" href="/favicon.png" type="image/png" />
@@ -12,68 +12,477 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link
-    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap"
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap"
     rel="stylesheet"
   />
 
   <style>
     :root {
       --accent: #00B39F;
-      --text: #102A43;
+      --accent-dark: #009885;
+      --text: #0F172A;
+      --text-secondary: #475569;
       --bg: #FAFBFC;
+      --surface: rgba(255, 255, 255, 0.8);
+      --surface-solid: #FFFFFF;
+      --border: rgba(255, 255, 255, 0.2);
+      --shadow: 0 4px 32px rgba(0, 0, 0, 0.08);
+      --shadow-lg: 0 8px 64px rgba(0, 0, 0, 0.12);
     }
-    * { margin:0; padding:0; box-sizing:border-box; }
-    html, body { height:100%; font-family:'Inter', sans-serif; color:var(--text); scroll-behavior:smooth; }
+    
+    * { 
+      margin: 0; 
+      padding: 0; 
+      box-sizing: border-box; 
+    }
+    
+    html, body { 
+      height: 100%; 
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; 
+      color: var(--text); 
+      scroll-behavior: smooth;
+      background: var(--bg);
+      overflow-x: hidden;
+    }
 
-    html {
-      background: none;
-      background-image:
-        linear-gradient(135deg, rgba(0,179,159,0.8) 0%, rgba(0,179,159,0.6) 15%, transparent 30%),
-        linear-gradient(45deg, rgba(0,200,180,0.7) 10%, rgba(0,200,180,0.5) 25%, transparent 40%),
-        linear-gradient(225deg, rgba(255,140,100,0.75) 20%, rgba(255,140,100,0.55) 35%, transparent 50%),
-        linear-gradient(315deg, rgba(178,152,255,0.7) 30%, rgba(178,152,255,0.5) 45%, transparent 60%),
-        linear-gradient(90deg, rgba(100,150,255,0.65) 40%, rgba(100,150,255,0.45) 55%, transparent 70%),
-        linear-gradient(180deg, rgba(120,200,150,0.6) 50%, rgba(120,200,150,0.4) 65%, transparent 80%),
-        linear-gradient(270deg, rgba(255,180,140,0.55) 60%, rgba(255,180,140,0.35) 75%, transparent 90%);
-      background-repeat: no-repeat;
-      background-attachment: scroll;
-      background-size: 100% 600vh;
-      min-height: 100%;
+    /* Sophisticated gradient background with depth */
+    html::before {
+      content: '';
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: 
+        radial-gradient(circle at 20% 80%, rgba(0, 179, 159, 0.15) 0%, transparent 50%),
+        radial-gradient(circle at 80% 20%, rgba(0, 200, 180, 0.12) 0%, transparent 50%),
+        radial-gradient(circle at 40% 40%, rgba(255, 140, 100, 0.08) 0%, transparent 50%),
+        radial-gradient(circle at 90% 90%, rgba(178, 152, 255, 0.1) 0%, transparent 50%),
+        linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, transparent 100%);
+      z-index: -1;
+    }
+
+    /* Subtle noise texture overlay */
+    html::after {
+      content: '';
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.015'/%3E%3C/svg%3E");
+      z-index: -1;
+      pointer-events: none;
     }
 
     body {
-      margin:0;
-      background: transparent;
-      position:relative;
-      overflow-x:hidden;
+      margin: 0;
+      position: relative;
+      line-height: 1.6;
     }
 
-    section { min-height:100vh; display:flex; align-items:center; padding:4rem 15vw; }
-    #hero { padding-top:6rem; }
-    .content { flex:1 1 40%; max-width:40%; text-align: left; }
-    .image { flex:1 1 50%; display:flex; justify-content:center; }
-    .image img { width:60%; border-radius:16px; box-shadow:0 4px 16px rgba(0,0,0,0.1); }
-    h1 { font-size:clamp(2.5rem,5vw,4rem); margin-bottom:1rem; line-height:1.2; }
-    h2 { font-size:clamp(1.75rem,3vw,2.5rem); margin-bottom:0.75rem; line-height:1.3; color:var(--text); }
-    p { font-size:1.125rem; line-height:1.6; }
-    .btn { display:inline-block; margin-top:2rem; padding:0.75rem 1.5rem; background:var(--accent); color:#fff; text-decoration:none; border-radius:8px; font-weight:700; transition:opacity .25s; }
-    .btn:hover { opacity:0.85; }
+    /* Header with sophisticated styling */
     .header {
-      position:fixed; top:0; left:0; right:0; padding:1.5rem 15vw;
-      display:flex; align-items:center; gap:0.75rem; z-index:10;
-      background:rgba(255,255,255,0.05); backdrop-filter:blur(10px); border-bottom:1px solid rgba(255,255,255,0.1);
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      padding: 1.5rem 5vw;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      z-index: 100;
+      background: rgba(255, 255, 255, 0.8);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border);
+      transition: all 0.3s ease;
     }
-    .logo-placeholder { width:32px; height:32px; background:var(--accent); border-radius:8px; display:flex; align-items:center; justify-content:center; color:white; font-weight:bold; font-size:14px; }
-    .app-name { font-size:1.25rem; font-weight:800; color:rgb(231, 151, 110); }
+
+    .header.scrolled {
+      background: rgba(255, 255, 255, 0.95);
+      box-shadow: var(--shadow);
+    }
+
+    .logo-link {
+      display: flex;
+      align-items: center;
+      text-decoration: none;
+      font-weight: 700;
+      font-size: 1.5rem;
+      color: var(--text);
+      transition: opacity 0.2s ease;
+    }
+
+    .logo-link:hover {
+      opacity: 0.8;
+    }
+
+    .logo {
+      width: 40px;
+      height: 40px;
+      margin-right: 0.75rem;
+      filter: brightness(0) saturate(100%);
+    }
+
+    .nav-cta {
+      padding: 0.75rem 1.5rem;
+      background: var(--accent);
+      color: white;
+      text-decoration: none;
+      border-radius: 12px;
+      font-weight: 600;
+      font-size: 0.875rem;
+      transition: all 0.2s ease;
+      box-shadow: 0 2px 8px rgba(0, 179, 159, 0.3);
+    }
+
+    .nav-cta:hover {
+      background: var(--accent-dark);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 16px rgba(0, 179, 159, 0.4);
+    }
+
+    /* Container and layout */
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 0 5vw;
+    }
+
+    section {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      padding: 8rem 0 4rem;
+      position: relative;
+    }
+
+    /* Hero section with sophisticated layout */
+    #hero {
+      padding-top: 8rem;
+      position: relative;
+    }
+
+    .hero-content {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 4rem;
+      align-items: center;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .hero-text {
+      position: relative;
+    }
+
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 0.5rem 1rem;
+      background: rgba(0, 179, 159, 0.1);
+      color: var(--accent);
+      border-radius: 50px;
+      font-size: 0.875rem;
+      font-weight: 600;
+      margin-bottom: 2rem;
+      border: 1px solid rgba(0, 179, 159, 0.2);
+    }
+
+    .hero-badge::before {
+      content: '✨';
+      margin-right: 0.5rem;
+    }
+
+    h1 {
+      font-size: clamp(3rem, 6vw, 4.5rem);
+      font-weight: 800;
+      line-height: 1.1;
+      margin-bottom: 1.5rem;
+      background: linear-gradient(135deg, var(--text) 0%, var(--accent) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .hero-subtitle {
+      font-size: 1.25rem;
+      color: var(--text-secondary);
+      margin-bottom: 2.5rem;
+      line-height: 1.6;
+      max-width: 500px;
+    }
+
+    .hero-cta {
+      display: inline-flex;
+      align-items: center;
+      padding: 1rem 2rem;
+      background: var(--accent);
+      color: white;
+      text-decoration: none;
+      border-radius: 16px;
+      font-weight: 600;
+      font-size: 1.125rem;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 20px rgba(0, 179, 159, 0.3);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero-cta::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+      transition: left 0.5s ease;
+    }
+
+    .hero-cta:hover::before {
+      left: 100%;
+    }
+
+    .hero-cta:hover {
+      background: var(--accent-dark);
+      transform: translateY(-2px);
+      box-shadow: 0 8px 32px rgba(0, 179, 159, 0.4);
+    }
+
+    .hero-visual {
+      position: relative;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .app-mockup {
+      width: 300px;
+      height: 600px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      border-radius: 24px;
+      position: relative;
+      box-shadow: var(--shadow-lg);
+      border: 8px solid white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-weight: 600;
+      font-size: 1.125rem;
+    }
+
+    .app-mockup::before {
+      content: 'App Mockup';
+      opacity: 0.7;
+    }
+
+    /* Feature sections with sophisticated styling */
+    .feature-section {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6rem;
+      align-items: center;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .feature-section:nth-child(even) {
+      direction: rtl;
+    }
+
+    .feature-section:nth-child(even) .feature-content {
+      direction: ltr;
+    }
+
+    .feature-content {
+      position: relative;
+    }
+
+    .feature-number {
+      font-size: 4rem;
+      font-weight: 900;
+      color: var(--accent);
+      opacity: 0.1;
+      position: absolute;
+      top: -2rem;
+      left: -1rem;
+      z-index: -1;
+    }
+
+    h2 {
+      font-size: clamp(2rem, 4vw, 3rem);
+      font-weight: 700;
+      line-height: 1.2;
+      margin-bottom: 1.5rem;
+      color: var(--text);
+    }
+
+    .feature-description {
+      font-size: 1.125rem;
+      color: var(--text-secondary);
+      line-height: 1.7;
+      margin-bottom: 2rem;
+    }
+
+    .feature-visual {
+      position: relative;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .feature-mockup {
+      width: 280px;
+      height: 560px;
+      background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+      border-radius: 20px;
+      position: relative;
+      box-shadow: var(--shadow-lg);
+      border: 6px solid white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-weight: 600;
+      font-size: 1rem;
+    }
+
+    .feature-mockup::before {
+      content: 'Feature Mockup';
+      opacity: 0.7;
+    }
+
+    /* Privacy section with special styling */
+    .privacy-section {
+      background: var(--surface);
+      backdrop-filter: blur(20px);
+      border-radius: 32px;
+      margin: 4rem auto;
+      padding: 4rem;
+      max-width: 1000px;
+      text-align: center;
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow);
+    }
+
+    .privacy-icon {
+      font-size: 3rem;
+      margin-bottom: 2rem;
+    }
+
+    /* Final CTA with sophisticated design */
     .cta-strip {
-      background:rgba(255,255,255,0.05); backdrop-filter:blur(10px); text-align:center;
-      padding:3rem 2rem; border-top:1px solid rgba(255,255,255,0.1);
-      position:relative; z-index:1;
+      background: var(--surface);
+      backdrop-filter: blur(20px);
+      text-align: center;
+      padding: 6rem 2rem;
+      border-top: 1px solid var(--border);
+      position: relative;
+      z-index: 1;
     }
-    @media (max-width:820px) {
-      section { flex-direction:column; }
-      .content, .image { max-width:100%; text-align:center; }
-      .image { margin-top:2rem; }
+
+    .cta-content {
+      max-width: 600px;
+      margin: 0 auto;
+    }
+
+    .cta-title {
+      font-size: clamp(2rem, 4vw, 3rem);
+      font-weight: 700;
+      margin-bottom: 1.5rem;
+      color: var(--text);
+    }
+
+    .cta-description {
+      font-size: 1.125rem;
+      color: var(--text-secondary);
+      margin-bottom: 2.5rem;
+      line-height: 1.6;
+    }
+
+    .cta-button {
+      display: inline-flex;
+      align-items: center;
+      padding: 1rem 2.5rem;
+      background: var(--accent);
+      color: white;
+      text-decoration: none;
+      border-radius: 16px;
+      font-weight: 600;
+      font-size: 1.125rem;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 20px rgba(0, 179, 159, 0.3);
+    }
+
+    .cta-button:hover {
+      background: var(--accent-dark);
+      transform: translateY(-2px);
+      box-shadow: 0 8px 32px rgba(0, 179, 159, 0.4);
+    }
+
+    /* Responsive design */
+    @media (max-width: 768px) {
+      .hero-content,
+      .feature-section {
+        grid-template-columns: 1fr;
+        gap: 3rem;
+        text-align: center;
+      }
+
+      .feature-section:nth-child(even) {
+        direction: ltr;
+      }
+
+      .feature-number {
+        position: static;
+        font-size: 3rem;
+        margin-bottom: 1rem;
+        opacity: 0.2;
+      }
+
+      .privacy-section {
+        margin: 2rem 1rem;
+        padding: 2rem;
+      }
+
+      .header {
+        padding: 1rem 5vw;
+      }
+
+      .nav-cta {
+        padding: 0.5rem 1rem;
+        font-size: 0.875rem;
+      }
+    }
+
+    /* Smooth animations */
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .fade-in-up {
+      animation: fadeInUp 0.8s ease-out;
+    }
+
+    /* Scroll-triggered animations */
+    .scroll-animate {
+      opacity: 0;
+      transform: translateY(30px);
+      transition: all 0.8s ease-out;
+    }
+
+    .scroll-animate.visible {
+      opacity: 1;
+      transform: translateY(0);
     }
   </style>
 
@@ -92,94 +501,142 @@
       }
     }
 
-    window.addEventListener('load', function() {
-      const logo = document.querySelector('.header img');
-      if (logo) {
-        logo.addEventListener('error', function() {
-          console.error('Logo failed to load:', this.src);
-          this.style.display = 'none';
-          const header = document.querySelector('.header');
-          if (header) {
-            const textLogo = document.createElement('div');
-            textLogo.textContent = 'Nexst';
-            textLogo.style.color = 'white';
-            textLogo.style.fontWeight = 'bold';
-            textLogo.style.fontSize = '1.25rem';
-            header.appendChild(textLogo);
-          }
-        });
-        logo.addEventListener('load', function() {
-          console.log('Logo loaded successfully:', this.src);
-        });
+    // Header scroll effect
+    window.addEventListener('scroll', function() {
+      const header = document.querySelector('.header');
+      if (window.scrollY > 50) {
+        header.classList.add('scrolled');
+      } else {
+        header.classList.remove('scrolled');
       }
+    });
+
+    // Intersection Observer for scroll animations
+    const observerOptions = {
+      threshold: 0.1,
+      rootMargin: '0px 0px -50px 0px'
+    };
+
+    const observer = new IntersectionObserver(function(entries) {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('visible');
+        }
+      });
+    }, observerOptions);
+
+    // Observe all scroll-animate elements
+    document.addEventListener('DOMContentLoaded', function() {
+      const animateElements = document.querySelectorAll('.scroll-animate');
+      animateElements.forEach(el => observer.observe(el));
     });
   </script>
 </head>
 <body>
   <!-- Header -->
   <header class="header">
-    <a href="https://nexst.app" style="text-decoration: none; display: flex; align-items: center;">
-      <img
-        src="/website_icon.png"
-        alt="Nexst Logo"
-        style="width: 40px; height: 40px; filter: brightness(0) invert(1);"
-      />
+    <a href="https://nexst.app" class="logo-link">
+      <img src="/website_icon.png" alt="Nexst Logo" class="logo" />
+      <span>Nexst</span>
     </a>
+    <a href="#" class="nav-cta" onclick="openTestFlight()">Join Beta</a>
   </header>
 
   <!-- Hero Section -->
   <section id="hero">
-    <div class="content">
-      <h1>
-        Know Your
-        <span style="color: white; font-weight: 800;">Nexst</span>
-        Step.
-      </h1>
-      <p>
-        Log your symptoms and let Nexst’s AI engine translate them into precise
-        next‑step actions and doctor‑prep questions—fast, accurate, and private.
-      </p>
-      <a href="#" class="btn" onclick="openTestFlight()">Join Beta</a>
-    </div>
-    <div class="image">
-      <img src="https://via.placeholder.com/300x600" alt="App hero mockup" />
+    <div class="container">
+      <div class="hero-content">
+        <div class="hero-text scroll-animate">
+          <div class="hero-badge">AI-Powered Health Intelligence</div>
+          <h1>Know Your Nexst Step</h1>
+          <p class="hero-subtitle">
+            Log your symptoms and let Nexst's AI engine translate them into precise next‑step actions and doctor‑prep questions—fast, accurate, and private.
+          </p>
+          <a href="#" class="hero-cta" onclick="openTestFlight()">Join Beta</a>
+        </div>
+        <div class="hero-visual scroll-animate">
+          <div class="app-mockup"></div>
+        </div>
+      </div>
     </div>
   </section>
 
-<!-- Features -->
+  <!-- Features -->
   <section>
-    <div class="image"><img src="https://via.placeholder.com/300x600" alt="Capture feature mockup"></div>
-    <div class="content">
-      <h2>Tap. Talk. Logged.</h2>
-      <p>Record symptoms hands-free in seconds—Nexst transcribes, summarizes, and timestamps automatically. We'll keep memory of how you're feeling and never forget.</p>
+    <div class="container">
+      <div class="feature-section">
+        <div class="feature-content scroll-animate">
+          <div class="feature-number">01</div>
+          <h2>Tap. Talk. Logged.</h2>
+          <p class="feature-description">
+            Record symptoms hands-free in seconds—Nexst transcribes, summarizes, and timestamps automatically. We'll keep memory of how you're feeling and never forget.
+          </p>
+        </div>
+        <div class="feature-visual scroll-animate">
+          <div class="feature-mockup"></div>
+        </div>
+      </div>
     </div>
   </section>
+
   <section>
-    <div class="image"><img src="https://via.placeholder.com/300x600" alt="Decode feature mockup"></div>
-    <div class="content">
-      <h2>Get Smart and Speed, Not Scary.</h2>
-      <p>Get immediate recommended next steps based on your symptoms. Our AI spots trends and severity you might miss.</p>
+    <div class="container">
+      <div class="feature-section">
+        <div class="feature-content scroll-animate">
+          <div class="feature-number">02</div>
+          <h2>Get Smart and Speed, Not Scary.</h2>
+          <p class="feature-description">
+            Get immediate recommended next steps based on your symptoms. Our AI spots trends and severity you might miss.
+          </p>
+        </div>
+        <div class="feature-visual scroll-animate">
+          <div class="feature-mockup"></div>
+        </div>
+      </div>
     </div>
   </section>
+
   <section>
-    <div class="image"><img src="https://via.placeholder.com/300x600" alt="Act feature mockup"></div>
-    <div class="content">
-      <h2>No more 'I forgot' moments.</h2>
-      <p>Walk into appointments with tailored questions and timestamped symptom history. Walk out with answers and a plan.</p>
+    <div class="container">
+      <div class="feature-section">
+        <div class="feature-content scroll-animate">
+          <div class="feature-number">03</div>
+          <h2>No more 'I forgot' moments.</h2>
+          <p class="feature-description">
+            Walk into appointments with tailored questions and timestamped symptom history. Walk out with answers and a plan.
+          </p>
+        </div>
+        <div class="feature-visual scroll-animate">
+          <div class="feature-mockup"></div>
+        </div>
+      </div>
     </div>
   </section>
+
   <!-- Privacy -->
   <section>
-    <div class="image"><img src="https://via.placeholder.com/300x600" alt="Privacy feature mockup"></div>
-    <div class="content">
-      <h2>Your Data Stays With You.</h2>
-      <p>Everything you log is end-to-end encrypted and processed locally. We don't store your data.</p>
+    <div class="container">
+      <div class="privacy-section scroll-animate">
+        <div class="privacy-icon">🔒</div>
+        <h2>Your Data Stays With You.</h2>
+        <p class="feature-description">
+          Everything you log is end-to-end encrypted and processed locally. We don't store your data.
+        </p>
+      </div>
     </div>
   </section>
+
   <!-- Final CTA Strip -->
   <div class="cta-strip">
-    <h2>Ready to take your next step?</h2>
-    <a href="#" class="btn" onclick="openTestFlight()">Join Beta</a>
+    <div class="container">
+      <div class="cta-content scroll-animate">
+        <h2 class="cta-title">Ready to take your next step?</h2>
+        <p class="cta-description">
+          Join thousands of users who are already making better health decisions with AI-powered insights.
+        </p>
+        <a href="#" class="cta-button" onclick="openTestFlight()">Join Beta</a>
+      </div>
+    </div>
   </div>
 </body>
 </html>
