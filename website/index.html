@@ -457,7 +457,7 @@
       }
     }
 
-    /* Smooth animations */
+    /* Enhanced animations and effects */
     @keyframes fadeInUp {
       from {
         opacity: 0;
@@ -469,11 +469,40 @@
       }
     }
 
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.05); }
+    }
+
+    @keyframes float {
+      0%, 100% { transform: translateY(0px); }
+      50% { transform: translateY(-10px); }
+    }
+
+    @keyframes gradientShift {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+
+    @keyframes typewriter {
+      from { width: 0; }
+      to { width: 100%; }
+    }
+
     .fade-in-up {
       animation: fadeInUp 0.8s ease-out;
     }
 
-    /* Scroll-triggered animations */
+    .pulse {
+      animation: pulse 2s infinite;
+    }
+
+    .float {
+      animation: float 3s ease-in-out infinite;
+    }
+
+    /* Enhanced scroll-triggered animations */
     .scroll-animate {
       opacity: 0;
       transform: translateY(30px);
@@ -483,6 +512,128 @@
     .scroll-animate.visible {
       opacity: 1;
       transform: translateY(0);
+    }
+
+    /* Glass-morphism cards */
+    .glass-card {
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 16px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    }
+
+    /* Gradient borders */
+    .gradient-border {
+      position: relative;
+      border-radius: 16px;
+      padding: 2px;
+      background: linear-gradient(135deg, var(--accent), rgba(178, 152, 255, 0.8));
+    }
+
+    .gradient-border::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: 16px;
+      padding: 2px;
+      background: linear-gradient(135deg, var(--accent), rgba(178, 152, 255, 0.8));
+      mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+      mask-composite: exclude;
+    }
+
+    /* Enhanced buttons with micro-interactions */
+    .hero-cta, .nav-cta, .cta-button {
+      position: relative;
+      overflow: hidden;
+      transition: all 0.3s ease;
+    }
+
+    .hero-cta::before, .nav-cta::before, .cta-button::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+      transition: left 0.5s ease;
+    }
+
+    .hero-cta:hover::before, .nav-cta:hover::before, .cta-button:hover::before {
+      left: 100%;
+    }
+
+    .hero-cta:hover, .nav-cta:hover, .cta-button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 32px rgba(0, 179, 159, 0.4);
+    }
+
+    /* 3D mockup effects */
+    .app-mockup, .feature-mockup {
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .app-mockup:hover, .feature-mockup:hover {
+      transform: perspective(1000px) rotateY(5deg) rotateX(5deg);
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+    }
+
+    /* Animated gradient background */
+    html::before {
+      background-size: 400% 400%;
+      animation: gradientShift 15s ease infinite;
+    }
+
+    /* Typing animation for hero title */
+    .hero-title {
+      overflow: hidden;
+      border-right: 3px solid var(--accent);
+      white-space: nowrap;
+      animation: typewriter 3s steps(40, end), blink-caret 0.75s step-end infinite;
+    }
+
+    @keyframes blink-caret {
+      from, to { border-color: transparent; }
+      50% { border-color: var(--accent); }
+    }
+
+    /* Progress indicator */
+    .progress-bar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 0%;
+      height: 3px;
+      background: linear-gradient(90deg, var(--accent), rgba(178, 152, 255, 0.8));
+      z-index: 1001;
+      transition: width 0.1s ease;
+    }
+
+    /* Enhanced shadows with color */
+    .colored-shadow {
+      box-shadow: 
+        0 4px 20px rgba(0, 179, 159, 0.2),
+        0 8px 40px rgba(178, 152, 255, 0.1);
+    }
+
+    /* Animated privacy icon */
+    .privacy-icon {
+      animation: float 4s ease-in-out infinite;
+    }
+
+    /* Geometric pattern overlay */
+    .geometric-pattern {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-image: 
+        radial-gradient(circle at 25% 25%, rgba(0, 179, 159, 0.1) 0%, transparent 50%),
+        radial-gradient(circle at 75% 75%, rgba(178, 152, 255, 0.1) 0%, transparent 50%);
+      z-index: -2;
+      pointer-events: none;
     }
   </style>
 
@@ -529,10 +680,43 @@
     document.addEventListener('DOMContentLoaded', function() {
       const animateElements = document.querySelectorAll('.scroll-animate');
       animateElements.forEach(el => observer.observe(el));
+      
+      // Initialize progress bar
+      initProgressBar();
+      
+      // Add pulse effect to CTAs
+      addPulseEffect();
     });
+
+    // Progress bar functionality
+    function initProgressBar() {
+      const progressBar = document.querySelector('.progress-bar');
+      
+      window.addEventListener('scroll', () => {
+        const scrollTop = window.pageYOffset;
+        const docHeight = document.body.offsetHeight - window.innerHeight;
+        const scrollPercent = (scrollTop / docHeight) * 100;
+        
+        progressBar.style.width = scrollPercent + '%';
+      });
+    }
+
+    // Add pulse effect to CTAs
+    function addPulseEffect() {
+      const ctas = document.querySelectorAll('.hero-cta, .cta-button');
+      ctas.forEach(cta => {
+        cta.classList.add('pulse');
+      });
+    }
   </script>
 </head>
 <body>
+  <!-- Progress bar -->
+  <div class="progress-bar"></div>
+
+  <!-- Geometric pattern overlay -->
+  <div class="geometric-pattern"></div>
+
   <!-- Header -->
   <header class="header">
     <a href="https://nexst.app" class="logo-link">
@@ -548,7 +732,7 @@
       <div class="hero-content">
         <div class="hero-text scroll-animate">
           <div class="hero-badge">AI-Powered Health Intelligence</div>
-          <h1>Know Your Nexst Step</h1>
+          <h1 class="hero-title">Know Your Nexst Step</h1>
           <p class="hero-subtitle">
             Log your symptoms and let Nexst's AI engine translate them into precise next‑step actions and doctor‑prep questions—fast, accurate, and private.
           </p>
@@ -616,7 +800,7 @@
   <!-- Privacy -->
   <section>
     <div class="container">
-      <div class="privacy-section scroll-animate">
+      <div class="privacy-section scroll-animate glass-card">
         <div class="privacy-icon">🔒</div>
         <h2>Your Data Stays With You.</h2>
         <p class="feature-description">
