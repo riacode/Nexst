@@ -48,7 +48,7 @@
       overflow-x: hidden;
     }
 
-    /* Future of Healthcare Background */
+    /* Innovative Tech-Forward Background */
     html::before {
       content: '';
       position: fixed;
@@ -57,12 +57,19 @@
       width: 100%;
       height: 100%;
       background: 
-        linear-gradient(135deg, var(--medical-blue) 0%, transparent 50%),
-        radial-gradient(circle at 20% 80%, var(--accent-mint) 0%, transparent 40%),
-        radial-gradient(circle at 80% 20%, var(--accent-electric) 0%, transparent 40%),
+        /* Main diagonal medical gradient */
+        linear-gradient(135deg, var(--medical-blue) 0%, transparent 30%),
+        /* Tech circuit pattern */
         linear-gradient(90deg, var(--tech-grid) 1px, transparent 1px),
-        linear-gradient(0deg, var(--tech-grid) 1px, transparent 1px);
-      background-size: 100% 100%, 60% 60%, 60% 60%, 50px 50px, 50px 50px;
+        linear-gradient(0deg, var(--tech-grid) 1px, transparent 1px),
+        /* Asymmetric accent blocks */
+        linear-gradient(45deg, transparent 0%, transparent 40%, var(--accent-mint) 40%, var(--accent-mint) 45%, transparent 45%),
+        linear-gradient(-45deg, transparent 0%, transparent 60%, var(--accent-electric) 60%, var(--accent-electric) 65%, transparent 65%),
+        /* Precision measurement lines */
+        linear-gradient(90deg, var(--accent) 0%, var(--accent) 1px, transparent 1px, transparent 100px),
+        linear-gradient(0deg, var(--accent) 0%, var(--accent) 1px, transparent 1px, transparent 100px);
+      background-size: 100% 100%, 80px 80px, 80px 80px, 100% 100%, 100% 100%, 200px 200px, 200px 200px;
+      background-position: 0 0, 0 0, 0 0, 0 0, 0 0, 0 0, 0 0;
       z-index: -1;
     }
 
@@ -171,10 +178,24 @@
     .hero-content {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 4rem;
+      gap: 6rem;
       align-items: center;
-      max-width: 1200px;
+      max-width: 1400px;
       margin: 0 auto;
+      position: relative;
+    }
+
+    .hero-content::before {
+      content: '';
+      position: absolute;
+      top: -50px;
+      right: 20%;
+      width: 200px;
+      height: 200px;
+      background: var(--accent-mint);
+      border-radius: 50%;
+      opacity: 0.1;
+      z-index: -1;
     }
 
     .hero-text {
@@ -200,23 +221,35 @@
     }
 
     h1 {
-      font-size: clamp(3rem, 6vw, 4.5rem);
-      font-weight: 800;
-      line-height: 1.1;
-      margin-bottom: 1.5rem;
+      font-size: clamp(3.5rem, 7vw, 5rem);
+      font-weight: 900;
+      line-height: 0.9;
+      margin-bottom: 2rem;
       color: var(--text);
       position: relative;
+      letter-spacing: -0.02em;
+    }
+
+    h1::before {
+      content: '01';
+      position: absolute;
+      top: -20px;
+      left: -10px;
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--accent);
+      opacity: 0.7;
     }
 
     h1::after {
       content: '';
       position: absolute;
-      bottom: -10px;
+      bottom: -15px;
       left: 0;
-      width: 60px;
-      height: 4px;
-      background: var(--accent);
-      border-radius: 2px;
+      width: 80px;
+      height: 6px;
+      background: linear-gradient(90deg, var(--accent) 0%, var(--accent-mint) 100%);
+      border-radius: 3px;
     }
 
     .hero-subtitle {
@@ -297,10 +330,24 @@
     .feature-section {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 6rem;
+      gap: 8rem;
       align-items: center;
-      max-width: 1200px;
+      max-width: 1400px;
       margin: 0 auto;
+      position: relative;
+    }
+
+    .feature-section::after {
+      content: '';
+      position: absolute;
+      bottom: -30px;
+      left: 10%;
+      width: 150px;
+      height: 150px;
+      background: var(--accent-electric);
+      border-radius: 0;
+      opacity: 0.08;
+      z-index: -1;
     }
 
     .feature-section:nth-child(even) {
@@ -316,22 +363,36 @@
     }
 
     .feature-number {
-      font-size: 4rem;
+      font-size: 6rem;
       font-weight: 900;
       color: var(--accent);
-      opacity: 0.1;
+      opacity: 0.15;
       position: absolute;
-      top: -2rem;
-      left: -1rem;
+      top: -3rem;
+      left: -2rem;
       z-index: -1;
+      font-family: 'Courier New', monospace;
     }
 
     h2 {
-      font-size: clamp(2rem, 4vw, 3rem);
-      font-weight: 700;
-      line-height: 1.2;
-      margin-bottom: 1.5rem;
+      font-size: clamp(2.5rem, 5vw, 3.5rem);
+      font-weight: 800;
+      line-height: 1.1;
+      margin-bottom: 2rem;
       color: var(--text);
+      position: relative;
+      letter-spacing: -0.01em;
+    }
+
+    h2::before {
+      content: '';
+      position: absolute;
+      top: -10px;
+      left: -5px;
+      width: 4px;
+      height: 40px;
+      background: var(--accent);
+      border-radius: 2px;
     }
 
     .feature-description {
