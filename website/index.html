@@ -585,18 +585,7 @@
       animation: gradientShift 15s ease infinite;
     }
 
-    /* Typing animation for hero title */
-    .hero-title {
-      overflow: hidden;
-      border-right: 3px solid var(--accent);
-      white-space: nowrap;
-      animation: typewriter 3s steps(40, end), blink-caret 0.75s step-end infinite;
-    }
 
-    @keyframes blink-caret {
-      from, to { border-color: transparent; }
-      50% { border-color: var(--accent); }
-    }
 
     /* Progress indicator */
     .progress-bar {
@@ -617,9 +606,14 @@
         0 8px 40px rgba(178, 152, 255, 0.1);
     }
 
-    /* Animated privacy icon */
+    /* Privacy icon */
     .privacy-icon {
-      animation: float 4s ease-in-out infinite;
+      width: 60px;
+      height: 60px;
+      background: var(--accent);
+      border-radius: 50%;
+      margin: 0 auto 2rem;
+      opacity: 0.8;
     }
 
     /* Geometric pattern overlay */
@@ -732,7 +726,7 @@
       <div class="hero-content">
         <div class="hero-text scroll-animate">
           <div class="hero-badge">AI-Powered Health Intelligence</div>
-          <h1 class="hero-title">Know Your Nexst Step</h1>
+          <h1>Know Your Nexst Step</h1>
           <p class="hero-subtitle">
             Log your symptoms and let Nexst's AI engine translate them into precise next‑step actions and doctor‑prep questions—fast, accurate, and private.
           </p>
@@ -801,7 +795,7 @@
   <section>
     <div class="container">
       <div class="privacy-section scroll-animate glass-card">
-        <div class="privacy-icon">🔒</div>
+        <div class="privacy-icon"></div>
         <h2>Your Data Stays With You.</h2>
         <p class="feature-description">
           Everything you log is end-to-end encrypted and processed locally. We don't store your data.
