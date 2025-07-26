@@ -515,16 +515,7 @@
       transform: translateY(0);
     }
 
-    /* Parallax sections */
-    .parallax-section {
-      transform: translateZ(0);
-      will-change: transform;
-    }
 
-    .parallax-content {
-      transform: translateY(0);
-      transition: transform 0.1s ease-out;
-    }
 
     /* Glass-morphism cards */
     .glass-card {
@@ -686,29 +677,7 @@
       });
     }
 
-    // Parallax effect
-    function initParallax() {
-      const parallaxSections = document.querySelectorAll('.parallax-section');
-      
-      window.addEventListener('scroll', () => {
-        const scrolled = window.pageYOffset;
-        
-        parallaxSections.forEach(section => {
-          const speed = 0.5;
-          const yPos = -(scrolled * speed);
-          const content = section.querySelector('.parallax-content');
-          
-          if (content) {
-            content.style.transform = `translateY(${yPos}px)`;
-          }
-        });
-      });
-    }
 
-    // Initialize parallax
-    document.addEventListener('DOMContentLoaded', function() {
-      initParallax();
-    });
   </script>
 </head>
 <body>
@@ -739,9 +708,9 @@
   </section>
 
   <!-- Features -->
-  <section class="parallax-section">
+  <section>
     <div class="container">
-      <div class="feature-section parallax-content">
+      <div class="feature-section">
         <div class="feature-content scroll-animate">
           <div class="feature-number">01</div>
           <h2>Tap. Talk. Logged.</h2>
@@ -756,9 +725,9 @@
     </div>
   </section>
 
-  <section class="parallax-section">
+  <section>
     <div class="container">
-      <div class="feature-section parallax-content">
+      <div class="feature-section">
         <div class="feature-content scroll-animate">
           <div class="feature-number">02</div>
           <h2>Get Smart and Speed, Not Scary.</h2>
@@ -773,9 +742,9 @@
     </div>
   </section>
 
-  <section class="parallax-section">
+  <section>
     <div class="container">
-      <div class="feature-section parallax-content">
+      <div class="feature-section">
         <div class="feature-content scroll-animate">
           <div class="feature-number">03</div>
           <h2>No more 'I forgot' moments.</h2>
@@ -791,9 +760,9 @@
   </section>
 
   <!-- Privacy -->
-  <section class="parallax-section">
+  <section>
     <div class="container">
-      <div class="privacy-section scroll-animate glass-card parallax-content">
+      <div class="privacy-section scroll-animate glass-card">
         <h2>Your Data Stays With You.</h2>
         <p class="feature-description">
           Everything you log is end-to-end encrypted and processed locally. We don't store your data.
