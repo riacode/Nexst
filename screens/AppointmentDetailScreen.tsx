@@ -299,7 +299,7 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     elevation: 4,
     borderLeftWidth: 4,
-    borderLeftColor: '#00B39F',
+    borderLeftColor: '#7FFFD4',
   },
   appointmentHeader: {
     flexDirection: 'row',
@@ -345,7 +345,7 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 2,
     borderLeftWidth: 3,
-    borderLeftColor: '#ef4444',
+    borderLeftColor: '#00FFFF',
   },
   symptomHeader: {
     flexDirection: 'row',
@@ -403,7 +403,7 @@ const styles = StyleSheet.create({
     width: 24,
     height: 24,
     borderRadius: 12,
-    backgroundColor: '#00B39F',
+    backgroundColor: '#00FFFF',
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 12,
