@@ -239,12 +239,21 @@
       align-items: center;
     }
 
-    .app-mockup {
-      width: 300px;
+    .app-mockup-container {
+      position: relative;
+      width: 400px;
       height: 600px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .app-mockup {
+      width: 280px;
+      height: 560px;
       background: linear-gradient(135deg, var(--medical-blue) 0%, #FFFFFF 100%);
       border-radius: 16px;
-      position: relative;
+      position: absolute;
       box-shadow: var(--shadow-lg);
       border: 3px solid var(--accent);
       display: flex;
@@ -252,12 +261,52 @@
       justify-content: center;
       color: var(--accent);
       font-weight: 600;
-      font-size: 1.125rem;
+      font-size: 1rem;
+      transition: transform 0.3s ease;
+    }
+
+    .mockup-1 {
+      transform: translateX(-40px) rotate(-8deg);
+      z-index: 3;
+    }
+
+    .mockup-2 {
+      transform: translateX(0px) rotate(0deg);
+      z-index: 2;
+    }
+
+    .mockup-3 {
+      transform: translateX(40px) rotate(8deg);
+      z-index: 1;
     }
 
     .app-mockup::before {
-      content: 'App Mockup';
+      content: 'Screen';
       opacity: 0.7;
+    }
+
+    .mockup-1::before {
+      content: 'Screen 1';
+    }
+
+    .mockup-2::before {
+      content: 'Screen 2';
+    }
+
+    .mockup-3::before {
+      content: 'Screen 3';
+    }
+
+    .app-mockup-container:hover .mockup-1 {
+      transform: translateX(-50px) rotate(-12deg);
+    }
+
+    .app-mockup-container:hover .mockup-2 {
+      transform: translateX(0px) rotate(0deg) scale(1.05);
+    }
+
+    .app-mockup-container:hover .mockup-3 {
+      transform: translateX(50px) rotate(12deg);
     }
 
     /* Feature sections with sophisticated styling */
@@ -704,7 +753,11 @@
           <a href="#" class="hero-cta" onclick="openTestFlight()">Join Beta</a>
         </div>
         <div class="hero-visual scroll-animate">
-          <div class="app-mockup"></div>
+          <div class="app-mockup-container">
+            <div class="app-mockup mockup-1"></div>
+            <div class="app-mockup mockup-2"></div>
+            <div class="app-mockup mockup-3"></div>
+          </div>
         </div>
       </div>
     </div>
@@ -733,7 +786,7 @@
       <div class="feature-section">
         <div class="feature-content scroll-animate">
           <div class="feature-number">02</div>
-          <h2>Get Smart and Speed, Not Scary.</h2>
+          <h2>Get Smart<br> and Speed,<br> Not Scary.</h2>
           <p class="feature-description">
             Get immediate recommended next steps based on your symptoms. Nexst's AI spots trends and severity you might miss.
           </p>
