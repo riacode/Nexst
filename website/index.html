@@ -280,6 +280,23 @@
       z-index: 1;
     }
 
+    /* Subtle hover effects for hero mockups */
+    .app-mockup {
+      transition: transform 0.2s ease;
+    }
+
+    .mockup-1:hover {
+      transform: translateX(-80px) rotate(-20deg) scale(1.05);
+    }
+
+    .mockup-2:hover {
+      transform: translateX(0px) rotate(0deg) scale(1.05);
+    }
+
+    .mockup-3:hover {
+      transform: translateX(80px) rotate(20deg) scale(1.05);
+    }
+
     .app-mockup::before {
       content: 'Screen';
       opacity: 0.7;
