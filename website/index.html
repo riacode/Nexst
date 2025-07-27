@@ -266,17 +266,57 @@
     }
 
     .mockup-1 {
-      transform: translateX(-40px) rotate(-8deg);
-      z-index: 3;
+      transform: translateX(-60px) rotate(-15deg);
+      z-index: 1;
+      cursor: pointer;
     }
 
     .mockup-2 {
       transform: translateX(0px) rotate(0deg);
       z-index: 2;
+      cursor: pointer;
     }
 
     .mockup-3 {
-      transform: translateX(40px) rotate(8deg);
+      transform: translateX(60px) rotate(15deg);
+      z-index: 1;
+      cursor: pointer;
+    }
+
+    .mockup-1.active {
+      transform: translateX(0px) rotate(0deg);
+      z-index: 3;
+    }
+
+    .mockup-2.active {
+      transform: translateX(0px) rotate(0deg);
+      z-index: 3;
+    }
+
+    .mockup-3.active {
+      transform: translateX(0px) rotate(0deg);
+      z-index: 3;
+    }
+
+    .mockup-1.active ~ .mockup-2,
+    .mockup-1.active ~ .mockup-3 {
+      transform: translateX(60px) rotate(15deg);
+      z-index: 1;
+    }
+
+    .mockup-2.active ~ .mockup-1 {
+      transform: translateX(-60px) rotate(-15deg);
+      z-index: 1;
+    }
+
+    .mockup-2.active ~ .mockup-3 {
+      transform: translateX(60px) rotate(15deg);
+      z-index: 1;
+    }
+
+    .mockup-3.active ~ .mockup-1,
+    .mockup-3.active ~ .mockup-2 {
+      transform: translateX(-60px) rotate(-15deg);
       z-index: 1;
     }
 
@@ -297,17 +337,7 @@
       content: 'Screen 3';
     }
 
-    .app-mockup-container:hover .mockup-1 {
-      transform: translateX(-50px) rotate(-12deg);
-    }
 
-    .app-mockup-container:hover .mockup-2 {
-      transform: translateX(0px) rotate(0deg) scale(1.05);
-    }
-
-    .app-mockup-container:hover .mockup-3 {
-      transform: translateX(50px) rotate(12deg);
-    }
 
     /* Feature sections with sophisticated styling */
     .feature-section {
@@ -705,6 +735,9 @@
       
       // Add pulse effect to CTAs
       addPulseEffect();
+      
+      // Initialize mockup clicks
+      initMockupClicks();
     });
 
     // Progress bar functionality
@@ -725,6 +758,20 @@
       const ctas = document.querySelectorAll('.hero-cta, .cta-button');
       ctas.forEach(cta => {
         cta.classList.add('pulse');
+      });
+    }
+
+    // Mockup click functionality
+    function initMockupClicks() {
+      const mockups = document.querySelectorAll('.app-mockup');
+      
+      mockups.forEach(mockup => {
+        mockup.addEventListener('click', function() {
+          // Remove active class from all mockups
+          mockups.forEach(m => m.classList.remove('active'));
+          // Add active class to clicked mockup
+          this.classList.add('active');
+        });
       });
     }
 
