@@ -48,14 +48,12 @@
       overflow-x: hidden;
     }
     
-    html {
-      min-height: 300vh;
-    }
+
 
     /* Innovative Tech-Forward Background */
     html::before {
       content: '';
-      position: absolute;
+      position: fixed;
       top: 0;
       left: 0;
       width: 100%;
@@ -65,7 +63,7 @@
         linear-gradient(45deg, transparent 0%, transparent 30%, var(--accent-mint) 30%, var(--accent-mint) 40%, transparent 40%),
         /* Electric blue diagonal stripe */
         linear-gradient(45deg, transparent 0%, transparent 40%, var(--accent-electric) 40%, var(--accent-electric) 55%, transparent 55%);
-      background-size: 100% 100%, 100% 100%;
+      background-size: 100% 300vh, 100% 300vh;
       background-position: 0 0, 0 0;
       z-index: -1;
     }
