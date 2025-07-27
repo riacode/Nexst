@@ -268,16 +268,19 @@
     .mockup-1 {
       transform: translateX(-80px) rotate(-20deg);
       z-index: 1;
+      cursor: pointer;
     }
 
     .mockup-2 {
       transform: translateX(0px) rotate(0deg);
       z-index: 2;
+      cursor: pointer;
     }
 
     .mockup-3 {
       transform: translateX(80px) rotate(20deg);
       z-index: 1;
+      cursor: pointer;
     }
 
     /* Subtle hover effects for hero mockups */
@@ -312,6 +315,19 @@
 
     .website-icon img:hover {
       transform: scale(1.05);
+    }
+
+    /* Active state for hero mockups - brings to front */
+    .mockup-1.active {
+      z-index: 3;
+    }
+
+    .mockup-2.active {
+      z-index: 3;
+    }
+
+    .mockup-3.active {
+      z-index: 3;
     }
 
     .app-mockup::before {
@@ -722,8 +738,23 @@
       addPulseEffect();
       
       // Initialize mockup clicks
+      initMockupClicks();
 
     });
+
+    // Mockup click functionality - brings clicked mockup to front
+    function initMockupClicks() {
+      const mockups = document.querySelectorAll('.app-mockup');
+      
+      mockups.forEach(mockup => {
+        mockup.addEventListener('click', function() {
+          // Remove active class from all mockups
+          mockups.forEach(m => m.classList.remove('active'));
+          // Add active class to clicked mockup
+          this.classList.add('active');
+        });
+      });
+    }
 
     // Progress bar functionality
     function initProgressBar() {
