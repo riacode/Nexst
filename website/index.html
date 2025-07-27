@@ -62,7 +62,22 @@
       background-size: 100% 500vh, 100% 500vh;
       z-index: -2;
       pointer-events: none;
-}
+    }
+
+    /* Website Icon */
+    .website-icon {
+      position: fixed;
+      top: 2rem;
+      left: 2rem;
+      z-index: 1000;
+      pointer-events: none;
+    }
+
+    .website-icon img {
+      width: 48px;
+      height: 48px;
+      border-radius: 8px;
+    }
 
     /* Subtle noise texture overlay */
     html::after {
@@ -642,6 +657,12 @@
 </head>
 <body>
   <div class="scroll-background"></div>
+  
+  <!-- Website Icon -->
+  <div class="website-icon">
+    <img src="website_icon.png" alt="Nexst" />
+  </div>
+  
   <!-- Hero Section -->
   <section id="hero">
     <div class="container">
