@@ -70,7 +70,15 @@
       top: 2rem;
       left: 2rem;
       z-index: 1000;
-      pointer-events: none;
+    }
+
+    .website-icon a {
+      display: block;
+      transition: transform 0.2s ease;
+    }
+
+    .website-icon a:hover {
+      transform: scale(1.05);
     }
 
     .website-icon img {
@@ -660,7 +668,9 @@
   
   <!-- Website Icon -->
   <div class="website-icon">
-    <img src="website_icon.png" alt="Nexst" />
+    <a href="https://nexst.app" target="_blank">
+      <img src="website_icon.png" alt="Nexst" />
+    </a>
   </div>
   
   <!-- Hero Section -->
