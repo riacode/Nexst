@@ -5,6 +5,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { fontStyles } from '../utils/fonts';
 import { useAppointments } from '../contexts/AppointmentsContext';
+import { useSmartAI } from '../contexts/SmartAIContext';
 import { useTutorial } from '../contexts/TutorialContext';
 import FeatureTutorial from '../components/FeatureTutorial';
 import { featureTutorials } from '../utils/onboardingContent';
@@ -20,25 +21,32 @@ interface Appointment {
 export default function AppointmentsScreen({ navigation }: any) {
   const { appointments, addAppointment: addAppointmentToContext } = useAppointments();
   const { tutorialState, completeAppointmentTutorial } = useTutorial();
+  const { scheduleAppointmentReminders } = useSmartAI();
   const [showModal, setShowModal] = useState(false);
   const [titleInput, setTitleInput] = useState('');
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [upcomingCollapsed, setUpcomingCollapsed] = useState(false);
   const [pastCollapsed, setPastCollapsed] = useState(false);
 
-  const addAppointment = () => {
+  const addAppointment = async () => {
     if (!titleInput.trim()) {
       Alert.alert('Error', 'Please enter an appointment name');
       return;
     }
     
     const now = new Date();
-    addAppointmentToContext({
+    const newAppointment = {
       id: now.toISOString(),
       title: titleInput,
       date: selectedDate,
       timestamp: now
-    });
+    };
+    
+    addAppointmentToContext(newAppointment);
+    
+    // Schedule appointment reminders
+    await scheduleAppointmentReminders(newAppointment);
+    
     setShowModal(false);
     setTitleInput('');
     setSelectedDate(new Date());

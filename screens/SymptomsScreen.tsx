@@ -4,7 +4,7 @@ import { Audio } from 'expo-av';
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { LinearGradient } from 'expo-linear-gradient';
-import { transcribeAudio, generateSummary, generateRecommendations, generateFollowUpQuestions, checkForMissedPeriod } from '../utils/openai';
+import { useSmartAI } from '../contexts/SmartAIContext';
 import { SymptomLog, MedicalRecommendation, RecommendationAlert } from '../types/recommendations';
 import { useRecommendations } from '../contexts/RecommendationsContext';
 import { useSymptomLogs } from '../contexts/SymptomLogsContext';
@@ -35,6 +35,11 @@ export default function SymptomScreen({ navigation }: any) {
     const { symptomLogs, addSymptomLog } = useSymptomLogs();
     const { markOnboardingComplete } = useOnboarding();
     const { tutorialState, completeSymptomTutorial } = useTutorial();
+    const { 
+        processSymptomLog, 
+        startProactiveMonitoring, 
+        isProactiveActive 
+    } = useSmartAI();
 
     // Audio recording state
     const [recording, setRecording] = useState<Audio.Recording | null>(null);
@@ -66,20 +71,28 @@ export default function SymptomScreen({ navigation }: any) {
 
 
 
-    // generate recommendations and follow-up questions when symptoms are added
+    // Start proactive monitoring when component mounts
+    useEffect(() => {
+        if (!isProactiveActive) {
+            startProactiveMonitoring();
+        }
+    }, [isProactiveActive, startProactiveMonitoring]);
+
+    // Generate recommendations and follow-up questions when symptoms are added
     useEffect(() => {
         const checkForRecommendations = async () => {
             try {
                 // Only generate recommendations if we have symptom logs
                 if (symptomLogs.length >= 1) {
-                    const symptomRecommendations = await generateRecommendations(symptomLogs, recommendations);
+                    // Use SmartHealthAI for personalized recommendations
+                    const symptomRecommendations = await processSymptomLog(symptomLogs[0]);
                     
-                    if (symptomRecommendations.length > 0) {
+                    if (symptomRecommendations.quickRecommendations.length > 0) {
                         // Add to global recommendations context
-                        addRecommendations(symptomRecommendations);
+                        addRecommendations(symptomRecommendations.quickRecommendations);
                         
                         // Send notifications for new recommendations
-                        for (const recommendation of symptomRecommendations) {
+                        for (const recommendation of symptomRecommendations.quickRecommendations) {
                             if (recommendation.priority === 'HIGH') {
                                 await NotificationService.sendHighPriorityNotification(recommendation);
                             } else {
@@ -88,7 +101,7 @@ export default function SymptomScreen({ navigation }: any) {
                         }
                         
                         // Create alert for highest priority recommendation
-                        const highPriorityRec = symptomRecommendations.find(rec => rec.priority === 'HIGH');
+                        const highPriorityRec = symptomRecommendations.quickRecommendations.find((rec: MedicalRecommendation) => rec.priority === 'HIGH');
                         if (highPriorityRec) {
                             setActiveAlert({
                                 id: Date.now().toString(),
@@ -101,26 +114,15 @@ export default function SymptomScreen({ navigation }: any) {
                     }
                 }
                 
-                // Check for follow-up questions for unresolved symptoms
-                if (symptomLogs.length >= 2) {
-                    const followUpQuestions = await generateFollowUpQuestions(symptomLogs);
-                    if (followUpQuestions.length > 0) {
-                        setFollowUpQuestion(followUpQuestions[0]);
-                    }
-                    
-                    // Check for missed period
-                    const missedPeriodQ = await checkForMissedPeriod(symptomLogs);
-                    if (missedPeriodQ) {
-                        setMissedPeriodQuestion(missedPeriodQ);
-                    }
-                }
+                // Note: Follow-up questions and missed period checks are now handled by proactive AI
+                // They will be triggered automatically by the background monitoring system
             } catch (error) {
                 console.error('Error generating recommendations:', error);
             }
         };
         
         checkForRecommendations();
-    }, [symptomLogs, addRecommendations, recommendations]);
+    }, [symptomLogs, addRecommendations, processSymptomLog]);
 
     // pulsating animation for first recording of the day
     useEffect(() => {
@@ -180,28 +182,39 @@ export default function SymptomScreen({ navigation }: any) {
                         setStatus("Processing audio...");
                         
                         try {
-                            // Transcribe audio
-                            const transcript = await transcribeAudio(uri);
-                            console.log("Transcript:", transcript);
-                            
-                            // Generate summary
-                            const summary = await generateSummary(transcript);
-                            console.log("Summary:", summary);
-                            
-                            // Add to global symptom logs
+                            // Create symptom log object for processing
                             const now = new Date();
-                            const newLog = { 
+                            const symptomLog = { 
                                 id: now.toISOString(), 
                                 timestamp: now, 
-                                summary, 
-                                transcript,
-                                audioURI: uri 
+                                summary: '', 
+                                transcript: '',
+                                audioURI: uri,
+                                healthDomain: 'general_wellness' as any, // Will be updated by AI
+                                severity: 'mild' as any, // Will be updated by AI
+                                impact: 'low' as any // Will be updated by AI
                             };
+                            
+                            // Use SmartHealthAI to process the symptom log
+                            console.log("🤖 SMART HEALTH AI: Processing symptom log");
+                            const processedLog = await processSymptomLog(symptomLog);
+                            
+                            // Update the log with processed data
+                            const newLog = {
+                                ...symptomLog,
+                                summary: processedLog.summary,
+                                transcript: processedLog.transcript,
+                                healthDomain: processedLog.healthDomain,
+                                severity: processedLog.severity,
+                                impact: processedLog.impact
+                            };
+                            
+                            // Add to global symptom logs
                             addSymptomLog(newLog);
                             
                             setStatus("Recording saved!");
                         } catch (error) {
-                            console.error("OpenAI processing error:", error);
+                            console.error("SmartHealthAI processing error:", error);
                             setStatus("Failed to process audio.");
                             Alert.alert("Error", "Failed to process audio. Please try again.");
                         } finally {

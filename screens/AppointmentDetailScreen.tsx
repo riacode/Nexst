@@ -3,7 +3,7 @@ import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Animated } from '
 import { Ionicons } from '@expo/vector-icons';
 import { fontStyles } from '../utils/fonts';
 import { useSymptomLogs } from '../contexts/SymptomLogsContext';
-import { generateAppointmentQuestions } from '../utils/openai';
+import { useSmartAI } from '../contexts/SmartAIContext';
 
 interface AppointmentDetailScreenProps {
   route?: {
@@ -22,6 +22,7 @@ interface AppointmentDetailScreenProps {
 export default function AppointmentDetailScreen({ route, navigation }: AppointmentDetailScreenProps) {
   const { appointment } = route?.params || {};
   const { getRelevantSymptoms } = useSymptomLogs();
+  const { generateAppointmentQuestions } = useSmartAI();
   const [relevantSymptoms, setRelevantSymptoms] = useState<any[]>([]);
   const [importantQuestions, setImportantQuestions] = useState<string[]>([]);
   const [isGeneratingQuestions, setIsGeneratingQuestions] = useState(false);
@@ -79,8 +80,8 @@ export default function AppointmentDetailScreen({ route, navigation }: Appointme
   const generateImportantQuestions = async (appointmentTitle: string, symptoms: any[], appointmentDate: Date) => {
     setIsGeneratingQuestions(true);
     try {
-      // Use AI to generate personalized questions
-      const aiQuestions = await generateAppointmentQuestions(appointmentTitle, symptoms, appointmentDate);
+      // Use SmartHealthAI to generate personalized questions
+      const aiQuestions = await generateAppointmentQuestions(appointmentTitle, appointmentDate);
       
       if (aiQuestions.length > 0) {
         setImportantQuestions(aiQuestions);

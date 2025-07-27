@@ -41,8 +41,10 @@ export function NotificationSettingsProvider({ children }: { children: React.Rea
   useEffect(() => {
     if (settings.enabled) {
       scheduleDailyReminder();
+      scheduleMissedLogSpotlight();
     } else {
       cancelDailyReminder();
+      cancelMissedLogSpotlight();
     }
   }, [settings]);
 
@@ -164,6 +166,65 @@ export function NotificationSettingsProvider({ children }: { children: React.Rea
       console.log('Notification badge cleared');
     } catch (error) {
       console.error('Error clearing notification badge:', error);
+    }
+  };
+
+  // ============================================================================
+  // MISSED LOG SPOTLIGHT FUNCTIONALITY
+  // ============================================================================
+
+  const scheduleMissedLogSpotlight = async () => {
+    try {
+      if (!settings.enabled) return;
+
+      // Schedule spotlight notification 1 hour after the user's preferred time
+      const spotlightTime = new Date(settings.time);
+      spotlightTime.setHours(spotlightTime.getHours() + 1);
+
+      // If time has passed today, schedule for tomorrow
+      const now = new Date();
+      if (spotlightTime <= now) {
+        spotlightTime.setDate(spotlightTime.getDate() + 1);
+      }
+
+      // Create daily trigger for spotlight (same format as daily reminder)
+      let trigger: any = {
+        hour: spotlightTime.getHours(),
+        minute: spotlightTime.getMinutes(),
+        repeats: true,
+      };
+
+      await Notifications.scheduleNotificationAsync({
+        content: {
+          title: '🌟 Spotlight: Health Check-in Overdue',
+          body: "Your daily health log is waiting! This helps track your wellness journey.",
+          data: { type: 'missed_log_spotlight' },
+          sound: 'default',
+          priority: 'high' as any,
+          badge: 1,
+          // iOS specific settings for maximum prominence
+          ...(Platform.OS === 'ios' && {
+            categoryIdentifier: 'missed_log_spotlight',
+            threadIdentifier: 'health_logging',
+            interruptionLevel: 'timeSensitive', // iOS 15+ for maximum prominence
+          }),
+        },
+        trigger,
+        identifier: 'missed_log_spotlight',
+      });
+
+      console.log('Missed log spotlight scheduled for:', spotlightTime.toLocaleString());
+    } catch (error) {
+      console.error('Error scheduling missed log spotlight:', error);
+    }
+  };
+
+  const cancelMissedLogSpotlight = async () => {
+    try {
+      await Notifications.cancelScheduledNotificationAsync('missed_log_spotlight');
+      console.log('Missed log spotlight cancelled');
+    } catch (error) {
+      console.error('Error cancelling missed log spotlight:', error);
     }
   };
 

@@ -20,6 +20,7 @@ import { SymptomLogsProvider, useSymptomLogs } from './contexts/SymptomLogsConte
 import { AppointmentsProvider, useAppointments } from './contexts/AppointmentsContext';
 import { OnboardingProvider, useOnboarding } from './contexts/OnboardingContext';
 import { NotificationSettingsProvider, useNotificationSettings } from './contexts/NotificationSettingsContext';
+import { SmartAIProvider } from './contexts/SmartAIContext';
 import { PrivacyProvider, usePrivacy } from './contexts/PrivacyContext';
 import { TutorialProvider, useTutorial } from './contexts/TutorialContext';
 import { NavigationProvider, useNavigationContext } from './contexts/NavigationContext';
@@ -220,11 +221,13 @@ export default function App() {
           <RecommendationsProvider>
             <AppointmentsProvider>
               <NotificationSettingsProvider>
-                <PrivacyProvider>
-                  <TutorialProvider>
-                    <AppContent />
-                  </TutorialProvider>
-                </PrivacyProvider>
+                <SmartAIProvider userId="default-user">
+                  <PrivacyProvider>
+                    <TutorialProvider>
+                      <AppContent />
+                    </TutorialProvider>
+                  </PrivacyProvider>
+                </SmartAIProvider>
               </NotificationSettingsProvider>
             </AppointmentsProvider>
           </RecommendationsProvider>
