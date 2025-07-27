@@ -266,7 +266,7 @@
     }
 
     .mockup-1 {
-      transform: translateX(-60px) rotate(-15deg);
+      transform: translateX(-80px) rotate(-20deg);
       z-index: 1;
       cursor: pointer;
     }
@@ -278,46 +278,21 @@
     }
 
     .mockup-3 {
-      transform: translateX(60px) rotate(15deg);
+      transform: translateX(80px) rotate(20deg);
       z-index: 1;
       cursor: pointer;
     }
 
     .mockup-1.active {
-      transform: translateX(0px) rotate(0deg);
       z-index: 3;
     }
 
     .mockup-2.active {
-      transform: translateX(0px) rotate(0deg);
       z-index: 3;
     }
 
     .mockup-3.active {
-      transform: translateX(0px) rotate(0deg);
       z-index: 3;
-    }
-
-    .mockup-1.active ~ .mockup-2,
-    .mockup-1.active ~ .mockup-3 {
-      transform: translateX(60px) rotate(15deg);
-      z-index: 1;
-    }
-
-    .mockup-2.active ~ .mockup-1 {
-      transform: translateX(-60px) rotate(-15deg);
-      z-index: 1;
-    }
-
-    .mockup-2.active ~ .mockup-3 {
-      transform: translateX(60px) rotate(15deg);
-      z-index: 1;
-    }
-
-    .mockup-3.active ~ .mockup-1,
-    .mockup-3.active ~ .mockup-2 {
-      transform: translateX(-60px) rotate(-15deg);
-      z-index: 1;
     }
 
     .app-mockup::before {
