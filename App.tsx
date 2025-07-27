@@ -143,6 +143,7 @@ function AppContent() {
   const { hasSeenOnboarding, markOnboardingComplete } = useOnboarding();
   const { tutorialState, completeOnboarding, hideOnboardingTutorial } = useTutorial();
   const { navigationRef } = useNavigationContext();
+  const { clearNotificationBadge } = useNotificationSettings();
 
   console.log('AppContent - hasSeenOnboarding:', hasSeenOnboarding);
 
@@ -150,8 +151,11 @@ function AppContent() {
     // Set up notification listeners when the app starts
     const cleanup = setupNotificationListeners();
     
+    // Clear notification badge when app opens
+    clearNotificationBadge();
+    
     return cleanup;
-  }, []);
+  }, [clearNotificationBadge]);
 
   const handleTutorialComplete = async () => {
     await completeOnboarding();

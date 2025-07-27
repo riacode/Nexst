@@ -1,12 +1,12 @@
 import * as Notifications from 'expo-notifications';
 import { Platform } from 'react-native';
 
-// Configure notification behavior
+// Configure notification behavior for better lock screen visibility
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
     shouldShowAlert: true,
     shouldPlaySound: true,
-    shouldSetBadge: false,
+    shouldSetBadge: true, // Enable badge for lock screen visibility
     shouldShowBanner: true,
     shouldShowList: true,
   }),

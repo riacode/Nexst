@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Notifications from 'expo-notifications';
 
@@ -6,13 +7,16 @@ interface NotificationSettings {
   enabled: boolean;
   time: Date;
   frequency: string; // 'Daily', 'Weekdays', 'Weekly'
+  priority: string; // 'normal', 'high'
+  lockScreenProminent: boolean;
 }
 
 interface NotificationSettingsContextType {
   settings: NotificationSettings;
-  updateSettings: (enabled: boolean, time: Date, frequency: string) => Promise<void>;
+  updateSettings: (enabled: boolean, time: Date, frequency: string, priority?: string, lockScreenProminent?: boolean) => Promise<void>;
   scheduleDailyReminder: () => Promise<void>;
   cancelDailyReminder: () => Promise<void>;
+  clearNotificationBadge: () => Promise<void>;
 }
 
 const NotificationSettingsContext = createContext<NotificationSettingsContextType | undefined>(undefined);
@@ -22,7 +26,9 @@ const STORAGE_KEY = 'notification_settings';
 const defaultSettings: NotificationSettings = {
   enabled: false,
   time: new Date(new Date().setHours(18, 0, 0, 0)), // 6 PM default
-  frequency: 'Daily'
+  frequency: 'Daily',
+  priority: 'high',
+  lockScreenProminent: true
 };
 
 export function NotificationSettingsProvider({ children }: { children: React.ReactNode }) {
@@ -63,8 +69,14 @@ export function NotificationSettingsProvider({ children }: { children: React.Rea
     }
   };
 
-  const updateSettings = async (enabled: boolean, time: Date, frequency: string) => {
-    const newSettings = { enabled, time, frequency };
+  const updateSettings = async (enabled: boolean, time: Date, frequency: string, priority?: string, lockScreenProminent?: boolean) => {
+    const newSettings = { 
+      enabled, 
+      time, 
+      frequency, 
+      priority: priority || settings.priority,
+      lockScreenProminent: lockScreenProminent !== undefined ? lockScreenProminent : settings.lockScreenProminent
+    };
     setSettings(newSettings);
     await saveSettings(newSettings);
   };
@@ -115,9 +127,17 @@ export function NotificationSettingsProvider({ children }: { children: React.Rea
 
       await Notifications.scheduleNotificationAsync({
         content: {
-          title: "Time to Record Your Symptoms",
-          body: "Take a moment to track how you're feeling today. Your health insights matter!",
+          title: "📝 Time to Log Your Symptoms",
+          body: "Tap to quickly record how you're feeling today. Your health insights matter!",
           data: { type: 'daily_reminder' },
+          sound: 'default',
+          priority: settings.priority as any,
+          badge: 1,
+          // iOS specific settings for lock screen prominence
+          ...(Platform.OS === 'ios' && {
+            categoryIdentifier: 'daily_reminder',
+            threadIdentifier: 'health_logging',
+          }),
         },
         trigger,
         identifier: 'daily_reminder',
@@ -138,6 +158,15 @@ export function NotificationSettingsProvider({ children }: { children: React.Rea
     }
   };
 
+  const clearNotificationBadge = async () => {
+    try {
+      await Notifications.setBadgeCountAsync(0);
+      console.log('Notification badge cleared');
+    } catch (error) {
+      console.error('Error clearing notification badge:', error);
+    }
+  };
+
   return (
     <NotificationSettingsContext.Provider
       value={{
@@ -145,6 +174,7 @@ export function NotificationSettingsProvider({ children }: { children: React.Rea
         updateSettings,
         scheduleDailyReminder,
         cancelDailyReminder,
+        clearNotificationBadge,
       }}
     >
       {children}
