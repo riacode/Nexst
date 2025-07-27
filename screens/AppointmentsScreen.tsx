@@ -362,7 +362,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 32,
   },
   appItem: { 
-    backgroundColor: 'rgba(255, 255, 255, 0.02)', 
+    backgroundColor: '#ffffff', 
     padding: 16, 
     borderRadius: 12, 
     marginBottom: 12,
@@ -371,9 +371,9 @@ const styles = StyleSheet.create({
     shadowRadius: 4, 
     elevation: 2,
     borderLeftWidth: 4, 
-            borderLeftColor: '#00B39F',
+    borderLeftColor: '#00B39F',
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.1)',
+    borderColor: '#E2E8F0',
   },
   appHeader: { 
     flexDirection: 'row', 
@@ -387,7 +387,7 @@ const styles = StyleSheet.create({
   },
   appTitle: { 
     ...fontStyles.bodyMedium,
-    color: '#ffffff',
+    color: '#1e293b',
     marginBottom: 4,
   },
   appScheduledDate: {
