@@ -5,7 +5,7 @@ import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSmartAI } from '../contexts/SmartAIContext';
-import { SymptomLog, MedicalRecommendation, RecommendationAlert } from '../types/recommendations';
+import { SymptomLog, MedicalRecommendation, RecommendationAlert, HealthDomain } from '../types/recommendations';
 import { useRecommendations } from '../contexts/RecommendationsContext';
 import { useSymptomLogs } from '../contexts/SymptomLogsContext';
 import { useOnboarding } from '../contexts/OnboardingContext';
@@ -15,6 +15,7 @@ import NotificationPermission from '../components/NotificationPermission';
 import FeatureTutorial from '../components/FeatureTutorial';
 import { featureTutorials } from '../utils/onboardingContent';
 import SharedBackground from '../components/SharedBackground';
+import { colors, gradients } from '../utils/colors';
 
 export default function SymptomScreen({ navigation }: any) {
     const [audioURI, setAudioURI] = useState<string | null>(null);
@@ -184,15 +185,15 @@ export default function SymptomScreen({ navigation }: any) {
                         try {
                             // Create symptom log object for processing
                             const now = new Date();
-                            const symptomLog = { 
+                            const symptomLog: SymptomLog = { 
                                 id: now.toISOString(), 
                                 timestamp: now, 
                                 summary: '', 
                                 transcript: '',
                                 audioURI: uri,
-                                healthDomain: 'general_wellness' as any, // Will be updated by AI
-                                severity: 'mild' as any, // Will be updated by AI
-                                impact: 'low' as any // Will be updated by AI
+                                healthDomain: 'general_wellness' as HealthDomain, // Will be updated by AI
+                                severity: 'mild', // Will be updated by AI
+                                impact: 'low' // Will be updated by AI
                             };
                             
                             // Use SmartHealthAI to process the symptom log
@@ -307,7 +308,7 @@ export default function SymptomScreen({ navigation }: any) {
                 {activeAlert.recommendation.priority === 'HIGH' ? '🚨 ' : '💡 '}
                 {activeAlert.recommendation.title}
               </Text>
-              <Ionicons name="arrow-forward" size={16} color="#00B39F" />
+              <Ionicons name="arrow-forward" size={16} color={colors.accent} />
             </TouchableOpacity>
           )}
           
@@ -352,7 +353,7 @@ export default function SymptomScreen({ navigation }: any) {
                   }
                 ]}
               >
-                <Ionicons name="sync" size={32} color="#00B39F" />
+                <Ionicons name="sync" size={32} color={colors.accent} />
               </Animated.View>
               <Text style={styles.processingText}>Processing your recording...</Text>
             </View>
@@ -365,7 +366,7 @@ export default function SymptomScreen({ navigation }: any) {
               ]}
             >
               <LinearGradient
-                colors={['#00B39F', '#00B39F']}
+                colors={[colors.accent, colors.accent]}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 1 }}
                 style={[styles.recordButtonInner, { borderRadius: symptomLogs.length > 0 ? 35 : 50 }]}
@@ -395,14 +396,14 @@ export default function SymptomScreen({ navigation }: any) {
       alert: {
         flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
         backgroundColor: '#e0f7ff', padding: 12, margin: 12, borderRadius: 8,
-        borderColor: '#00B39F', borderWidth: 1,
+        borderColor: colors.accent, borderWidth: 1,
       },
-      alertText: { flex: 1, color: '#00B39F' },
+              alertText: { flex: 1, color: colors.accent },
       logsContainer: { padding: 12, paddingBottom: 140 },
       logCard: {
         backgroundColor: '#ffffff', padding: 16, borderRadius: 12, marginBottom: 12,
         shadowColor: '#000', shadowOpacity: 0.08, shadowRadius: 6, elevation: 3,
-        borderLeftWidth: 4, borderLeftColor: '#00B39F',
+        borderLeftWidth: 4, borderLeftColor: colors.accent,
         borderWidth: 1, borderColor: '#E2E8F0',
       },
       logHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 8 },
@@ -410,7 +411,7 @@ export default function SymptomScreen({ navigation }: any) {
       logTitle: { fontSize: 18, color: '#1e293b', fontWeight: '600' },
       recordButton: {
         position: 'absolute', bottom: 24, alignSelf: 'center',
-        backgroundColor: '#00B39F', width: 100, height: 100, borderRadius: 50,
+        backgroundColor: colors.accent, width: 100, height: 100, borderRadius: 50,
         justifyContent: 'center', alignItems: 'center',
         shadowColor: '#000', shadowOpacity: 0.2, shadowRadius: 8, elevation: 5,
       },
