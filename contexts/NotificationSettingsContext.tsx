@@ -23,7 +23,7 @@ const NotificationSettingsContext = createContext<NotificationSettingsContextTyp
 const STORAGE_KEY = 'notification_settings';
 
 const defaultSettings: NotificationSettings = {
-  enabled: false,
+  enabled: true,
   time: new Date(new Date().setHours(9, 0, 0, 0)), // 9 AM default
   frequency: 'Daily',
   isNewUser: true,

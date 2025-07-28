@@ -184,9 +184,9 @@ export default function SettingsModal({
               
               <View style={styles.settingRow}>
                 <View style={styles.settingContent}>
-                  <Text style={styles.settingTitle}>Enable Daily Reminders</Text>
+                  <Text style={styles.settingTitle}>Enable Reminders</Text>
                   <Text style={styles.settingDescription}>
-                    Get reminded to record your symptoms daily
+                    Get reminded to record your symptoms
                   </Text>
                 </View>
                 <Switch
@@ -203,7 +203,7 @@ export default function SettingsModal({
                     <View style={styles.settingContent}>
                       <Text style={styles.settingTitle}>Reminder Time</Text>
                       <Text style={styles.settingDescription}>
-                        When to send daily reminders
+                        When to send reminders
                       </Text>
                     </View>
                     <DateTimePicker
