@@ -118,7 +118,6 @@ export function NotificationSettingsProvider({ children }: { children: React.Rea
   const cancelNotifications = async () => {
     try {
       await NotificationService.cancelNotification('daily_reminder');
-      await NotificationService.cancelNotification('missed_log_reminder');
       console.log('All scheduled notifications cancelled');
     } catch (error) {
       console.error('Error cancelling notifications:', error);

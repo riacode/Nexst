@@ -64,9 +64,7 @@ export default function AppointmentsScreen({ navigation }: any) {
     
     addAppointmentToContext(newAppointment);
     
-    // Schedule appointment reminders
-    const { NotificationService } = await import('../utils/notifications');
-    await NotificationService.scheduleAppointmentReminders(newAppointment);
+    
     
     setShowModal(false);
     setTitleInput('');

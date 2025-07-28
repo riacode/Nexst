@@ -79,7 +79,7 @@ export class NotificationService {
       // More than one hour past - send missed reminder
       await this.scheduleLocalNotification(
         "Missed Your Health Check-in",
-        "It's been over an hour since your scheduled time. Your health insights are waiting!",
+        "Make sure you log your symptoms today!",
         { type: 'missed_log_reminder', priority: 'high' }
       );
       console.log('New user: More than one hour past, sent missed reminder');
@@ -91,7 +91,6 @@ export class NotificationService {
     try {
       // Cancel any existing reminders
       await this.cancelNotification('daily_reminder');
-      await this.cancelNotification('missed_log_reminder');
 
       const triggerTime = new Date(time);
       const now = new Date();
@@ -126,54 +125,21 @@ export class NotificationService {
         };
       }
 
-      // Schedule daily reminder
+      // Schedule daily reminder with high priority for iOS lock screen
       await Notifications.scheduleNotificationAsync({
         content: {
           title: "Time to Log Your Symptoms",
           body: "Tap to quickly record how you're feeling today.",
-          data: { type: 'daily_reminder', priority: 'normal' },
+          data: { type: 'daily_reminder', priority: 'high' },
           sound: 'default',
+          // Ensure high priority for iOS lock screen positioning
+          ...(Platform.OS === 'ios' && {
+            priority: 'high',
+            categoryIdentifier: 'high_priority'
+          })
         },
         trigger,
         identifier: 'daily_reminder',
-      });
-
-      // Schedule missed log reminder (1 hour after)
-      const missedTime = new Date(triggerTime);
-      missedTime.setHours(missedTime.getHours() + 1);
-      
-      let missedTrigger: any;
-      if (frequency === 'Daily') {
-        missedTrigger = {
-          hour: missedTime.getHours(),
-          minute: missedTime.getMinutes(),
-          repeats: true,
-        };
-      } else if (frequency === 'Weekdays') {
-        missedTrigger = {
-          hour: missedTime.getHours(),
-          minute: missedTime.getMinutes(),
-          weekday: 1,
-          repeats: true,
-        };
-      } else if (frequency === 'Weekly') {
-        missedTrigger = {
-          hour: missedTime.getHours(),
-          minute: missedTime.getMinutes(),
-          weekday: 1,
-          repeats: true,
-        };
-      }
-
-      await Notifications.scheduleNotificationAsync({
-        content: {
-          title: "Missed Your Health Check-in",
-          body: "It's been an hour since your scheduled time. Your health insights are waiting!",
-          data: { type: 'missed_log_reminder', priority: 'normal' },
-          sound: 'default',
-        },
-        trigger: missedTrigger,
-        identifier: 'missed_log_reminder',
       });
 
       console.log(`${frequency} reminders scheduled for:`, triggerTime.toLocaleString());
@@ -182,69 +148,9 @@ export class NotificationService {
     }
   }
 
-  // 3. Appointment reminders
-  static async scheduleAppointmentReminders(appointment: any) {
-    try {
-      const appointmentDate = new Date(appointment.date);
-      const now = new Date();
-      
-      // Day before reminder
-      const dayBefore = new Date(appointmentDate);
-      dayBefore.setDate(dayBefore.getDate() - 1);
-      dayBefore.setHours(9, 0, 0, 0); // 9 AM
-      
-      if (dayBefore > now) {
-        await Notifications.scheduleNotificationAsync({
-          content: {
-            title: "Appointment Tomorrow",
-            body: `Your appointment "${appointment.title}" is tomorrow. Don't forget to prepare your questions!`,
-            data: { type: 'appointment_reminder', appointmentId: appointment.id, priority: 'normal' },
-            sound: 'default',
-          },
-          trigger: {
-            hour: dayBefore.getHours(),
-            minute: dayBefore.getMinutes(),
-            day: dayBefore.getDate(),
-            month: dayBefore.getMonth() + 1,
-            year: dayBefore.getFullYear(),
-          },
-          identifier: `appointment_day_before_${appointment.id}`,
-        });
-      }
-      
-      // Hour before reminder
-      const hourBefore = new Date(appointmentDate);
-      hourBefore.setHours(hourBefore.getHours() - 1);
-      
-      if (hourBefore > now) {
-        await Notifications.scheduleNotificationAsync({
-          content: {
-            title: "Appointment in 1 Hour",
-            body: `Your appointment "${appointment.title}" is in one hour. Good luck!`,
-            data: { type: 'appointment_reminder', appointmentId: appointment.id, priority: 'normal' },
-            sound: 'default',
-          },
-          trigger: hourBefore,
-          identifier: `appointment_hour_before_${appointment.id}`,
-        });
-      }
-      
-      console.log('Appointment reminders scheduled for:', appointment.title);
-    } catch (error) {
-      console.error('Error scheduling appointment reminders:', error);
-    }
-  }
 
-  // 4. Cancel appointment reminders
-  static async cancelAppointmentReminders(appointmentId: string) {
-    try {
-      await this.cancelNotification(`appointment_day_before_${appointmentId}`);
-      await this.cancelNotification(`appointment_hour_before_${appointmentId}`);
-      console.log('Appointment reminders cancelled for:', appointmentId);
-    } catch (error) {
-      console.error('Error cancelling appointment reminders:', error);
-    }
-  }
+
+
 
   // 5. New recommendation notification (high priority)
   static async sendRecommendationNotification(recommendation: any) {
@@ -341,12 +247,10 @@ export const setupNotificationListeners = () => {
     } else if (data?.type === 'follow_up_question') {
       console.log('Follow-up question notification tapped:', data);
       // Navigate to follow-up questions screen
-    } else if (data?.type === 'daily_reminder' || data?.type === 'missed_log_reminder') {
+    } else if (data?.type === 'daily_reminder') {
       console.log('Log reminder notification tapped:', data);
       // Navigate to symptoms screen
-    } else if (data?.type === 'appointment_reminder') {
-      console.log('Appointment reminder notification tapped:', data);
-      // Navigate to appointments screen
+
     } else if (data?.type === 'new_log') {
       console.log('New log notification tapped:', data);
       // Navigate to symptoms screen

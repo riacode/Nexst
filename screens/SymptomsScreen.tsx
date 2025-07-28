@@ -97,9 +97,6 @@ export default function SymptomScreen({ navigation }: any) {
                             await NotificationService.sendRecommendationNotification(recommendation);
                         }
                         
-                        // Send notification for new log
-                        await NotificationService.sendNewLogNotification();
-                        
                         // Create alert for highest priority recommendation
                         const highPriorityRec = symptomRecommendations.quickRecommendations.find((rec: MedicalRecommendation) => rec.priority === 'HIGH');
                         if (highPriorityRec) {
