@@ -157,8 +157,8 @@ export default function OnboardingScreen({ navigation }: OnboardingScreenProps) 
                         <Text style={[styles.logoText, { color: colors.accent }]}>N</Text>
         <Text style={[styles.logoText, { color: colors.accent }]}>e</Text>
         <Text style={[styles.logoText, { color: colors.accent }]}>x</Text>
-                  <Text style={[styles.logoText, { color: colors.accentMint }]}>s</Text>
-          <Text style={[styles.logoText, { color: colors.accentMint }]}>t</Text>
+                  <Text style={[styles.logoText, { color: colors.accent }]}>s</Text>
+          <Text style={[styles.logoText, { color: colors.accent }]}>t</Text>
               </Text>
             </Animated.View>
           </View>
