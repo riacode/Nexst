@@ -4,6 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { useTutorial } from '../contexts/TutorialContext';
 import { clearOnboardingData } from '../utils/testUtils';
+import { colors } from '../utils/colors';
 
 interface SettingsModalProps {
   visible: boolean;
@@ -296,7 +297,7 @@ export default function SettingsModal({
                 onPress={onClearAppointments}
               >
                 <View style={styles.optionIcon}>
-                  <Ionicons name="calendar" size={24} color="rgb(231, 151, 110)" />
+                  <Ionicons name="calendar" size={24} color={colors.accentElectric} />
                 </View>
                 <View style={styles.optionContent}>
                   <Text style={styles.optionTitle}>Clear All Appointments</Text>

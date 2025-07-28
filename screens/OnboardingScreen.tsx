@@ -14,6 +14,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 
 import { useOnboarding } from '../contexts/OnboardingContext';
 import SharedBackground from '../components/SharedBackground';
+import { colors, gradients } from '../utils/colors';
 
 const { width, height } = Dimensions.get('window');
 
@@ -139,7 +140,7 @@ export default function OnboardingScreen({ navigation }: OnboardingScreenProps) 
                 {
                   shadowColor: logoGlowAnim.interpolate({
                     inputRange: [0, 0.5, 1],
-                    outputRange: ['#00B39F', '#00B39F', '#00B39F'],
+                    outputRange: [colors.accent, colors.accent, colors.accent],
                   }),
                   shadowOpacity: logoGlowAnim.interpolate({
                     inputRange: [0, 1],
@@ -153,17 +154,17 @@ export default function OnboardingScreen({ navigation }: OnboardingScreenProps) 
               ]}
             >
               <Text style={styles.logoText}>
-                        <Text style={[styles.logoText, { color: '#00B39F' }]}>N</Text>
-        <Text style={[styles.logoText, { color: '#00B39F' }]}>e</Text>
-        <Text style={[styles.logoText, { color: '#00B39F' }]}>x</Text>
-        <Text style={[styles.logoText, { color: 'rgb(231, 151, 110)' }]}>s</Text>
-        <Text style={[styles.logoText, { color: 'rgb(231, 151, 110)' }]}>t</Text>
+                        <Text style={[styles.logoText, { color: colors.accent }]}>N</Text>
+        <Text style={[styles.logoText, { color: colors.accent }]}>e</Text>
+        <Text style={[styles.logoText, { color: colors.accent }]}>x</Text>
+                  <Text style={[styles.logoText, { color: colors.accentMint }]}>s</Text>
+          <Text style={[styles.logoText, { color: colors.accentMint }]}>t</Text>
               </Text>
             </Animated.View>
           </View>
           <View style={styles.taglineContainer}>
             <Text style={styles.tagline}>
-              <Text style={styles.boldText}>Reimagining</Text> how you{'\n'}<Text style={styles.underlinedText}>manage your health</Text>.
+              <Text></Text> Reimagining how you{'\n'}<Text style={styles.underlinedText}>manage your health</Text>.
             </Text>
             <Animated.View 
               style={[
@@ -222,7 +223,7 @@ export default function OnboardingScreen({ navigation }: OnboardingScreenProps) 
                 opacity: 0, // Hide the original icon
               }}
             >
-              <View style={[styles.featureIcon, { backgroundColor: 'rgb(231, 151, 110)' }]}>
+                              <View style={[styles.featureIcon, { backgroundColor: colors.accentMint }]}>
                 <Ionicons name="bulb" size={32} color="#ffffff" />
               </View>
             </Animated.View>
@@ -293,7 +294,7 @@ export default function OnboardingScreen({ navigation }: OnboardingScreenProps) 
               zIndex: 10,
             }}
           >
-            <View style={[styles.independentIcon, { backgroundColor: 'rgb(231, 151, 110)' }]}>
+                            <View style={[styles.independentIcon, { backgroundColor: colors.accentMint }]}>
               <Ionicons name="bulb" size={32} color="#ffffff" />
             </View>
           </Animated.View>

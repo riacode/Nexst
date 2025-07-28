@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { fontStyles } from '../utils/fonts';
+import { colors } from '../utils/colors';
 import { onboardingSteps, OnboardingStep } from '../utils/onboardingContent';
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
@@ -304,7 +305,7 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   completeButton: {
-    backgroundColor: 'rgb(231, 151, 110)',
+            backgroundColor: colors.accentMint,
   },
   nextButtonText: {
     ...fontStyles.button,

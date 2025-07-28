@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { BottomTabBarProps } from '@react-navigation/bottom-tabs';
+import { colors } from '../utils/colors';
 
 export default function CustomTabBar({ state, descriptors, navigation }: BottomTabBarProps) {
   return (
@@ -62,7 +63,7 @@ export default function CustomTabBar({ state, descriptors, navigation }: BottomT
               <Ionicons 
                 name={iconName} 
                 size={28} 
-                color={isFocused ? (isRecommendations ? 'rgb(231, 151, 110)' : '#00B39F') : '#64748b'} 
+                color={isFocused ? (isRecommendations ? colors.accentElectric : colors.accent) : '#64748b'} 
               />
             </View>
 
@@ -102,7 +103,7 @@ const styles = StyleSheet.create({
   recommendationsTabActive: {
     backgroundColor: '#F0F9FF',
     borderWidth: 2,
-    borderColor: 'rgb(231, 151, 110)',
+    borderColor: colors.accentElectric,
   },
 
 }); 

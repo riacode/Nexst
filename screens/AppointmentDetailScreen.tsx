@@ -4,6 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { fontStyles } from '../utils/fonts';
 import { useSymptomLogs } from '../contexts/SymptomLogsContext';
 import { useSmartAI } from '../contexts/SmartAIContext';
+import { colors, gradients } from '../utils/colors';
 
 interface AppointmentDetailScreenProps {
   route?: {
@@ -164,7 +165,7 @@ export default function AppointmentDetailScreen({ route, navigation }: Appointme
         {/* Appointment Info */}
         <View style={styles.appointmentCard}>
           <View style={styles.appointmentHeader}>
-            <Ionicons name="calendar" size={32} color="#00B39F" />
+            <Ionicons name="calendar" size={32} color={colors.accent} />
                       <Text style={styles.appointmentTitle}>{appointmentWithDates.title}</Text>
         </View>
         <Text style={styles.appointmentDate}>
@@ -226,7 +227,7 @@ export default function AppointmentDetailScreen({ route, navigation }: Appointme
                     }
                   ]}
                 >
-                  <Ionicons name="sync" size={24} color="#00B39F" />
+                  <Ionicons name="sync" size={24} color={colors.accent} />
                 </Animated.View>
                 <Text style={styles.loadingText}>Generating personalized questions...</Text>
                 <Text style={styles.loadingSubtext}>Analyzing your symptoms and appointment details</Text>
@@ -300,7 +301,7 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     elevation: 4,
     borderLeftWidth: 4,
-    borderLeftColor: '#7FFFD4',
+            borderLeftColor: colors.accentMint,
   },
   appointmentHeader: {
     flexDirection: 'row',
@@ -346,7 +347,7 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 2,
     borderLeftWidth: 3,
-    borderLeftColor: '#00FFFF',
+            borderLeftColor: colors.accentElectric,
   },
   symptomHeader: {
     flexDirection: 'row',
@@ -404,7 +405,7 @@ const styles = StyleSheet.create({
     width: 24,
     height: 24,
     borderRadius: 12,
-    backgroundColor: '#00FFFF',
+            backgroundColor: colors.accentElectric,
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 12,

@@ -10,6 +10,7 @@ import { useTutorial } from '../contexts/TutorialContext';
 import FeatureTutorial from '../components/FeatureTutorial';
 import { featureTutorials } from '../utils/onboardingContent';
 import SharedBackground from '../components/SharedBackground';
+import { colors, gradients } from '../utils/colors';
 
 interface Appointment {
     id: string;
@@ -296,7 +297,7 @@ export default function AppointmentsScreen({ navigation }: any) {
       {/* These are now handled inline within the modal */}
       
       <LinearGradient
-                        colors={['#00B39F', '#7FFFD4']}
+                        colors={[colors.accent, colors.accentMint]}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         style={[styles.recordButton, appointments.length > 0 && styles.recordButtonSmall, { borderRadius: appointments.length > 0 ? 35 : 50 }]}
@@ -379,7 +380,7 @@ const styles = StyleSheet.create({
     shadowRadius: 4, 
     elevation: 2,
     borderLeftWidth: 4, 
-    borderLeftColor: '#00B39F',
+            borderLeftColor: colors.accent,
     borderWidth: 1,
     borderColor: '#E2E8F0',
   },
@@ -485,7 +486,7 @@ const styles = StyleSheet.create({
   },
   modalClose: {
     ...fontStyles.button,
-            color: '#00B39F',
+            color: colors.accent,
   },
 
   pickerButtons: {
@@ -514,7 +515,7 @@ const styles = StyleSheet.create({
     padding: 16,
     marginLeft: 8,
     borderRadius: 12,
-    backgroundColor: '#00FFFF',
+            backgroundColor: colors.accentElectric,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -527,7 +528,7 @@ const styles = StyleSheet.create({
     position: 'absolute', 
     bottom: 24, 
     alignSelf: 'center',
-    backgroundColor: '#7FFFD4', 
+            backgroundColor: colors.accentMint, 
     width: 100, 
     height: 100, 
     borderRadius: 50,

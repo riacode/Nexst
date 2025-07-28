@@ -3,6 +3,7 @@ import { View, Text, TouchableOpacity, StyleSheet, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { NotificationService } from '../utils/notifications';
+import { colors } from '../utils/colors';
 
 interface NotificationPermissionProps {
   onPermissionGranted?: () => void;
@@ -56,14 +57,14 @@ export default function NotificationPermission({ onPermissionGranted }: Notifica
   return (
     <View style={styles.container}>
       <View style={styles.content}>
-        <Ionicons name="notifications" size={32} color="#00B39F" />
+        <Ionicons name="notifications" size={32} color={colors.accent} />
         <Text style={styles.title}>Stay Updated</Text>
         <Text style={styles.description}>
           Enable notifications to receive important health recommendations and updates.
         </Text>
         <TouchableOpacity onPress={requestPermission}>
           <LinearGradient
-            colors={['#00B39F', '#00B39F']}
+            colors={[colors.accent, colors.accent]}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 0 }}
             style={styles.button}
@@ -79,7 +80,7 @@ export default function NotificationPermission({ onPermissionGranted }: Notifica
 const styles = StyleSheet.create({
   container: {
     backgroundColor: '#f0f9ff',
-    borderColor: '#00B39F',
+    borderColor: colors.accent,
     borderWidth: 1,
     borderRadius: 12,
     margin: 16,

@@ -8,6 +8,7 @@ import { useTutorial } from '../contexts/TutorialContext';
 import FeatureTutorial from '../components/FeatureTutorial';
 import { featureTutorials } from '../utils/onboardingContent';
 import SharedBackground from '../components/SharedBackground';
+import { colors, gradients, getPriorityColor as getPriorityColorUtil } from '../utils/colors';
 
 export default function RecommendationsScreen({ route, navigation }: any) {
   // Get recommendations from global context
@@ -18,12 +19,7 @@ export default function RecommendationsScreen({ route, navigation }: any) {
   const [cancelledCollapsed, setCancelledCollapsed] = useState(false);
 
   const getPriorityColor = (priority: string) => {
-    switch (priority) {
-        case 'HIGH': return '#00B39F';
-  case 'MEDIUM': return '#00B39F';
-  case 'LOW': return 'rgb(231, 151, 110)';
-  default: return '#6b7280';
-    }
+    return getPriorityColorUtil(priority as 'HIGH' | 'MEDIUM' | 'LOW');
   };
 
   const getPriorityLabel = (priority: string) => {
@@ -156,7 +152,7 @@ export default function RecommendationsScreen({ route, navigation }: any) {
         <Ionicons 
           name={getActionTypeIcon(action.type)} 
           size={20} 
-          color={action.isCompleted ? '#00B39F' : '#6b7280'} 
+          color={action.isCompleted ? colors.accent : '#6b7280'} 
         />
         <Text style={[
           styles.actionItemTitle,
@@ -267,7 +263,7 @@ export default function RecommendationsScreen({ route, navigation }: any) {
       {/* Status info */}
       {recommendation.isCompleted && recommendation.completedAt && (
         <View style={styles.completedInfo}>
-          <Ionicons name="checkmark-circle" size={16} color="#00B39F" />
+          <Ionicons name="checkmark-circle" size={16} color={colors.accent} />
           <Text style={styles.completedText}>
             Completed on {recommendation.completedAt.toLocaleDateString()}
           </Text>
@@ -276,7 +272,7 @@ export default function RecommendationsScreen({ route, navigation }: any) {
 
       {recommendation.isCancelled && recommendation.cancelledAt && (
         <View style={styles.cancelledInfo}>
-          <Ionicons name="close-circle" size={16} color="rgb(231, 151, 110)" />
+          <Ionicons name="close-circle" size={16} color={colors.accentElectric} />
           <Text style={styles.cancelledText}>
             Cancelled on {recommendation.cancelledAt.toLocaleDateString()}
           </Text>
@@ -408,7 +404,7 @@ const styles = StyleSheet.create({
     opacity: 0.7,
   },
   recommendationCardCancelled: {
-    borderLeftColor: 'rgb(231, 151, 110)',
+    borderLeftColor: colors.accentElectric,
     opacity: 0.7,
   },
   
@@ -434,7 +430,7 @@ const styles = StyleSheet.create({
     color: '#00B39F',
   },
   problemTitleCancelled: {
-    color: 'rgb(231, 151, 110)',
+    color: colors.accentElectric,
   },
   problemDescription: {
     ...fontStyles.body,
@@ -445,7 +441,7 @@ const styles = StyleSheet.create({
     color: '#00B39F',
   },
   problemDescriptionCancelled: {
-    color: 'rgb(231, 151, 110)',
+    color: colors.accentElectric,
   },
   
   // Solutions Section
@@ -470,7 +466,7 @@ const styles = StyleSheet.create({
   },
   actionItemCompleted: {
     backgroundColor: '#f0fdf4',
-    borderColor: '#00B39F',
+    borderColor: colors.accent,
   },
   actionItemHeader: {
     flexDirection: 'row',
@@ -485,7 +481,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   actionItemTitleCompleted: {
-    color: '#00B39F',
+    color: colors.accent,
   },
   actionItemDescription: {
     ...fontStyles.body,

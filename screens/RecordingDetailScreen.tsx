@@ -4,6 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { Audio } from 'expo-av';
 import { useFocusEffect } from '@react-navigation/native';
 import { fontStyles } from '../utils/fonts';
+import { colors } from '../utils/colors';
 
 export default function RecordingDetailScreen({ route, navigation }: any) {
   const { log } = route.params;
@@ -394,7 +395,7 @@ const styles = StyleSheet.create({
   },
   errorText: {
     ...fontStyles.caption,
-    color: 'rgb(231, 151, 110)',
+            color: colors.accentElectric,
     marginLeft: 6,
     flex: 1,
   },
