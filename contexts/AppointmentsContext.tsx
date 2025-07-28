@@ -5,6 +5,8 @@ interface Appointment {
   title: string;
   date: Date;
   timestamp: Date;
+  questions?: string[];
+  recentSymptomsLastUpdated?: Date;
 }
 
 interface AppointmentsContextType {

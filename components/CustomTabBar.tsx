@@ -35,7 +35,7 @@ export default function CustomTabBar({ state, descriptors, navigation }: BottomT
 
         let iconName: keyof typeof Ionicons.glyphMap;
         if (route.name === 'Symptoms') {
-          iconName = isFocused ? 'pulse' : 'pulse-outline';
+          iconName = isFocused ? 'mic' : 'mic-outline';
         } else if (route.name === 'Recommendations') {
           iconName = isFocused ? 'bulb' : 'bulb-outline';
         } else if (route.name === 'Appointments') {
@@ -63,7 +63,7 @@ export default function CustomTabBar({ state, descriptors, navigation }: BottomT
               <Ionicons 
                 name={iconName} 
                 size={28} 
-                color={isFocused ? (isRecommendations ? colors.accentElectric : colors.accent) : '#64748b'} 
+                color={isFocused ? colors.accent : '#64748b'} 
               />
             </View>
 
@@ -101,9 +101,9 @@ const styles = StyleSheet.create({
     borderColor: '#E2E8F0',
   },
   recommendationsTabActive: {
-    backgroundColor: '#F0F9FF',
+    backgroundColor: colors.accentMint,
     borderWidth: 2,
-    borderColor: colors.accentElectric,
+    borderColor: colors.accent,
   },
 
 }); 

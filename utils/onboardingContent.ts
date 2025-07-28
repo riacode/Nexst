@@ -62,14 +62,14 @@ export const onboardingSteps: OnboardingStep[] = [
 export const featureTutorials: Record<string, FeatureTutorialContent> = {
   symptoms: {
     title: 'Start Recording',
-    description: 'Tap the mic button below and speak for 30 seconds or less about your symptoms. I\'ll transcribe and summarize everything for you.',
+    description: 'Tap the mic button below and speak for 30 seconds or less about your symptoms – Nexst will transcribe and summarize everything for you.',
   },
   recommendations: {
-    title: 'Your Health Insights',
-    description: 'Here you\'ll see personalized recommendations based on your symptoms. I\'ll suggest next steps and help you understand what to do.',
+    title: 'Nexst Steps',
+    description: 'Here you\'ll see personalized recommendations based on your symptoms to help you understand what to do nexst.',
   },
   appointments: {
     title: 'Add Appointments',
-    description: 'Tap the + button below to schedule appointments. I\'ll generate relevant questions based on your symptom history to help you prepare.',
+    description: 'Tap the + button below to schedule appointments – Nexst will generate relevant questions based on your symptom history to help you prepare.',
   },
 }; 

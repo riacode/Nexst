@@ -67,7 +67,6 @@ export default function SettingsModal({
     );
   };
   const backdropAnim = React.useRef(new Animated.Value(0)).current;
-  const [showTimePicker, setShowTimePicker] = useState(false);
 
   React.useEffect(() => {
     if (visible) {
@@ -125,7 +124,6 @@ export default function SettingsModal({
   };
 
   const handleTimeChange = (event: any, selectedTime?: Date) => {
-    setShowTimePicker(false);
     if (selectedTime) {
       onUpdateNotificationSettings(notificationEnabled, selectedTime, notificationFrequency);
     }
@@ -208,13 +206,14 @@ export default function SettingsModal({
                         When to send daily reminders
                       </Text>
                     </View>
-                    <TouchableOpacity 
-                      style={styles.timeButton}
-                      onPress={() => setShowTimePicker(true)}
-                    >
-                      <Text style={styles.timeText}>{formatTime(notificationTime)}</Text>
-                      <Ionicons name="time" size={16} color="#64748b" />
-                    </TouchableOpacity>
+                    <DateTimePicker
+                      value={notificationTime}
+                      mode="time"
+                      display="default"
+                      onChange={handleTimeChange}
+                      style={styles.inlineTimePicker}
+                      textColor="#1e293b"
+                    />
                   </View>
 
                   <View style={styles.settingRow}>
@@ -281,28 +280,12 @@ export default function SettingsModal({
                 onPress={onClearSymptomLogs}
               >
                 <View style={styles.optionIcon}>
-                  <Ionicons name="pulse" size={24} color="#00B39F" />
+                  <Ionicons name="pulse" size={24} color="#ef4444" />
                 </View>
                 <View style={styles.optionContent}>
                   <Text style={styles.optionTitle}>Clear All Symptom Logs</Text>
                   <Text style={styles.optionDescription}>
                     Delete all recordings, summaries, and logs
-                  </Text>
-                </View>
-                <Ionicons name="chevron-forward" size={20} color="#cbd5e1" />
-              </TouchableOpacity>
-
-              <TouchableOpacity 
-                style={styles.option} 
-                onPress={onClearAppointments}
-              >
-                <View style={styles.optionIcon}>
-                  <Ionicons name="calendar" size={24} color={colors.accentElectric} />
-                </View>
-                <View style={styles.optionContent}>
-                  <Text style={styles.optionTitle}>Clear All Appointments</Text>
-                  <Text style={styles.optionDescription}>
-                    Delete all upcoming and past appointments
                   </Text>
                 </View>
                 <Ionicons name="chevron-forward" size={20} color="#cbd5e1" />
@@ -323,18 +306,26 @@ export default function SettingsModal({
                 </View>
                 <Ionicons name="chevron-forward" size={20} color="#cbd5e1" />
               </TouchableOpacity>
+
+              <TouchableOpacity 
+                style={styles.option} 
+                onPress={onClearAppointments}
+              >
+                <View style={styles.optionIcon}>
+                  <Ionicons name="calendar" size={24} color="#ef4444" />
+                </View>
+                <View style={styles.optionContent}>
+                  <Text style={styles.optionTitle}>Clear All Appointments</Text>
+                  <Text style={styles.optionDescription}>
+                    Delete all upcoming and past appointments
+                  </Text>
+                </View>
+                <Ionicons name="chevron-forward" size={20} color="#cbd5e1" />
+              </TouchableOpacity>
             </View>
           </ScrollView>
 
-          {showTimePicker && (
-            <DateTimePicker
-              value={notificationTime}
-              mode="time"
-              is24Hour={false}
-              display="default"
-              onChange={handleTimeChange}
-            />
-          )}
+
         </Animated.View>
       </View>
     </Modal>
@@ -452,6 +443,10 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '500',
     color: '#1e293b',
+  },
+  inlineTimePicker: {
+    width: 120,
+    height: 40,
   },
   frequencyButtons: {
     flexDirection: 'row',

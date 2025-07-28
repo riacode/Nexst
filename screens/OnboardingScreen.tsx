@@ -130,6 +130,11 @@ export default function OnboardingScreen({ navigation }: OnboardingScreenProps) 
   return (
     <SharedBackground>
       <SafeAreaView style={styles.container}>
+        {/* Diagonal Stripes Background */}
+        <View style={styles.stripesContainer}>
+          <View style={[styles.stripe, styles.mintStripe]} />
+          <View style={[styles.stripe, styles.electricStripe]} />
+        </View>
         <View style={styles.content}>
         {/* Header */}
         <View style={styles.header}>
@@ -194,14 +199,9 @@ export default function OnboardingScreen({ navigation }: OnboardingScreenProps) 
                 opacity: 0, // Hide the original icon
               }}
             >
-              <LinearGradient
-                colors={['#00B39F', '#00B39F']}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 1 }}
-                style={styles.featureIcon}
-              >
+              <View style={[styles.featureIcon, { backgroundColor: colors.accent }]}>
                 <Ionicons name="mic" size={32} color="#ffffff" />
-              </LinearGradient>
+              </View>
             </Animated.View>
             <View style={styles.featureText}>
               <Text style={styles.featureTitle}>Voice Symptom Tracking</Text>
@@ -223,7 +223,7 @@ export default function OnboardingScreen({ navigation }: OnboardingScreenProps) 
                 opacity: 0, // Hide the original icon
               }}
             >
-                              <View style={[styles.featureIcon, { backgroundColor: colors.accentMint }]}>
+                              <View style={[styles.featureIcon, { backgroundColor: colors.accent }]}>
                 <Ionicons name="bulb" size={32} color="#ffffff" />
               </View>
             </Animated.View>
@@ -247,14 +247,9 @@ export default function OnboardingScreen({ navigation }: OnboardingScreenProps) 
                 opacity: 0, // Hide the original icon
               }}
             >
-              <LinearGradient
-                colors={['#00B39F', '#00B39F']}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 1 }}
-                style={styles.featureIcon}
-              >
+              <View style={[styles.featureIcon, { backgroundColor: colors.accent }]}>
                 <Ionicons name="calendar" size={32} color="#ffffff" />
-              </LinearGradient>
+              </View>
             </Animated.View>
             <View style={styles.featureText}>
               <Text style={styles.featureTitle}>Appointment Prep</Text>
@@ -276,14 +271,9 @@ export default function OnboardingScreen({ navigation }: OnboardingScreenProps) 
               zIndex: 10,
             }}
           >
-            <LinearGradient
-              colors={['#00B39F', '#00B39F']}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-              style={styles.independentIcon}
-            >
-              <Ionicons name="mic" size={32} color="#ffffff" />
-            </LinearGradient>
+                         <View style={[styles.independentIcon, { backgroundColor: colors.accent }]}>
+               <Ionicons name="mic" size={32} color="#ffffff" />
+             </View>
           </Animated.View>
           <Animated.View
             style={{
@@ -294,7 +284,7 @@ export default function OnboardingScreen({ navigation }: OnboardingScreenProps) 
               zIndex: 10,
             }}
           >
-                            <View style={[styles.independentIcon, { backgroundColor: colors.accentMint }]}>
+                            <View style={[styles.independentIcon, { backgroundColor: colors.accent }]}>
               <Ionicons name="bulb" size={32} color="#ffffff" />
             </View>
           </Animated.View>
@@ -307,14 +297,9 @@ export default function OnboardingScreen({ navigation }: OnboardingScreenProps) 
               zIndex: 10,
             }}
           >
-            <LinearGradient
-              colors={['#00B39F', '#00B39F']}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-              style={styles.independentIcon}
-            >
-              <Ionicons name="calendar" size={32} color="#ffffff" />
-            </LinearGradient>
+                         <View style={[styles.independentIcon, { backgroundColor: colors.accent }]}>
+               <Ionicons name="calendar" size={32} color="#ffffff" />
+             </View>
           </Animated.View>
         </View>
 
@@ -344,12 +329,11 @@ export default function OnboardingScreen({ navigation }: OnboardingScreenProps) 
         <View style={styles.bottomSection}>
           <Animated.View style={{ opacity: closing1Opacity }}>
             <Text style={styles.bottomText}>
-              You tell us what's happening now.
             </Text>
           </Animated.View>
           <Animated.View style={{ opacity: closing2Opacity }}>
             <Text style={styles.bottomText}>
-              We'll tell you what to do <Text style={{ fontWeight: 'bold' }}>nexst</Text>.
+              Know your nexst step.
             </Text>
           </Animated.View>
         </View>
@@ -381,6 +365,31 @@ export default function OnboardingScreen({ navigation }: OnboardingScreenProps) 
   const styles = StyleSheet.create({
     container: {
       flex: 1,
+    },
+    stripesContainer: {
+      position: 'absolute',
+      top: -100,
+      left: 0,
+      right: 0,
+      height: 500,
+      zIndex: -1,
+      overflow: 'hidden',
+    },
+    stripe: {
+      position: 'absolute',
+      width: '300%',
+      height: 60,
+      transform: [{ rotate: '30deg' }],
+    },
+    mintStripe: {
+      backgroundColor: colors.accentElectric,
+      top: 380,
+      left: -60,
+    },
+    electricStripe: {
+      backgroundColor: colors.accentMint,
+      top: 430,
+      left: -90,
     },
   content: {
     flex: 1,

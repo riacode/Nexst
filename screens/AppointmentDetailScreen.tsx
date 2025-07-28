@@ -13,7 +13,9 @@ interface AppointmentDetailScreenProps {
         id: string;
         title: string;
         date: string;
-        timestamp: string; 
+        timestamp: string;
+        questions?: string[];
+        recentSymptomsLastUpdated?: string;
       };
     };
   };
@@ -23,17 +25,16 @@ interface AppointmentDetailScreenProps {
 export default function AppointmentDetailScreen({ route, navigation }: AppointmentDetailScreenProps) {
   const { appointment } = route?.params || {};
   const { getRelevantSymptoms } = useSymptomLogs();
-  const { generateAppointmentQuestions } = useSmartAI();
   const [relevantSymptoms, setRelevantSymptoms] = useState<any[]>([]);
   const [importantQuestions, setImportantQuestions] = useState<string[]>([]);
-  const [isGeneratingQuestions, setIsGeneratingQuestions] = useState(false);
   const spinAnim = useRef(new Animated.Value(0)).current;
 
   // Convert string dates back to Date objects
   const appointmentWithDates = appointment ? {
     ...appointment,
     date: new Date(appointment.date),
-    timestamp: new Date(appointment.timestamp)
+    timestamp: new Date(appointment.timestamp),
+    recentSymptomsLastUpdated: appointment.recentSymptomsLastUpdated ? new Date(appointment.recentSymptomsLastUpdated) : undefined
   } : null;
 
   // Early return if no appointment data
@@ -58,55 +59,26 @@ export default function AppointmentDetailScreen({ route, navigation }: Appointme
 
   useEffect(() => {
     const symptoms = getRelevantSymptoms(appointmentWithDates.title);
-    setRelevantSymptoms(symptoms);
-    generateImportantQuestions(appointmentWithDates.title, symptoms, appointmentWithDates.date);
-  }, [appointmentWithDates.title, getRelevantSymptoms]);
-
-  // Start spinning animation when loading
-  useEffect(() => {
-    if (isGeneratingQuestions) {
-      const spinAnimation = Animated.loop(
-        Animated.timing(spinAnim, {
-          toValue: 1,
-          duration: 1000,
-          useNativeDriver: true,
-        })
-      );
-      spinAnimation.start();
+    
+    // Only update recent symptoms if there are new symptoms since last update
+    const shouldUpdateSymptoms = !appointmentWithDates.recentSymptomsLastUpdated || 
+      symptoms.some(symptom => new Date(symptom.timestamp) > (appointmentWithDates.recentSymptomsLastUpdated || new Date(0)));
+    
+    if (shouldUpdateSymptoms) {
+      setRelevantSymptoms(symptoms);
+      // Update the appointment with new timestamp
+      // Note: This would require updating the appointment in the context
+      // For now, we'll just update the local state
     } else {
-      spinAnim.setValue(0);
+      // Use cached symptoms if no new ones
+      setRelevantSymptoms(symptoms);
     }
-  }, [isGeneratingQuestions, spinAnim]);
-
-  const generateImportantQuestions = async (appointmentTitle: string, symptoms: any[], appointmentDate: Date) => {
-    setIsGeneratingQuestions(true);
-    try {
-      // Use SmartHealthAI to generate personalized questions
-      const aiQuestions = await generateAppointmentQuestions(appointmentTitle, appointmentDate);
-      
-      if (aiQuestions.length > 0) {
-        setImportantQuestions(aiQuestions);
-      } else {
-        // Fallback to basic questions if AI fails
-        const fallbackQuestions = symptoms.length === 0 ? [
-          "Regarding my blood pressure and lab results, are these normal and/or better from my last visit?",
-          "What vaccinations am I due for?",
-          "Are my current prescriptions or supplements still necessary and at the right dose?",
-          "What preventive screenings should I consider based on my age and risk factors?",
-          "Are there any lifestyle changes I should make to improve my health?"
-        ] : [
-          "Could this affect my work or daily activities, and for how long?",
-          "What side effects should I watch for with any treatments?",
-          "What exactly is causing my symptoms?",
-          "What should I do if I miss a dose of any medication?",
-          "When should I follow up if I'm not improving?",
-          "Are there any red flags that would require immediate medical attention?"
-        ];
-        setImportantQuestions(fallbackQuestions);
-      }
-    } catch (error) {
-      console.error('Error generating questions:', error);
-      // Fallback to basic questions
+    
+    // Use stored questions if available, otherwise use fallback
+    if (appointmentWithDates.questions && appointmentWithDates.questions.length > 0) {
+      setImportantQuestions(appointmentWithDates.questions);
+    } else {
+      // Fallback questions if none were generated
       const fallbackQuestions = symptoms.length === 0 ? [
         "Regarding my blood pressure and lab results, are these normal and/or better from my last visit?",
         "What vaccinations am I due for?",
@@ -122,10 +94,10 @@ export default function AppointmentDetailScreen({ route, navigation }: Appointme
         "Are there any red flags that would require immediate medical attention?"
       ];
       setImportantQuestions(fallbackQuestions);
-    } finally {
-      setIsGeneratingQuestions(false);
     }
-  };
+  }, [appointmentWithDates.title, getRelevantSymptoms]);
+
+
 
 
 
@@ -212,36 +184,16 @@ export default function AppointmentDetailScreen({ route, navigation }: Appointme
             Make sure to get these important answers before leaving your appointment
           </Text>
           <View style={styles.questionsCard}>
-            {isGeneratingQuestions ? (
-              <View style={styles.loadingContainer}>
-                <Animated.View 
-                  style={[
-                    styles.loadingSpinner,
-                    {
-                      transform: [{
-                        rotate: spinAnim.interpolate({
-                          inputRange: [0, 1],
-                          outputRange: ['0deg', '360deg']
-                        })
-                      }]
-                    }
-                  ]}
-                >
-                  <Ionicons name="sync" size={24} color={colors.accent} />
-                </Animated.View>
-                <Text style={styles.loadingText}>Generating personalized questions...</Text>
-                <Text style={styles.loadingSubtext}>Analyzing your symptoms and appointment details</Text>
-              </View>
-            ) : (
-              importantQuestions.map((question, index) => (
-                <View key={index} style={styles.questionItem}>
-                  <View style={styles.questionNumber}>
-                    <Text style={styles.questionNumberText}>{index + 1}</Text>
-                  </View>
-                  <Text style={styles.questionText}>{question}</Text>
+            {importantQuestions.map((question, index) => (
+              <View key={index} style={styles.questionItem}>
+                <View style={styles.questionNumber}>
+                  <Text style={styles.questionNumberText}>{index + 1}</Text>
                 </View>
-              ))
-            )}
+                <Text style={styles.questionText}>
+                  {question.replace(/^\d+\.\s*/, '')}
+                </Text>
+              </View>
+            ))}
           </View>
         </View>
 
@@ -405,7 +357,7 @@ const styles = StyleSheet.create({
     width: 24,
     height: 24,
     borderRadius: 12,
-            backgroundColor: colors.accentElectric,
+    backgroundColor: colors.accent,
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 12,

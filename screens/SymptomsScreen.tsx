@@ -94,12 +94,11 @@ export default function SymptomScreen({ navigation }: any) {
                         
                         // Send notifications for new recommendations
                         for (const recommendation of symptomRecommendations.quickRecommendations) {
-                            if (recommendation.priority === 'HIGH') {
-                                await NotificationService.sendHighPriorityNotification(recommendation);
-                            } else {
-                                await NotificationService.sendRecommendationNotification(recommendation);
-                            }
+                            await NotificationService.sendRecommendationNotification(recommendation);
                         }
+                        
+                        // Send notification for new log
+                        await NotificationService.sendNewLogNotification();
                         
                         // Create alert for highest priority recommendation
                         const highPriorityRec = symptomRecommendations.quickRecommendations.find((rec: MedicalRecommendation) => rec.priority === 'HIGH');
@@ -205,9 +204,9 @@ export default function SymptomScreen({ navigation }: any) {
                                 ...symptomLog,
                                 summary: processedLog.summary,
                                 transcript: processedLog.transcript,
-                                healthDomain: processedLog.healthDomain,
-                                severity: processedLog.severity,
-                                impact: processedLog.impact
+                                healthDomain: processedLog.healthDomain as HealthDomain,
+                                severity: processedLog.severity as 'mild' | 'moderate' | 'severe',
+                                impact: processedLog.impact as 'low' | 'medium' | 'high'
                             };
                             
                             // Add to global symptom logs

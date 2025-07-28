@@ -22,7 +22,7 @@ interface Appointment {
 export default function AppointmentsScreen({ navigation }: any) {
   const { appointments, addAppointment: addAppointmentToContext } = useAppointments();
   const { tutorialState, completeAppointmentTutorial } = useTutorial();
-  const { scheduleAppointmentReminders } = useSmartAI();
+  const { scheduleAppointmentReminders, generateAppointmentQuestions } = useSmartAI();
   const [showModal, setShowModal] = useState(false);
   const [titleInput, setTitleInput] = useState('');
   const [selectedDate, setSelectedDate] = useState(new Date());
@@ -36,17 +36,37 @@ export default function AppointmentsScreen({ navigation }: any) {
     }
     
     const now = new Date();
+    
+    // Generate questions for the appointment
+    let questions: string[] = [];
+    try {
+      questions = await generateAppointmentQuestions(titleInput, selectedDate);
+    } catch (error) {
+      console.error('Error generating appointment questions:', error);
+      // Fallback questions if AI fails
+      questions = [
+        "How have you been feeling since your last visit?",
+        "Have you noticed any new symptoms?",
+        "Are there any concerns you'd like to discuss?",
+        "How are your current medications working?",
+        "Have you made any lifestyle changes recently?"
+      ];
+    }
+    
     const newAppointment = {
       id: now.toISOString(),
       title: titleInput,
       date: selectedDate,
-      timestamp: now
+      timestamp: now,
+      questions: questions,
+      recentSymptomsLastUpdated: now
     };
     
     addAppointmentToContext(newAppointment);
     
     // Schedule appointment reminders
-    await scheduleAppointmentReminders(newAppointment);
+    const { NotificationService } = await import('../utils/notifications');
+    await NotificationService.scheduleAppointmentReminders(newAppointment);
     
     setShowModal(false);
     setTitleInput('');
@@ -210,16 +230,7 @@ export default function AppointmentsScreen({ navigation }: any) {
               </CollapsibleSection>
             )}
 
-            {/* Empty State */}
-            {appointments.length === 0 && (
-              <View style={styles.emptyState}>
-                <Ionicons name="calendar" size={64} color="#cbd5e1" />
-                <Text style={styles.emptyStateTitle}>No Appointments Yet</Text>
-                <Text style={styles.emptyStateText}>
-                  Tap the + button to schedule your first appointment.
-                </Text>
-              </View>
-            )}
+
           </View>
         )}
       />
@@ -296,23 +307,16 @@ export default function AppointmentsScreen({ navigation }: any) {
       {/* Date/Time Pickers */}
       {/* These are now handled inline within the modal */}
       
-      <LinearGradient
-                        colors={[colors.accent, colors.accentMint]}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-        style={[styles.recordButton, appointments.length > 0 && styles.recordButtonSmall, { borderRadius: appointments.length > 0 ? 35 : 50 }]}
+      <TouchableOpacity
+        style={[styles.recordButton, appointments.length > 0 && styles.recordButtonSmall, { borderRadius: appointments.length > 0 ? 35 : 50, backgroundColor: colors.accent }]}
+        onPress={() => setShowModal(true)}
       >
-        <TouchableOpacity
-          style={styles.recordButtonInner}
-          onPress={() => setShowModal(true)}
-        >
-          <Ionicons 
-            name="add" 
-            size={appointments.length === 0 ? 48 : 32} 
-            color="#fff" 
-          />
-        </TouchableOpacity>
-      </LinearGradient>
+        <Ionicons 
+          name="add" 
+          size={appointments.length === 0 ? 48 : 32} 
+          color="#fff" 
+        />
+      </TouchableOpacity>
       </View>
     </SharedBackground>
   );
@@ -515,7 +519,7 @@ const styles = StyleSheet.create({
     padding: 16,
     marginLeft: 8,
     borderRadius: 12,
-            backgroundColor: colors.accentElectric,
+            backgroundColor: colors.accent,
     alignItems: 'center',
     justifyContent: 'center',
   },

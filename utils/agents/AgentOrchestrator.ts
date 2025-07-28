@@ -133,21 +133,34 @@ export class AgentOrchestrator {
     console.log('🔄 REACTIVE AI: Generating appointment questions');
 
     const userProfile = await this.agents.userModel.getUserProfile();
-    const recentSymptoms = await this.getRecentSymptoms(7);
+    const recentSymptoms = await this.getRecentSymptoms(30); // Get last 30 days for better context
     
     const prompt = `
-    Generate personalized questions for this appointment:
+    Generate specific questions that the PATIENT should ask their doctor during this appointment:
     Appointment: ${appointmentTitle} on ${appointmentDate.toLocaleDateString()}
     
-    User Profile:
-    - Common symptoms: ${userProfile.learningInsights?.commonSymptoms?.join(', ') || 'None'}
-    - Recent symptoms: ${recentSymptoms.map(log => log.summary).join(', ')}
+    Patient's Symptom History (last 30 days):
+    ${recentSymptoms.map(log => `- ${log.summary} (${log.timestamp.toLocaleDateString()})`).join('\n')}
     
-    Generate 5-7 specific questions that:
-    1. Address recent symptoms
-    2. Consider user's health patterns
-    3. Are relevant to the appointment type
-    4. Help the doctor understand the user's health status
+    Patient's Health Patterns:
+    - Common symptoms: ${userProfile.learningInsights?.commonSymptoms?.join(', ') || 'None'}
+    - Triggers: ${userProfile.learningInsights?.triggers?.join(', ') || 'None'}
+    
+    Generate 1-6 specific questions that the PATIENT should ask their doctor. These should be:
+    1. Questions about their specific symptoms and health concerns
+    2. Questions seeking medical advice, diagnosis, or treatment options
+    3. Questions about their health patterns and what they mean
+    4. Questions relevant to the appointment type and their symptom history
+    5. Questions that will help the patient understand their health better
+    
+    Focus on questions like:
+    - "What could be causing my [specific symptom]?"
+    - "Should I be concerned about [symptom pattern]?"
+    - "What tests or treatments do you recommend for [symptom]?"
+    - "How can I manage [symptom] better?"
+    - "Is [symptom] related to [other symptom]?"
+    
+    The number of questions should be realistic (1-6) based on the complexity of their symptoms and appointment type.
     
     Return as JSON array of question strings.
     `;
@@ -238,7 +251,11 @@ export class AgentOrchestrator {
     if (reminderDate > new Date()) {
       const delayMs = reminderDate.getTime() - Date.now();
       setTimeout(async () => {
-        await NotificationService.sendAppointmentReminder(appointment);
+        await NotificationService.scheduleLocalNotification(
+          'Appointment Reminder',
+          `Your appointment "${appointment.title}" is in 2 days. Don't forget to prepare your questions!`,
+          { type: 'appointment_reminder', appointmentId: appointment.id }
+        );
       }, delayMs);
     }
 
@@ -249,7 +266,11 @@ export class AgentOrchestrator {
     if (dayOfReminder > new Date()) {
       const delayMs = dayOfReminder.getTime() - Date.now();
       setTimeout(async () => {
-        await NotificationService.sendAppointmentDayReminder(appointment);
+        await NotificationService.scheduleLocalNotification(
+          'Appointment Today',
+          `Your appointment "${appointment.title}" is today. Good luck!`,
+          { type: 'appointment_day', appointmentId: appointment.id }
+        );
       }, delayMs);
     }
   }

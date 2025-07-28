@@ -111,9 +111,6 @@ export default function FeatureTutorial({
         ]}
       >
         <View style={styles.header}>
-          <View style={styles.iconContainer}>
-            <Ionicons name="bulb" size={24} color="#f59e0b" />
-          </View>
           {showSkip && onSkip && (
             <TouchableOpacity style={styles.skipButton} onPress={onSkip}>
               <Ionicons name="close" size={20} color="#64748b" />

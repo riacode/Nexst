@@ -11,6 +11,7 @@ import AppointmentsScreen from './screens/AppointmentsScreen';
 import RecommendationsScreen from './screens/RecommendationsScreen';
 import RecordingDetailScreen from './screens/RecordingDetailScreen';
 import AppointmentDetailScreen from './screens/AppointmentDetailScreen';
+import FollowUpQuestionsScreen from './screens/FollowUpQuestionsScreen';
 import OnboardingScreen from './screens/OnboardingScreen';
 import Header from './components/Header';
 import CustomTabBar from './components/CustomTabBar';
@@ -24,6 +25,7 @@ import { SmartAIProvider } from './contexts/SmartAIContext';
 import { PrivacyProvider, usePrivacy } from './contexts/PrivacyContext';
 import { TutorialProvider, useTutorial } from './contexts/TutorialContext';
 import { NavigationProvider, useNavigationContext } from './contexts/NavigationContext';
+import { FollowUpQuestionsProvider } from './contexts/FollowUpQuestionsContext';
 import OnboardingTutorial from './components/OnboardingTutorial';
 
 const Tab = createBottomTabNavigator();
@@ -35,6 +37,7 @@ function MainTabNavigator() {
   const { clearAllAppointments } = useAppointments();
   const { settings, updateSettings } = useNotificationSettings();
   const [settingsVisible, setSettingsVisible] = useState(false);
+  const { navigationRef } = useNavigationContext();
 
   const handleSettingsPress = () => {
     setSettingsVisible(true);
@@ -95,6 +98,10 @@ function MainTabNavigator() {
     await updateSettings(enabled, time, frequency);
   };
 
+  const handleFollowUpPress = () => {
+    navigationRef.current?.navigate('FollowUpQuestions');
+  };
+
   return (
     <>
       <Tab.Navigator
@@ -104,6 +111,7 @@ function MainTabNavigator() {
             <Header
               title={route.name}
               onSettingsPress={handleSettingsPress}
+              onFollowUpPress={handleFollowUpPress}
             />
           ),
         })}
@@ -199,6 +207,11 @@ function AppContent() {
                 component={PrivacySettingsScreen}
                 options={{ headerShown: false }}
               />
+              <Stack.Screen
+                name="FollowUpQuestions"
+                component={FollowUpQuestionsScreen}
+                options={{ headerShown: false }}
+              />
             </>
           )}
         </Stack.Navigator>
@@ -221,13 +234,15 @@ export default function App() {
           <RecommendationsProvider>
             <AppointmentsProvider>
               <NotificationSettingsProvider>
-                <SmartAIProvider userId="default-user">
-                  <PrivacyProvider>
-                    <TutorialProvider>
-                      <AppContent />
-                    </TutorialProvider>
-                  </PrivacyProvider>
-                </SmartAIProvider>
+                <FollowUpQuestionsProvider>
+                  <SmartAIProvider userId="default-user">
+                    <PrivacyProvider>
+                      <TutorialProvider>
+                        <AppContent />
+                      </TutorialProvider>
+                    </PrivacyProvider>
+                  </SmartAIProvider>
+                </FollowUpQuestionsProvider>
               </NotificationSettingsProvider>
             </AppointmentsProvider>
           </RecommendationsProvider>
