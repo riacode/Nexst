@@ -1,4 +1,5 @@
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { SymptomLog } from '../types/recommendations';
 
 interface SymptomLogsContextType {
@@ -19,8 +20,42 @@ interface SymptomLogsProviderProps {
 export const SymptomLogsProvider: React.FC<SymptomLogsProviderProps> = ({ children }) => {
   const [symptomLogs, setSymptomLogs] = useState<SymptomLog[]>([]);
 
+  // Load symptom logs from AsyncStorage on mount
+  useEffect(() => {
+    loadSymptomLogs();
+  }, []);
+
+  const loadSymptomLogs = async () => {
+    try {
+      const key = 'symptom_logs_default-user';
+      const logsJson = await AsyncStorage.getItem(key);
+      if (logsJson) {
+        const logs: SymptomLog[] = JSON.parse(logsJson);
+        // Convert timestamp strings back to Date objects
+        const logsWithDates = logs.map(log => ({
+          ...log,
+          timestamp: new Date(log.timestamp)
+        }));
+        setSymptomLogs(logsWithDates);
+      }
+    } catch (error) {
+      console.error('Error loading symptom logs:', error);
+    }
+  };
+
+  const saveSymptomLogs = async (logs: SymptomLog[]) => {
+    try {
+      const key = 'symptom_logs_default-user';
+      await AsyncStorage.setItem(key, JSON.stringify(logs));
+    } catch (error) {
+      console.error('Error saving symptom logs:', error);
+    }
+  };
+
   const addSymptomLog = (log: SymptomLog) => {
-    setSymptomLogs(prev => [log, ...prev]);
+    const newLogs = [log, ...symptomLogs];
+    setSymptomLogs(newLogs);
+    saveSymptomLogs(newLogs);
   };
 
   const updateSymptomLog = (id: string, updates: Partial<SymptomLog>) => {

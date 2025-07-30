@@ -1,33 +1,27 @@
 // ============================================================================
-// AGENT ORCHESTRATOR - Manages all autonomous agents
+// AGENT ORCHESTRATOR - Manages Micro-Agents with iOS Optimization
 // ============================================================================
 
-import { AgentManager } from './AgentManager';
-import { PatternAnalysisAgent } from './PatternAnalysisAgent';
-import { FollowUpAgent } from './FollowUpAgent';
-import { UserModelAgent } from './UserModelAgent';
-import { RecommendationAgent } from './RecommendationAgent';
+import { MicroAgentManager } from './MicroAgentManager';
+import { SymptomAnalysisAgent } from './SymptomAnalysisAgent';
+import { PatternDetectionAgent } from './PatternDetectionAgent';
 import { SymptomLog, MedicalRecommendation, HealthDomain } from '../../types/recommendations';
 
 export class AgentOrchestrator {
   private userId: string;
   private isInitialized: boolean = false;
   private agents: {
-    patternAnalysis: PatternAnalysisAgent;
-    followUp: FollowUpAgent;
-    userModel: UserModelAgent;
-    recommendation: RecommendationAgent;
+    symptomAnalysis: SymptomAnalysisAgent;
+    patternDetection: PatternDetectionAgent;
   };
 
   constructor(userId: string) {
     this.userId = userId;
     
-    // Initialize all agents
+    // Initialize micro-agents
     this.agents = {
-      patternAnalysis: new PatternAnalysisAgent(userId),
-      followUp: new FollowUpAgent(userId),
-      userModel: new UserModelAgent(userId),
-      recommendation: new RecommendationAgent(userId)
+      symptomAnalysis: new SymptomAnalysisAgent(userId),
+      patternDetection: new PatternDetectionAgent(userId)
     };
   }
 
@@ -36,7 +30,7 @@ export class AgentOrchestrator {
   // ============================================================================
 
   /**
-   * Initialize and start all agents
+   * Initialize and register all micro-agents
    */
   async initialize(): Promise<void> {
     if (this.isInitialized) {
@@ -44,18 +38,24 @@ export class AgentOrchestrator {
       return;
     }
 
-    console.log('🤖 AgentOrchestrator: Initializing all agents');
+    console.log('🤖 AgentOrchestrator: Initializing micro-agents');
+
+    // Initialize the micro-agent manager
+    await MicroAgentManager.initialize();
 
     // Register all agents with the manager
-    Object.values(this.agents).forEach(agent => {
-      AgentManager.registerAgent(agent);
-    });
+    MicroAgentManager.registerAgent(this.agents.symptomAnalysis, [
+      'new_symptom_log',
+      'symptom_analysis_requested'
+    ]);
 
-    // Start all agents
-    await AgentManager.startAllAgents();
+    MicroAgentManager.registerAgent(this.agents.patternDetection, [
+      'pattern_analysis_requested',
+      'background_analysis'
+    ]);
     
     this.isInitialized = true;
-    console.log('🤖 AgentOrchestrator: All agents initialized and running');
+    console.log('🤖 AgentOrchestrator: All micro-agents initialized and registered');
   }
 
   /**
@@ -67,8 +67,8 @@ export class AgentOrchestrator {
       return;
     }
 
-    console.log('🤖 AgentOrchestrator: Shutting down all agents');
-    await AgentManager.stopAllAgents();
+    console.log('🤖 AgentOrchestrator: Shutting down micro-agents');
+    await MicroAgentManager.shutdown();
     this.isInitialized = false;
   }
 
@@ -89,38 +89,39 @@ export class AgentOrchestrator {
   }> {
     console.log('🔄 REACTIVE AI: Processing symptom log');
 
-    // Step 1: Quick transcription (Whisper API - $0.006)
-    const { transcribeAudio } = await import('../openai');
-    const transcript = await transcribeAudio(symptomLog.audioURI!);
+    // Trigger symptom analysis agent
+    await MicroAgentManager.triggerEvent({
+      id: `symptom-${Date.now()}`,
+      type: 'new_symptom_log',
+      data: { symptomLog },
+      timestamp: new Date(),
+      priority: 'high'
+    });
+
+    // Execute the agent immediately
+    const result = await MicroAgentManager.executeAgent(this.agents.symptomAnalysis.getAgentId());
     
-    // Step 2: Generate comprehensive health analysis (GPT-4 - $0.03)
-    const healthAnalysis = await this.analyzeHealthLog(transcript);
-    
-    // Step 3: Quick recommendations using templates + light AI ($0.02)
-    const quickRecommendations = await this.generateQuickRecommendations(transcript, healthAnalysis.summary);
-    
-    // Step 4: Update symptom log with health domain classification
-    const updatedSymptomLog = {
-      ...symptomLog,
-      summary: healthAnalysis.summary,
-      healthDomain: healthAnalysis.healthDomain,
-      severity: healthAnalysis.severity,
-      impact: healthAnalysis.impact,
-      duration: healthAnalysis.duration,
-      relatedFactors: healthAnalysis.relatedFactors
-    };
-    
-    // Step 5: Notify agents about new symptom log
-    await this.notifyAgentsOfNewSymptomLog(updatedSymptomLog, transcript, healthAnalysis.summary);
-    
-    return {
-      transcript,
-      summary: healthAnalysis.summary,
-      quickRecommendations,
-      healthDomain: healthAnalysis.healthDomain,
-      severity: healthAnalysis.severity,
-      impact: healthAnalysis.impact
-    };
+    if (result?.success && result.data) {
+      // Convert the analysis result to the expected format
+      return {
+        transcript: result.data.transcript,
+        summary: result.data.summary,
+        quickRecommendations: this.convertToRecommendations(result.data.recommendations),
+        healthDomain: result.data.healthDomain,
+        severity: result.data.severity,
+        impact: result.data.impact
+      };
+    } else {
+      // Fallback if agent fails
+      return {
+        transcript: 'Processing failed',
+        summary: symptomLog.summary || 'Symptom recorded',
+        quickRecommendations: [],
+        healthDomain: 'general_wellness',
+        severity: 'mild',
+        impact: 'low'
+      };
+    }
   }
 
   /**
@@ -132,7 +133,6 @@ export class AgentOrchestrator {
   ): Promise<string[]> {
     console.log('🔄 REACTIVE AI: Generating appointment questions');
 
-    const userProfile = await this.agents.userModel.getUserProfile();
     const recentSymptoms = await this.getRecentSymptoms(30); // Get last 30 days for better context
     
     const prompt = `
@@ -141,10 +141,6 @@ export class AgentOrchestrator {
     
     Patient's Symptom History (last 30 days):
     ${recentSymptoms.map(log => `- ${log.summary} (${log.timestamp.toLocaleDateString()})`).join('\n')}
-    
-    Patient's Health Patterns:
-    - Common symptoms: ${userProfile.learningInsights?.commonSymptoms?.join(', ') || 'None'}
-    - Triggers: ${userProfile.learningInsights?.triggers?.join(', ') || 'None'}
     
     Generate 1-6 specific questions that the PATIENT should ask their doctor. These should be:
     1. Questions about their specific symptoms and health concerns
@@ -203,8 +199,23 @@ export class AgentOrchestrator {
   async getPersonalizedRecommendations(): Promise<MedicalRecommendation[]> {
     console.log('🔄 REACTIVE AI: Getting personalized recommendations');
     
-    // Get current recommendations from recommendation agent
-    return await this.agents.recommendation.getCurrentRecommendations();
+    // Trigger pattern analysis to get latest insights
+    await MicroAgentManager.triggerEvent({
+      id: `recommendations-${Date.now()}`,
+      type: 'pattern_analysis_requested',
+      data: {},
+      timestamp: new Date(),
+      priority: 'medium'
+    });
+
+    // Execute pattern detection agent
+    const result = await MicroAgentManager.executeAgent(this.agents.patternDetection.getAgentId());
+    
+    if (result?.success && result.data) {
+      return this.convertPatternsToRecommendations(result.data.patterns);
+    } else {
+      return [];
+    }
   }
 
   // ============================================================================
@@ -212,11 +223,23 @@ export class AgentOrchestrator {
   // ============================================================================
 
   /**
-   * Start proactive monitoring (all agents already running autonomously)
+   * Start proactive monitoring (uses iOS Background App Refresh)
    */
   async startProactiveMonitoring(): Promise<void> {
-    console.log('🤖 PROACTIVE AI: Proactive monitoring already active');
-    // All agents are already running autonomously
+    console.log('🤖 PROACTIVE AI: Starting proactive monitoring');
+    
+    if (!this.isInitialized) {
+      await this.initialize();
+    }
+
+    // Trigger background analysis
+    await MicroAgentManager.triggerEvent({
+      id: `background-${Date.now()}`,
+      type: 'background_analysis',
+      data: {},
+      timestamp: new Date(),
+      priority: 'low'
+    });
   }
 
   /**
@@ -232,6 +255,24 @@ export class AgentOrchestrator {
    */
   isProactiveActive(): boolean {
     return this.isInitialized;
+  }
+
+  // ============================================================================
+  // BACKGROUND TASK SUPPORT
+  // ============================================================================
+
+  /**
+   * Execute background task (called by iOS Background App Refresh)
+   */
+  async executeBackgroundTask(): Promise<void> {
+    console.log('🤖 AgentOrchestrator: Executing background task');
+    
+    if (!this.isInitialized) {
+      await this.initialize();
+    }
+
+    MicroAgentManager.startBackgroundTask();
+    await MicroAgentManager.executeBackgroundTask();
   }
 
   // ============================================================================
@@ -284,191 +325,8 @@ export class AgentOrchestrator {
   }
 
   // ============================================================================
-  // AGENT COMMUNICATION
-  // ============================================================================
-
-  /**
-   * Analyze health log to determine domain, severity, and impact
-   */
-  private async analyzeHealthLog(transcript: string): Promise<{
-    summary: string;
-    healthDomain: HealthDomain;
-    severity: 'mild' | 'moderate' | 'severe';
-    impact: 'low' | 'medium' | 'high';
-    duration?: number;
-    relatedFactors?: string[];
-  }> {
-    const prompt = `
-    Analyze this health log and classify it comprehensively:
-    
-    Transcript: "${transcript}"
-    
-    Classify this health issue across ALL domains:
-    
-    PHYSICAL INJURY: Sprains, fractures, cuts, burns, accidents, pain from injury
-    ILLNESS: Colds, flu, infections, chronic diseases, symptoms, sickness
-    MENTAL HEALTH: Anxiety, depression, stress, mood swings, emotional states, mental health
-    WEIGHT MANAGEMENT: Weight changes, body composition, eating patterns, weight gain/loss
-    NUTRITION: Diet issues, food intolerances, eating habits, cravings, nutrition
-    SLEEP: Sleep quality, insomnia, sleep disorders, fatigue, tiredness
-    EXERCISE: Fitness levels, workout injuries, performance, motivation, exercise
-    REPRODUCTIVE: Periods, pregnancy, fertility, hormonal changes, reproductive health
-    CHRONIC CONDITIONS: Diabetes, hypertension, asthma, management, chronic disease
-    MEDICATION: Side effects, adherence, interactions, effectiveness, medication
-    PREVENTIVE: Vaccinations, screenings, check-ups, health maintenance, prevention
-    GENERAL WELLNESS: Energy, fatigue, overall health, vitality, general wellness
-    
-    Determine:
-    1. Primary health domain (most relevant)
-    2. Severity: mild, moderate, severe
-    3. Impact on daily life: low, medium, high
-    4. Duration in days (if mentioned)
-    5. Related factors (triggers, activities, foods, etc.)
-    6. Summary of the health issue
-    
-    Return as JSON:
-    {
-      "summary": "Brief summary of the health issue",
-      "healthDomain": "primary_domain",
-      "severity": "mild|moderate|severe",
-      "impact": "low|medium|high",
-      "duration": number (optional),
-      "relatedFactors": ["factor1", "factor2"] (optional)
-    }
-    `;
-
-    try {
-      const { makeOpenAIRequest } = await import('../openai');
-      const response = await makeOpenAIRequest({
-        model: 'gpt-4',
-        messages: [
-          {
-            role: 'system',
-            content: 'You are a health classification expert. Analyze and classify health issues accurately.'
-          },
-          {
-            role: 'user',
-            content: prompt
-          }
-        ],
-        max_tokens: 300,
-        temperature: 0.1,
-      });
-      
-      const content = response.choices[0]?.message?.content || '';
-      const analysis = JSON.parse(content);
-      
-      return {
-        summary: analysis.summary,
-        healthDomain: analysis.healthDomain as HealthDomain,
-        severity: analysis.severity,
-        impact: analysis.impact,
-        duration: analysis.duration,
-        relatedFactors: analysis.relatedFactors
-      };
-    } catch (error) {
-      console.error('Error analyzing health log:', error);
-      // Fallback to general wellness with default values
-      return {
-        summary: transcript,
-        healthDomain: 'general_wellness',
-        severity: 'mild',
-        impact: 'low'
-      };
-    }
-  }
-
-  private async notifyAgentsOfNewSymptomLog(
-    symptomLog: SymptomLog, 
-    transcript: string, 
-    summary: string
-  ): Promise<void> {
-    // Notify pattern analysis agent
-    await AgentManager.sendMessage({
-      id: `symptom-${Date.now()}`,
-      from: 'orchestrator',
-      to: this.agents.patternAnalysis.getAgentId(),
-      type: 'symptom_log_added',
-      data: { symptomLog, transcript, summary },
-      timestamp: new Date(),
-      priority: 'medium'
-    });
-
-    // Notify follow-up agent
-    await AgentManager.sendMessage({
-      id: `followup-${Date.now()}`,
-      from: 'orchestrator',
-      to: this.agents.followUp.getAgentId(),
-      type: 'symptom_log_added',
-      data: { symptomLog },
-      timestamp: new Date(),
-      priority: 'medium'
-    });
-
-    // Notify user model agent
-    await AgentManager.sendMessage({
-      id: `usermodel-${Date.now()}`,
-      from: 'orchestrator',
-      to: this.agents.userModel.getAgentId(),
-      type: 'symptom_log_added',
-      data: { symptomLog },
-      timestamp: new Date(),
-      priority: 'medium'
-    });
-
-    // Notify recommendation agent
-    await AgentManager.sendMessage({
-      id: `recommendation-${Date.now()}`,
-      from: 'orchestrator',
-      to: this.agents.recommendation.getAgentId(),
-      type: 'symptom_log_added',
-      data: { symptomLog },
-      timestamp: new Date(),
-      priority: 'medium'
-    });
-  }
-
-  // ============================================================================
   // UTILITY FUNCTIONS
   // ============================================================================
-
-  private async generateQuickRecommendations(transcript: string, summary: string): Promise<MedicalRecommendation[]> {
-    const prompt = `
-    Based on this symptom: "${summary}"
-    Transcript: "${transcript}"
-    
-    Generate 2-3 quick, actionable recommendations.
-    Return as JSON array with:
-    - title: Short recommendation
-    - description: Brief explanation
-    - category: 'lifestyle', 'medical', 'preventive'
-    - priority: 'low', 'medium', 'high'
-    `;
-
-    try {
-      const { makeOpenAIRequest } = await import('../openai');
-      const response = await makeOpenAIRequest({
-        model: 'gpt-4',
-        messages: [
-          {
-            role: 'system',
-            content: 'You are a health assistant. Generate quick, actionable recommendations.'
-          },
-          {
-            role: 'user',
-            content: prompt
-          }
-        ],
-        max_tokens: 300,
-        temperature: 0.4,
-      });
-      const recommendations = response.choices[0]?.message?.content || '';
-      return this.parseRecommendations(recommendations);
-    } catch (error) {
-      console.error('Error generating quick recommendations:', error);
-      return [];
-    }
-  }
 
   private async getRecentSymptoms(days: number): Promise<SymptomLog[]> {
     try {
@@ -499,14 +357,44 @@ export class AgentOrchestrator {
     }
   }
 
-  private parseRecommendations(content: string): MedicalRecommendation[] {
-    try {
-      const parsed = JSON.parse(content);
-      return Array.isArray(parsed) ? parsed : [];
-    } catch (error) {
-      console.error('Error parsing recommendations:', error);
-      return [];
-    }
+  private convertToRecommendations(recommendations: string[]): MedicalRecommendation[] {
+    return recommendations.map((rec, index) => ({
+      id: `rec-${Date.now()}-${index}`,
+      priority: 'MEDIUM' as const,
+      title: rec,
+      description: rec,
+      actionItems: [],
+      urgency: 'within days' as const,
+      category: 'lifestyle' as const,
+      healthDomain: 'general_wellness' as HealthDomain,
+      medicalRationale: 'AI-generated recommendation based on symptom analysis',
+      symptomsTriggering: [],
+      severityIndicators: [],
+      followUpRequired: false,
+      riskLevel: 'low' as const,
+      interventionType: 'self_care' as const,
+      createdAt: new Date()
+    }));
+  }
+
+  private convertPatternsToRecommendations(patterns: any[]): MedicalRecommendation[] {
+    return patterns.map((pattern, index) => ({
+      id: `pattern-rec-${Date.now()}-${index}`,
+      priority: pattern.severity === 'severe' ? 'HIGH' : 'MEDIUM',
+      title: `Address ${pattern.symptom} pattern`,
+      description: `Consider addressing the recurring ${pattern.symptom} pattern`,
+      actionItems: [],
+      urgency: 'within weeks' as const,
+      category: 'monitoring' as const,
+      healthDomain: pattern.healthDomain || 'general_wellness',
+      medicalRationale: 'Pattern analysis identified recurring symptom',
+      symptomsTriggering: [pattern.symptom],
+      severityIndicators: [pattern.severity],
+      followUpRequired: pattern.trend === 'worsening',
+      riskLevel: pattern.severity === 'severe' ? 'high' : 'medium',
+      interventionType: 'professional_care' as const,
+      createdAt: new Date()
+    }));
   }
 
   // ============================================================================
@@ -519,8 +407,8 @@ export class AgentOrchestrator {
   getSystemStatus(): any {
     return {
       isInitialized: this.isInitialized,
-      agentStatus: AgentManager.getAllAgentStatus(),
-      systemStatus: AgentManager.getSystemStatus()
+      agentStatus: MicroAgentManager.getAllAgentStatus(),
+      systemStatus: MicroAgentManager.getSystemStatus()
     };
   }
 
@@ -532,13 +420,12 @@ export class AgentOrchestrator {
     proactive: number;
     total: number;
   } {
-    const agentStatuses = AgentManager.getAllAgentStatus();
-    const proactiveCost = agentStatuses.reduce((sum, agent) => sum + agent.totalCost, 0);
+    const totalCost = MicroAgentManager.getTotalCost();
     
     return {
-      reactive: 0.05, // Per symptom log
-      proactive: proactiveCost,
-      total: proactiveCost + 0.05
+      reactive: totalCost * 0.7, // Estimate 70% reactive, 30% proactive
+      proactive: totalCost * 0.3,
+      total: totalCost
     };
   }
 
@@ -549,17 +436,17 @@ export class AgentOrchestrator {
     totalAgents: number;
     runningAgents: number;
     totalRuns: number;
-    pendingMessages: number;
+    pendingEvents: number;
   } {
-    const systemStatus = AgentManager.getSystemStatus();
-    const agentStatuses = AgentManager.getAllAgentStatus();
+    const systemStatus = MicroAgentManager.getSystemStatus();
+    const agentStatuses = MicroAgentManager.getAllAgentStatus();
     const totalRuns = agentStatuses.reduce((sum, agent) => sum + agent.runCount, 0);
     
     return {
       totalAgents: systemStatus.totalAgents,
-      runningAgents: systemStatus.runningAgents,
+      runningAgents: systemStatus.processingAgents,
       totalRuns,
-      pendingMessages: systemStatus.pendingMessages
+      pendingEvents: systemStatus.pendingEvents
     };
   }
 } 

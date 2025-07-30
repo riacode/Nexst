@@ -28,11 +28,13 @@ interface SmartAIContextType {
   stopProactiveMonitoring: () => void;
   isProactiveActive: boolean;
   
+  // Background task support
+  executeBackgroundTask: () => Promise<void>;
+  
   // Notification functions
   scheduleAppointmentReminders: (appointment: any) => Promise<void>;
   cancelAppointmentReminders: (appointmentId: string) => Promise<void>;
   sendFollowUpQuestion: (question: string, questionType: string) => Promise<void>;
-  sendMissedLogSpotlight: () => Promise<void>;
   
   // Cost and usage tracking
   getCostBreakdown: () => {
@@ -164,6 +166,15 @@ export const SmartAIProvider: React.FC<SmartAIProviderProps> = ({
     setIsProactiveActive(false);
   };
 
+  /**
+   * BACKGROUND: Execute background task (iOS Background App Refresh)
+   * COST: Varies based on tasks executed
+   */
+  const executeBackgroundTask = async () => {
+    console.log('🤖 BACKGROUND AI: Executing background task');
+    await smartAI.executeBackgroundTask();
+  };
+
   // ============================================================================
   // NOTIFICATION FUNCTIONS
   // ============================================================================
@@ -191,15 +202,6 @@ export const SmartAIProvider: React.FC<SmartAIProviderProps> = ({
   const sendFollowUpQuestion = async (question: string, questionType: string) => {
     const { NotificationService } = await import('../utils/notifications');
     await NotificationService.sendFollowUpQuestion(question, questionType);
-  };
-
-  /**
-   * NOTIFICATION: Send missed log spotlight
-   * COST: $0 (no API calls)
-   */
-  const sendMissedLogSpotlight = async () => {
-    const { NotificationService } = await import('../utils/notifications');
-    await NotificationService.sendMissedLogSpotlight();
   };
 
   // ============================================================================
@@ -239,11 +241,13 @@ export const SmartAIProvider: React.FC<SmartAIProviderProps> = ({
     stopProactiveMonitoring,
     isProactiveActive,
     
+    // Background task support
+    executeBackgroundTask,
+    
     // Notification functions
     scheduleAppointmentReminders,
     cancelAppointmentReminders,
     sendFollowUpQuestion,
-    sendMissedLogSpotlight,
     
     // Cost and usage tracking
     getCostBreakdown,
