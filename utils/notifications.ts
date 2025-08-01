@@ -59,30 +59,18 @@ export class NotificationService {
     const todayScheduled = new Date();
     todayScheduled.setHours(scheduledHour, scheduledMinute, 0, 0);
     
-    // Create one hour after scheduled time
-    const oneHourAfter = new Date(todayScheduled);
-    oneHourAfter.setHours(oneHourAfter.getHours() + 1);
-    
     if (now < todayScheduled) {
       // Before scheduled time - no notification needed
       console.log('New user: Before scheduled time, no notification sent');
       return;
-    } else if (now >= todayScheduled && now < oneHourAfter) {
-      // At scheduled time - send reminder
+    } else {
+      // At or after scheduled time - send reminder (pinned to lock screen)
       await this.scheduleLocalNotification(
         "Time to Log Your Symptoms",
         "Tap to quickly record how you're feeling today.",
         { type: 'daily_reminder', priority: 'high' }
       );
-      console.log('New user: At scheduled time, sent reminder');
-    } else {
-      // More than one hour past - send missed reminder
-      await this.scheduleLocalNotification(
-        "Missed Your Health Check-in",
-        "Make sure you log your symptoms today!",
-        { type: 'missed_log_reminder', priority: 'high' }
-      );
-      console.log('New user: More than one hour past, sent missed reminder');
+      console.log('New user: At or after scheduled time, sent reminder');
     }
   }
 
@@ -201,8 +189,8 @@ export class NotificationService {
         body,
         data,
         sound: 'default',
-        // Set priority for iOS lock screen positioning
-        ...(data?.priority === 'high' && Platform.OS === 'ios' && {
+        // Set priority for iOS lock screen positioning - all notifications are high priority
+        ...(Platform.OS === 'ios' && {
           priority: 'high',
           categoryIdentifier: 'high_priority'
         })
@@ -229,6 +217,16 @@ export class NotificationService {
     } catch (error) {
       console.error(`Error cancelling notification ${identifier}:`, error);
     }
+  }
+
+  // Helper method to check if we should send notification today
+  static shouldSendNotificationToday(lastNotificationDate?: string): boolean {
+    if (!lastNotificationDate) return true;
+    
+    const today = new Date().toDateString();
+    const lastDate = new Date(lastNotificationDate).toDateString();
+    
+    return today !== lastDate;
   }
 }
 

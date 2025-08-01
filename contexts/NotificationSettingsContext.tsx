@@ -7,6 +7,7 @@ interface NotificationSettings {
   time: Date;
   frequency: string; // 'Daily', 'Weekdays', 'Weekly'
   isNewUser: boolean; // Track if this is a new user
+  lastNotificationDate?: string; // Track when last notification was sent to prevent duplicates
 }
 
 interface NotificationSettingsContextType {
@@ -27,6 +28,7 @@ const defaultSettings: NotificationSettings = {
   time: new Date(new Date().setHours(9, 0, 0, 0)), // 9 AM default
   frequency: 'Daily',
   isNewUser: true,
+  lastNotificationDate: undefined,
 };
 
 export function NotificationSettingsProvider({ children }: { children: React.ReactNode }) {
@@ -46,7 +48,7 @@ export function NotificationSettingsProvider({ children }: { children: React.Rea
     } else {
       cancelNotifications();
     }
-  }, [settings]);
+  }, [settings.enabled, settings.time, settings.frequency, settings.isNewUser]);
 
   const loadSettings = async () => {
     try {
@@ -56,7 +58,8 @@ export function NotificationSettingsProvider({ children }: { children: React.Rea
         setSettings({
           ...parsed,
           time: new Date(parsed.time),
-          isNewUser: parsed.isNewUser !== false // Default to true if not set
+          isNewUser: parsed.isNewUser !== false, // Default to true if not set
+          lastNotificationDate: parsed.lastNotificationDate || undefined
         });
       }
     } catch (error) {
@@ -88,11 +91,21 @@ export function NotificationSettingsProvider({ children }: { children: React.Rea
     try {
       if (!settings.enabled) return;
 
+      // Check if we've already sent a notification today
+      if (!NotificationService.shouldSendNotificationToday(settings.lastNotificationDate)) {
+        console.log('New user notification already sent today, skipping');
+        return;
+      }
+
       // Handle smart initial notification for new users
       await NotificationService.handleNewUserNotification(settings.time);
       
-      // Mark user as no longer new
-      const updatedSettings = { ...settings, isNewUser: false };
+      // Mark user as no longer new and record notification date
+      const updatedSettings = { 
+        ...settings, 
+        isNewUser: false,
+        lastNotificationDate: new Date().toDateString()
+      };
       setSettings(updatedSettings);
       await saveSettings(updatedSettings);
       
@@ -106,8 +119,19 @@ export function NotificationSettingsProvider({ children }: { children: React.Rea
     try {
       if (!settings.enabled) return;
 
+      // Check if we've already scheduled notifications today
+      if (!NotificationService.shouldSendNotificationToday(settings.lastNotificationDate)) {
+        console.log('Notifications already scheduled today, skipping');
+        return;
+      }
+
       // Schedule recurring log reminders
       await NotificationService.scheduleLogReminders(settings.time, settings.frequency);
+
+      // Record that we've scheduled notifications today
+      const updatedSettings = { ...settings, lastNotificationDate: new Date().toDateString() };
+      setSettings(updatedSettings);
+      await saveSettings(updatedSettings);
 
       console.log('Notifications scheduled for time:', settings.time.toLocaleString(), 'frequency:', settings.frequency);
     } catch (error) {
