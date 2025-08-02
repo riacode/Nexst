@@ -279,50 +279,7 @@ export class AgentOrchestrator {
   // NOTIFICATION FUNCTIONS
   // ============================================================================
 
-  /**
-   * Schedule appointment reminders
-   */
-  async scheduleAppointmentReminders(appointment: any): Promise<void> {
-    const { NotificationService } = await import('../notifications');
-    
-    // Schedule reminder 2 days before
-    const reminderDate = new Date(appointment.date);
-    reminderDate.setDate(reminderDate.getDate() - 2);
-    
-    if (reminderDate > new Date()) {
-      const delayMs = reminderDate.getTime() - Date.now();
-      setTimeout(async () => {
-        await NotificationService.scheduleLocalNotification(
-          'Appointment Reminder',
-          `Your appointment "${appointment.title}" is in 2 days. Don't forget to prepare your questions!`,
-          { type: 'appointment_reminder', appointmentId: appointment.id }
-        );
-      }, delayMs);
-    }
 
-    // Schedule day-of reminder
-    const dayOfReminder = new Date(appointment.date);
-    dayOfReminder.setHours(9, 0, 0, 0); // 9 AM
-    
-    if (dayOfReminder > new Date()) {
-      const delayMs = dayOfReminder.getTime() - Date.now();
-      setTimeout(async () => {
-        await NotificationService.scheduleLocalNotification(
-          'Appointment Today',
-          `Your appointment "${appointment.title}" is today. Good luck!`,
-          { type: 'appointment_day', appointmentId: appointment.id }
-        );
-      }, delayMs);
-    }
-  }
-
-  /**
-   * Cancel appointment reminders
-   */
-  async cancelAppointmentReminders(appointmentId: string): Promise<void> {
-    // Implementation would cancel scheduled notifications
-    console.log(`Cancelled reminders for appointment: ${appointmentId}`);
-  }
 
   // ============================================================================
   // UTILITY FUNCTIONS

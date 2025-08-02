@@ -22,7 +22,7 @@ interface Appointment {
 export default function AppointmentsScreen({ navigation }: any) {
   const { appointments, addAppointment: addAppointmentToContext } = useAppointments();
   const { tutorialState, completeAppointmentTutorial } = useTutorial();
-  const { scheduleAppointmentReminders, generateAppointmentQuestions } = useSmartAI();
+  const { generateAppointmentQuestions } = useSmartAI();
   const [showModal, setShowModal] = useState(false);
   const [titleInput, setTitleInput] = useState('');
   const [selectedDate, setSelectedDate] = useState(new Date());

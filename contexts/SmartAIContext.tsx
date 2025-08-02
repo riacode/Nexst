@@ -32,8 +32,6 @@ interface SmartAIContextType {
   executeBackgroundTask: () => Promise<void>;
   
   // Notification functions
-  scheduleAppointmentReminders: (appointment: any) => Promise<void>;
-  cancelAppointmentReminders: (appointmentId: string) => Promise<void>;
   sendFollowUpQuestion: (question: string, questionType: string) => Promise<void>;
   
   // Cost and usage tracking
@@ -179,21 +177,7 @@ export const SmartAIProvider: React.FC<SmartAIProviderProps> = ({
   // NOTIFICATION FUNCTIONS
   // ============================================================================
 
-  /**
-   * NOTIFICATION: Schedule appointment reminders
-   * COST: $0 (no API calls)
-   */
-  const scheduleAppointmentReminders = async (appointment: any) => {
-    await smartAI.scheduleAppointmentReminders(appointment);
-  };
 
-  /**
-   * NOTIFICATION: Cancel appointment reminders
-   * COST: $0 (no API calls)
-   */
-  const cancelAppointmentReminders = async (appointmentId: string) => {
-    await smartAI.cancelAppointmentReminders(appointmentId);
-  };
 
   /**
    * NOTIFICATION: Send follow-up question
@@ -245,8 +229,6 @@ export const SmartAIProvider: React.FC<SmartAIProviderProps> = ({
     executeBackgroundTask,
     
     // Notification functions
-    scheduleAppointmentReminders,
-    cancelAppointmentReminders,
     sendFollowUpQuestion,
     
     // Cost and usage tracking

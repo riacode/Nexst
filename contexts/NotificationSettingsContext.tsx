@@ -6,8 +6,6 @@ interface NotificationSettings {
   enabled: boolean;
   time: Date;
   frequency: string; // 'Daily', 'Weekdays', 'Weekly'
-  isNewUser: boolean; // Track if this is a new user
-  lastNotificationDate?: string; // Track when last notification was sent to prevent duplicates
 }
 
 interface NotificationSettingsContextType {
@@ -16,7 +14,8 @@ interface NotificationSettingsContextType {
   scheduleNotifications: () => Promise<void>;
   cancelNotifications: () => Promise<void>;
   clearNotificationBadge: () => Promise<void>;
-  handleNewUserSetup: () => Promise<void>;
+  testNotification: () => Promise<void>;
+  getAllScheduledNotifications: () => Promise<any[]>;
 }
 
 const NotificationSettingsContext = createContext<NotificationSettingsContextType | undefined>(undefined);
@@ -27,133 +26,127 @@ const defaultSettings: NotificationSettings = {
   enabled: true,
   time: new Date(new Date().setHours(9, 0, 0, 0)), // 9 AM default
   frequency: 'Daily',
-  isNewUser: true,
-  lastNotificationDate: undefined,
 };
 
 export function NotificationSettingsProvider({ children }: { children: React.ReactNode }) {
   const [settings, setSettings] = useState<NotificationSettings>(defaultSettings);
+  const [isInitialized, setIsInitialized] = useState(false);
 
   useEffect(() => {
     loadSettings();
   }, []);
 
   useEffect(() => {
-    if (settings.enabled) {
-      if (settings.isNewUser) {
-        handleNewUserSetup();
-      } else {
+    if (isInitialized) {
+      console.log('🔔 Notification settings changed, updating...');
+      if (settings.enabled) {
         scheduleNotifications();
+      } else {
+        cancelNotifications();
       }
-    } else {
-      cancelNotifications();
     }
-  }, [settings.enabled, settings.time, settings.frequency, settings.isNewUser]);
+  }, [settings.enabled, settings.time, settings.frequency, isInitialized]);
 
   const loadSettings = async () => {
     try {
+      console.log('📱 Loading notification settings...');
       const stored = await AsyncStorage.getItem(STORAGE_KEY);
       if (stored) {
         const parsed = JSON.parse(stored);
-        setSettings({
+        const loadedSettings = {
           ...parsed,
           time: new Date(parsed.time),
-          isNewUser: parsed.isNewUser !== false, // Default to true if not set
-          lastNotificationDate: parsed.lastNotificationDate || undefined
-        });
+        };
+        setSettings(loadedSettings);
+        console.log('✅ Notification settings loaded:', loadedSettings);
+      } else {
+        console.log('📱 No stored notification settings, using defaults');
       }
+      setIsInitialized(true);
     } catch (error) {
-      console.error('Error loading notification settings:', error);
+      console.error('❌ Error loading notification settings:', error);
+      setIsInitialized(true);
     }
   };
 
   const saveSettings = async (newSettings: NotificationSettings) => {
     try {
       await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(newSettings));
+      console.log('✅ Notification settings saved:', newSettings);
     } catch (error) {
-      console.error('Error saving notification settings:', error);
+      console.error('❌ Error saving notification settings:', error);
     }
   };
 
   const updateSettings = async (enabled: boolean, time: Date, frequency: string) => {
+    console.log('🔧 Updating notification settings:', { enabled, time, frequency });
+    
     const newSettings = { 
       ...settings,
       enabled, 
       time, 
-      frequency,
-      isNewUser: false // User has now configured settings
+      frequency
     };
     setSettings(newSettings);
     await saveSettings(newSettings);
   };
 
-  const handleNewUserSetup = async () => {
-    try {
-      if (!settings.enabled) return;
-
-      // Check if we've already sent a notification today
-      if (!NotificationService.shouldSendNotificationToday(settings.lastNotificationDate)) {
-        console.log('New user notification already sent today, skipping');
-        return;
-      }
-
-      // Handle smart initial notification for new users
-      await NotificationService.handleNewUserNotification(settings.time);
-      
-      // Mark user as no longer new and record notification date
-      const updatedSettings = { 
-        ...settings, 
-        isNewUser: false,
-        lastNotificationDate: new Date().toDateString()
-      };
-      setSettings(updatedSettings);
-      await saveSettings(updatedSettings);
-      
-      console.log('New user notification setup completed');
-    } catch (error) {
-      console.error('Error setting up new user notifications:', error);
-    }
-  };
-
   const scheduleNotifications = async () => {
     try {
-      if (!settings.enabled) return;
-
-      // Check if we've already scheduled notifications today
-      if (!NotificationService.shouldSendNotificationToday(settings.lastNotificationDate)) {
-        console.log('Notifications already scheduled today, skipping');
+      console.log('📅 Scheduling notifications...');
+      
+      if (!settings.enabled) {
+        console.log('❌ Notifications disabled, skipping scheduling');
         return;
       }
 
       // Schedule recurring log reminders
-      await NotificationService.scheduleLogReminders(settings.time, settings.frequency);
+      const notificationId = await NotificationService.scheduleLogReminders(settings.time, settings.frequency);
 
-      // Record that we've scheduled notifications today
-      const updatedSettings = { ...settings, lastNotificationDate: new Date().toDateString() };
-      setSettings(updatedSettings);
-      await saveSettings(updatedSettings);
-
-      console.log('Notifications scheduled for time:', settings.time.toLocaleString(), 'frequency:', settings.frequency);
+      console.log(`✅ Notifications scheduled for time: ${settings.time.toLocaleTimeString()}, frequency: ${settings.frequency}`);
+      console.log(`📱 Notification ID: ${notificationId}`);
     } catch (error) {
-      console.error('Error scheduling notifications:', error);
+      console.error('❌ Error scheduling notifications:', error);
     }
   };
 
   const cancelNotifications = async () => {
     try {
+      console.log('❌ Cancelling all notifications...');
       await NotificationService.cancelNotification('daily_reminder');
-      console.log('All scheduled notifications cancelled');
+      console.log('✅ All scheduled notifications cancelled');
     } catch (error) {
-      console.error('Error cancelling notifications:', error);
+      console.error('❌ Error cancelling notifications:', error);
     }
   };
 
   const clearNotificationBadge = async () => {
     try {
+      console.log('🧹 Clearing notification badge...');
       // This would need to be implemented if you want to clear badges
-      console.log('Notification badge cleared');
+      console.log('✅ Notification badge cleared');
     } catch (error) {
-      console.error('Error clearing notification badge:', error);
+      console.error('❌ Error clearing notification badge:', error);
+    }
+  };
+
+  const testNotification = async () => {
+    try {
+      console.log('🧪 Testing notification system...');
+      await NotificationService.testNotification();
+    } catch (error) {
+      console.error('❌ Error testing notification:', error);
+    }
+  };
+
+  const getAllScheduledNotifications = async () => {
+    try {
+      console.log('📱 Getting all scheduled notifications...');
+      const notifications = await NotificationService.getAllScheduledNotifications();
+      return notifications;
+    } catch (error) {
+      console.error('❌ Error getting scheduled notifications:', error);
+      return [];
     }
   };
 
@@ -165,7 +158,8 @@ export function NotificationSettingsProvider({ children }: { children: React.Rea
         scheduleNotifications,
         cancelNotifications,
         clearNotificationBadge,
-        handleNewUserSetup,
+        testNotification,
+        getAllScheduledNotifications,
       }}
     >
       {children}
