@@ -53,47 +53,15 @@ export class NotificationService {
       await this.cancelNotification('daily_reminder');
 
       const triggerTime = new Date(time);
-      const now = new Date();
       
-      // Calculate the next occurrence time
-      const nextOccurrence = new Date();
-      nextOccurrence.setHours(triggerTime.getHours(), triggerTime.getMinutes(), 0, 0);
+      console.log('📅 Scheduling daily reminder for:', triggerTime.toLocaleTimeString());
       
-      // If the time has already passed today, schedule for tomorrow
-      if (nextOccurrence <= now) {
-        nextOccurrence.setDate(nextOccurrence.getDate() + 1);
-      }
-      
-      console.log('📅 Next occurrence calculated:', nextOccurrence.toLocaleString());
-      console.log('⏰ Current time:', now.toLocaleString());
-      console.log('🎯 Target time:', triggerTime.toLocaleTimeString());
-      
-      // Create proper trigger based on frequency
-      let trigger: any;
-      
-      if (frequency === 'Daily') {
-        trigger = {
-          hour: triggerTime.getHours(),
-          minute: triggerTime.getMinutes(),
-          repeats: true,
-        };
-      } else if (frequency === 'Weekdays') {
-        trigger = {
-          hour: triggerTime.getHours(),
-          minute: triggerTime.getMinutes(),
-          weekday: 1, // Monday
-          repeats: true,
-        };
-      } else if (frequency === 'Weekly') {
-        trigger = {
-          hour: triggerTime.getHours(),
-          minute: triggerTime.getMinutes(),
-          weekday: 1, // Monday
-          repeats: true,
-        };
-      }
-
-      console.log('📅 Scheduling daily reminder with trigger:', trigger);
+      // Simple daily trigger
+      const trigger: any = {
+        hour: triggerTime.getHours(),
+        minute: triggerTime.getMinutes(),
+        repeats: true,
+      };
 
       // Schedule daily reminder
       const notificationId = await Notifications.scheduleNotificationAsync({
@@ -111,9 +79,8 @@ export class NotificationService {
         identifier: 'daily_reminder',
       });
 
-      console.log(`✅ ${frequency} reminders scheduled for: ${triggerTime.toLocaleTimeString()}`);
+      console.log(`✅ Daily reminder scheduled for: ${triggerTime.toLocaleTimeString()}`);
       console.log(`📱 Notification ID: ${notificationId}`);
-      console.log(`⏰ Next notification will appear at: ${nextOccurrence.toLocaleString()}`);
       
       return notificationId;
     } catch (error) {

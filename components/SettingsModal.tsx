@@ -33,7 +33,7 @@ export default function SettingsModal({
   notificationFrequency
 }: SettingsModalProps) {
   const { resetTutorials } = useTutorial();
-  const { getAllScheduledNotifications } = useNotificationSettings();
+  const { getAllScheduledNotifications, rescheduleNotifications } = useNotificationSettings();
   const slideAnim = React.useRef(new Animated.Value(screenHeight)).current;
 
   const handleRestartApp = () => {
@@ -246,6 +246,13 @@ export default function SettingsModal({
                     </View>
                   </View>
 
+                  {/* Apply Changes Button */}
+                  <TouchableOpacity
+                    style={styles.applyButton}
+                    onPress={rescheduleNotifications}
+                  >
+                    <Text style={styles.applyButtonText}>Apply Changes</Text>
+                  </TouchableOpacity>
 
                 </>
               )}
@@ -472,6 +479,19 @@ const styles = StyleSheet.create({
   },
   frequencyTextActive: {
     color: '#ffffff',
+  },
+  applyButton: {
+    backgroundColor: colors.accent,
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    borderRadius: 8,
+    marginTop: 16,
+    alignItems: 'center',
+  },
+  applyButtonText: {
+    color: '#ffffff',
+    fontSize: 16,
+    fontWeight: '600',
   },
 
   options: {

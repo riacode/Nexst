@@ -14,7 +14,7 @@ interface NotificationSettingsContextType {
   scheduleNotifications: () => Promise<void>;
   cancelNotifications: () => Promise<void>;
   clearNotificationBadge: () => Promise<void>;
-
+  rescheduleNotifications: () => Promise<void>;
   getAllScheduledNotifications: () => Promise<any[]>;
 }
 
@@ -91,16 +91,20 @@ export function NotificationSettingsProvider({ children }: { children: React.Rea
     setSettings(newSettings);
     await saveSettings(newSettings);
     
-    // Handle notification scheduling based on user action
+    // Only schedule/cancel when the enabled state changes
     if (enabled && !settings.enabled) {
-      console.log('🔔 User enabled notifications, scheduling immediately...');
+      console.log('🔔 User enabled notifications, scheduling...');
       await scheduleNotifications();
     } else if (!enabled && settings.enabled) {
       console.log('🔔 User disabled notifications, cancelling...');
       await cancelNotifications();
-    } else if (enabled && settings.enabled) {
-      // User changed time or frequency while notifications are enabled
-      console.log('🔔 User updated notification settings, rescheduling...');
+    }
+    // Don't reschedule when user just changes time/frequency while enabled
+  };
+
+  const rescheduleNotifications = async () => {
+    if (settings.enabled) {
+      console.log('🔔 Rescheduling notifications with new time...');
       await scheduleNotifications();
     }
   };
@@ -176,6 +180,7 @@ export function NotificationSettingsProvider({ children }: { children: React.Rea
         scheduleNotifications,
         cancelNotifications,
         clearNotificationBadge,
+        rescheduleNotifications,
         getAllScheduledNotifications,
       }}
     >
