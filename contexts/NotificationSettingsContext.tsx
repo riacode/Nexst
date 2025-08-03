@@ -38,7 +38,11 @@ export function NotificationSettingsProvider({ children }: { children: React.Rea
 
   useEffect(() => {
     if (isInitialized) {
-      console.log('🔔 Notification settings changed, updating...');
+      console.log('🔔 Notification settings changed, updating...', {
+        enabled: settings.enabled,
+        time: settings.time.toLocaleTimeString(),
+        frequency: settings.frequency
+      });
       if (settings.enabled) {
         scheduleNotifications();
       } else {
@@ -97,6 +101,17 @@ export function NotificationSettingsProvider({ children }: { children: React.Rea
       
       if (!settings.enabled) {
         console.log('❌ Notifications disabled, skipping scheduling');
+        return;
+      }
+
+      // Check if notifications are already scheduled
+      const existingNotifications = await NotificationService.getAllScheduledNotifications();
+      const hasDailyReminder = existingNotifications.some(notification => 
+        notification.identifier === 'daily_reminder'
+      );
+
+      if (hasDailyReminder) {
+        console.log('📅 Daily reminder already scheduled, skipping re-scheduling');
         return;
       }
 

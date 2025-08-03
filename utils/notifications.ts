@@ -53,6 +53,16 @@ export class NotificationService {
       await this.cancelNotification('daily_reminder');
 
       const triggerTime = new Date(time);
+      const now = new Date();
+      
+      // If the time has already passed today, schedule for tomorrow
+      const scheduledTime = new Date();
+      scheduledTime.setHours(triggerTime.getHours(), triggerTime.getMinutes(), 0, 0);
+      
+      if (scheduledTime <= now) {
+        // Time has passed today, schedule for tomorrow
+        scheduledTime.setDate(scheduledTime.getDate() + 1);
+      }
       
       // Create proper trigger based on frequency
       let trigger: any;
