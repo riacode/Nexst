@@ -55,14 +55,18 @@ export class NotificationService {
       const triggerTime = new Date(time);
       const now = new Date();
       
-      // If the time has already passed today, schedule for tomorrow
-      const scheduledTime = new Date();
-      scheduledTime.setHours(triggerTime.getHours(), triggerTime.getMinutes(), 0, 0);
+      // Calculate the next occurrence time
+      const nextOccurrence = new Date();
+      nextOccurrence.setHours(triggerTime.getHours(), triggerTime.getMinutes(), 0, 0);
       
-      if (scheduledTime <= now) {
-        // Time has passed today, schedule for tomorrow
-        scheduledTime.setDate(scheduledTime.getDate() + 1);
+      // If the time has already passed today, schedule for tomorrow
+      if (nextOccurrence <= now) {
+        nextOccurrence.setDate(nextOccurrence.getDate() + 1);
       }
+      
+      console.log('📅 Next occurrence calculated:', nextOccurrence.toLocaleString());
+      console.log('⏰ Current time:', now.toLocaleString());
+      console.log('🎯 Target time:', triggerTime.toLocaleTimeString());
       
       // Create proper trigger based on frequency
       let trigger: any;
@@ -74,7 +78,6 @@ export class NotificationService {
           repeats: true,
         };
       } else if (frequency === 'Weekdays') {
-        // For weekdays, schedule Monday through Friday
         trigger = {
           hour: triggerTime.getHours(),
           minute: triggerTime.getMinutes(),
@@ -99,7 +102,6 @@ export class NotificationService {
           body: "Tap to quickly record how you're feeling today.",
           data: { type: 'daily_reminder' },
           sound: 'default',
-          // iOS-specific configuration for lock screen pinning
           ...(Platform.OS === 'ios' && {
             priority: 'high',
             categoryIdentifier: 'high_priority'
@@ -111,6 +113,7 @@ export class NotificationService {
 
       console.log(`✅ ${frequency} reminders scheduled for: ${triggerTime.toLocaleTimeString()}`);
       console.log(`📱 Notification ID: ${notificationId}`);
+      console.log(`⏰ Next notification will appear at: ${nextOccurrence.toLocaleString()}`);
       
       return notificationId;
     } catch (error) {

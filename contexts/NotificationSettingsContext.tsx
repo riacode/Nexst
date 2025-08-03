@@ -14,7 +14,7 @@ interface NotificationSettingsContextType {
   scheduleNotifications: () => Promise<void>;
   cancelNotifications: () => Promise<void>;
   clearNotificationBadge: () => Promise<void>;
-  testNotification: () => Promise<void>;
+
   getAllScheduledNotifications: () => Promise<any[]>;
 }
 
@@ -23,8 +23,8 @@ const NotificationSettingsContext = createContext<NotificationSettingsContextTyp
 const STORAGE_KEY = 'notification_settings';
 
 const defaultSettings: NotificationSettings = {
-  enabled: true,
-  time: new Date(new Date().setHours(9, 0, 0, 0)), // 9 AM default
+  enabled: false, // Changed from true to false - users must explicitly enable
+  time: new Date(new Date().setHours(10, 0, 0, 0)), // Changed to 10 AM as requested
   frequency: 'Daily',
 };
 
@@ -43,11 +43,8 @@ export function NotificationSettingsProvider({ children }: { children: React.Rea
         time: settings.time.toLocaleTimeString(),
         frequency: settings.frequency
       });
-      if (settings.enabled) {
-        scheduleNotifications();
-      } else {
-        cancelNotifications();
-      }
+      // Don't auto-schedule on app startup - only when user explicitly enables
+      // The scheduling will be handled in updateSettings when user toggles notifications on
     }
   }, [settings.enabled, settings.time, settings.frequency, isInitialized]);
 
@@ -93,6 +90,19 @@ export function NotificationSettingsProvider({ children }: { children: React.Rea
     };
     setSettings(newSettings);
     await saveSettings(newSettings);
+    
+    // Handle notification scheduling based on user action
+    if (enabled && !settings.enabled) {
+      console.log('🔔 User enabled notifications, scheduling immediately...');
+      await scheduleNotifications();
+    } else if (!enabled && settings.enabled) {
+      console.log('🔔 User disabled notifications, cancelling...');
+      await cancelNotifications();
+    } else if (enabled && settings.enabled) {
+      // User changed time or frequency while notifications are enabled
+      console.log('🔔 User updated notification settings, rescheduling...');
+      await scheduleNotifications();
+    }
   };
 
   const scheduleNotifications = async () => {
@@ -145,14 +155,7 @@ export function NotificationSettingsProvider({ children }: { children: React.Rea
     }
   };
 
-  const testNotification = async () => {
-    try {
-      console.log('🧪 Testing notification system...');
-      await NotificationService.testNotification();
-    } catch (error) {
-      console.error('❌ Error testing notification:', error);
-    }
-  };
+
 
   const getAllScheduledNotifications = async () => {
     try {
@@ -173,7 +176,6 @@ export function NotificationSettingsProvider({ children }: { children: React.Rea
         scheduleNotifications,
         cancelNotifications,
         clearNotificationBadge,
-        testNotification,
         getAllScheduledNotifications,
       }}
     >

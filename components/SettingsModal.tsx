@@ -33,7 +33,7 @@ export default function SettingsModal({
   notificationFrequency
 }: SettingsModalProps) {
   const { resetTutorials } = useTutorial();
-  const { testNotification, getAllScheduledNotifications } = useNotificationSettings();
+  const { getAllScheduledNotifications } = useNotificationSettings();
   const slideAnim = React.useRef(new Animated.Value(screenHeight)).current;
 
   const handleRestartApp = () => {
@@ -246,28 +246,7 @@ export default function SettingsModal({
                     </View>
                   </View>
 
-                  {/* Test Notification Button */}
-                  <View style={styles.settingRow}>
-                    <View style={styles.settingContent}>
-                      <Text style={styles.settingTitle}>Test Notifications</Text>
-                      <Text style={styles.settingDescription}>
-                        Send a test notification to verify the system works
-                      </Text>
-                    </View>
-                    <TouchableOpacity
-                      style={styles.testButton}
-                      onPress={async () => {
-                        try {
-                          await testNotification();
-                          Alert.alert('Test Notification', 'Test notification sent! Check your device.');
-                        } catch (error) {
-                          Alert.alert('Error', 'Failed to send test notification. Check console for details.');
-                        }
-                      }}
-                    >
-                      <Text style={styles.testButtonText}>Test</Text>
-                    </TouchableOpacity>
-                  </View>
+
                 </>
               )}
             </View>
@@ -494,17 +473,7 @@ const styles = StyleSheet.create({
   frequencyTextActive: {
     color: '#ffffff',
   },
-  testButton: {
-    backgroundColor: colors.accent,
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 8,
-  },
-  testButtonText: {
-    color: '#ffffff',
-    fontSize: 14,
-    fontWeight: '500',
-  },
+
   options: {
     paddingHorizontal: 20,
     paddingTop: 16,
