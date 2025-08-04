@@ -536,8 +536,8 @@ export default function SymptomScreen({ navigation }: any) {
          {!tutorialState.hasSeenSymptomTutorial && (
            <FeatureTutorial
              visible={!tutorialState.hasSeenSymptomTutorial}
-             title={featureTutorials.symptom.title}
-             description={featureTutorials.symptom.description}
+             title={featureTutorials.symptoms.title}
+             description={featureTutorials.symptoms.description}
              position="center"
              onComplete={completeSymptomTutorial}
              showSkip={false}
