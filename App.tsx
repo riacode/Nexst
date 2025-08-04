@@ -5,6 +5,7 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createStackNavigator } from '@react-navigation/stack';
 import { Ionicons } from '@expo/vector-icons';
 import { Alert } from 'react-native';
+
 import SymptomsScreen from './screens/SymptomsScreen';
 import AppointmentsScreen from './screens/AppointmentsScreen';
 import RecommendationsScreen from './screens/RecommendationsScreen';
@@ -19,9 +20,11 @@ import { RecommendationsProvider, useRecommendations } from './contexts/Recommen
 import { SymptomLogsProvider, useSymptomLogs } from './contexts/SymptomLogsContext';
 import { AppointmentsProvider, useAppointments } from './contexts/AppointmentsContext';
 import { OnboardingProvider, useOnboarding } from './contexts/OnboardingContext';
+
 import { SmartAIProvider } from './contexts/SmartAIContext';
 import { PrivacyProvider, usePrivacy } from './contexts/PrivacyContext';
 import { TutorialProvider, useTutorial } from './contexts/TutorialContext';
+import { NavigationProvider, useNavigationContext } from './contexts/NavigationContext';
 import { FollowUpQuestionsProvider } from './contexts/FollowUpQuestionsContext';
 import OnboardingTutorial from './components/OnboardingTutorial';
 
@@ -33,7 +36,6 @@ function MainTabNavigator() {
   const { clearAllRecommendations } = useRecommendations();
   const { clearAllAppointments } = useAppointments();
   const [settingsVisible, setSettingsVisible] = useState(false);
-  const navigation = useNavigation();
 
   const handleSettingsPress = () => {
     setSettingsVisible(true);
@@ -91,7 +93,7 @@ function MainTabNavigator() {
   };
 
   const handleFollowUpPress = () => {
-    navigation.navigate('FollowUpQuestions' as never);
+    // Navigate to follow-up questions
   };
 
   return (
@@ -131,6 +133,10 @@ function MainTabNavigator() {
         onClearSymptomLogs={handleClearSymptomLogs}
         onClearAppointments={handleClearAppointments}
         onClearRecommendations={handleClearRecommendations}
+        onUpdateNotificationSettings={() => {}}
+        notificationEnabled={false}
+        notificationTime={new Date()}
+        notificationFrequency="daily"
       />
     </>
   );
@@ -139,12 +145,10 @@ function MainTabNavigator() {
 function AppContent() {
   const { hasSeenOnboarding, markOnboardingComplete } = useOnboarding();
   const { tutorialState, completeOnboarding, hideOnboardingTutorial } = useTutorial();
-
   console.log('AppContent - hasSeenOnboarding:', hasSeenOnboarding);
 
   useEffect(() => {
-    // Set up app initialization when the app starts
-    
+    // App initialization
     return () => {
       // cleanup
     };
@@ -217,7 +221,7 @@ export default function App() {
         <RecommendationsProvider>
           <AppointmentsProvider>
             <FollowUpQuestionsProvider>
-              <SmartAIProvider>
+              <SmartAIProvider userId="default-user">
                 <PrivacyProvider>
                   <TutorialProvider>
                     <AppContent />

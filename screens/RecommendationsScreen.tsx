@@ -332,15 +332,7 @@ export default function RecommendationsScreen({ route, navigation }: any) {
           </CollapsibleSection>
         )}
 
-        {recommendations.length === 0 && (
-          <View style={styles.emptyState}>
-            <Ionicons name="medical" size={64} color="#cbd5e1" />
-            <Text style={styles.emptyStateTitle}>No Recommendations Yet</Text>
-            <Text style={styles.emptyStateText}>
-              Keep recording your symptoms to receive personalized health suggestions.
-            </Text>
-          </View>
-        )}
+
       </ScrollView>
       </View>
     </SharedBackground>
@@ -616,22 +608,5 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   
-  // Empty State
-  emptyState: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 60,
-  },
-  emptyStateTitle: {
-    ...fontStyles.h3,
-    color: '#64748b',
-    marginTop: 16,
-    marginBottom: 8,
-  },
-  emptyStateText: {
-    ...fontStyles.body,
-    color: '#94a3b8',
-    textAlign: 'center',
-    paddingHorizontal: 32,
-  },
+
 }); 

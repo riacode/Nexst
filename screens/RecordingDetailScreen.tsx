@@ -20,6 +20,7 @@ export default function RecordingDetailScreen({ route, navigation }: any) {
           >
             <Ionicons name="arrow-back" size={24} color="#1e293b" />
           </TouchableOpacity>
+          <Text style={styles.headerTitle}>Recording Details</Text>
         </View>
         <View style={styles.content}>
           <Text style={styles.errorText}>No recording data available</Text>
@@ -195,6 +196,7 @@ export default function RecordingDetailScreen({ route, navigation }: any) {
         >
           <Ionicons name="arrow-back" size={24} color="#1e293b" />
         </TouchableOpacity>
+        <Text style={styles.headerTitle}>Recording Details</Text>
       </View>
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
