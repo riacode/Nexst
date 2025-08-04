@@ -13,59 +13,48 @@ import SharedBackground from '../components/SharedBackground';
 import { colors, gradients } from '../utils/colors';
 
 interface Appointment {
-    id: string;
-    title: string;
-    date: Date;
-    timestamp: Date;
+  id: string;
+  title: string;
+  date: Date;
+  provider: string;
+  location?: string;
+  notes?: string;
+  questions: string[];
+  createdAt: Date;
+  isCompleted: boolean;
+  completedAt?: Date;
 }
 
 export default function AppointmentsScreen({ navigation }: any) {
-  const { appointments, addAppointment: addAppointmentToContext } = useAppointments();
+  const { appointments, addAppointment } = useAppointments();
   const { tutorialState, completeAppointmentTutorial } = useTutorial();
   const { generateAppointmentQuestions } = useSmartAI();
   const [showModal, setShowModal] = useState(false);
   const [titleInput, setTitleInput] = useState('');
   const [selectedDate, setSelectedDate] = useState(new Date());
-  const [upcomingCollapsed, setUpcomingCollapsed] = useState(false);
-  const [pastCollapsed, setPastCollapsed] = useState(false);
+  const [collapsedSections, setCollapsedSections] = useState({
+    upcoming: false,
+    past: false
+  });
 
-  const addAppointment = async () => {
+  const addAppointmentToContext = async () => {
     if (!titleInput.trim()) {
-      Alert.alert('Error', 'Please enter an appointment name');
+      Alert.alert('Error', 'Please enter an appointment title');
       return;
     }
-    
-    const now = new Date();
-    
+
     // Generate questions for the appointment
-    let questions: string[] = [];
-    try {
-      questions = await generateAppointmentQuestions(titleInput, selectedDate);
-    } catch (error) {
-      console.error('Error generating appointment questions:', error);
-      // Fallback questions if AI fails
-      questions = [
-        "How have you been feeling since your last visit?",
-        "Have you noticed any new symptoms?",
-        "Are there any concerns you'd like to discuss?",
-        "How are your current medications working?",
-        "Have you made any lifestyle changes recently?"
-      ];
-    }
+    const questions = await generateAppointmentQuestions(titleInput, selectedDate);
     
     const newAppointment = {
-      id: now.toISOString(),
       title: titleInput,
       date: selectedDate,
-      timestamp: now,
+      provider: 'Healthcare Provider',
       questions: questions,
-      recentSymptomsLastUpdated: now
+      isCompleted: false
     };
     
-    addAppointmentToContext(newAppointment);
-    
-    
-    
+    addAppointment(newAppointment);
     setShowModal(false);
     setTitleInput('');
     setSelectedDate(new Date());
@@ -162,7 +151,7 @@ export default function AppointmentsScreen({ navigation }: any) {
         appointment: {
           ...item,
           date: item.date.toISOString(),
-          timestamp: item.timestamp.toISOString()
+          timestamp: item.createdAt.toISOString()
         }
       })}
     >
@@ -200,8 +189,8 @@ export default function AppointmentsScreen({ navigation }: any) {
             {sortedUpcoming.length > 0 && (
               <CollapsibleSection
                 title="Upcoming Appointments"
-                isCollapsed={upcomingCollapsed}
-                onToggle={() => setUpcomingCollapsed(!upcomingCollapsed)}
+                isCollapsed={collapsedSections.upcoming}
+                onToggle={() => setCollapsedSections(prev => ({ ...prev, upcoming: !prev.upcoming }))}
                 count={sortedUpcoming.length}
               >
                 {sortedUpcoming.map((item) => (
@@ -216,8 +205,8 @@ export default function AppointmentsScreen({ navigation }: any) {
             {sortedPast.length > 0 && (
               <CollapsibleSection
                 title="Past Appointments"
-                isCollapsed={pastCollapsed}
-                onToggle={() => setPastCollapsed(!pastCollapsed)}
+                isCollapsed={collapsedSections.past}
+                onToggle={() => setCollapsedSections(prev => ({ ...prev, past: !prev.past }))}
                 count={sortedPast.length}
               >
                 {sortedPast.map((item) => (
@@ -293,7 +282,7 @@ export default function AppointmentsScreen({ navigation }: any) {
                 <TouchableOpacity style={styles.cancelButton} onPress={resetForm}>
                   <Text style={styles.cancelButtonText}>Cancel</Text>
                 </TouchableOpacity>
-                <TouchableOpacity style={styles.addButtonStyle} onPress={addAppointment}>
+                <TouchableOpacity style={styles.addButtonStyle} onPress={addAppointmentToContext}>
                   <Text style={styles.addButtonText}>Add</Text>
                 </TouchableOpacity>
               </View>

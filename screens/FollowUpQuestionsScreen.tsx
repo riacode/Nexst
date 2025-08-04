@@ -1,138 +1,156 @@
-import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Alert } from 'react-native';
+import React from 'react';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { fontStyles } from '../utils/fonts';
+import { useFollowUpQuestions, FollowUpQuestion } from '../contexts/FollowUpQuestionsContext';
 import { colors } from '../utils/colors';
-import { useFollowUpQuestions } from '../contexts/FollowUpQuestionsContext';
-import { useSymptomLogs } from '../contexts/SymptomLogsContext';
 
 interface FollowUpQuestionsScreenProps {
-  navigation?: any;
+  navigation: any;
 }
 
 export default function FollowUpQuestionsScreen({ navigation }: FollowUpQuestionsScreenProps) {
-  const { followUpQuestions, removeFollowUpQuestion, markAsAnswered } = useFollowUpQuestions();
-  const { addSymptomLog } = useSymptomLogs();
-  const [recordingQuestionId, setRecordingQuestionId] = useState<string | null>(null);
+  const { questions, updateQuestion, markAsAnswered } = useFollowUpQuestions();
 
-  const handleRecordAnswer = async (question: any) => {
-    setRecordingQuestionId(question.id);
-    
-    try {
-      // This would integrate with your existing recording system
-      // For now, we'll simulate recording and add a placeholder log
-      const answerLog = {
-        id: Date.now().toString(),
-        summary: `Answer to follow-up: ${question.question}`,
-        healthDomain: 'GENERAL_WELLNESS' as any,
-        severity: 'mild' as 'mild',
-        impact: 'low' as 'low',
-        timestamp: new Date(),
-        transcript: `User answered: ${question.question}`,
-        isFollowUpAnswer: true,
-        followUpQuestionId: question.id,
-      };
-      
-      await addSymptomLog(answerLog);
-      markAsAnswered(question.id);
-      removeFollowUpQuestion(question.id);
-      
-      Alert.alert('Success', 'Your answer has been recorded and added to your symptom logs.');
-    } catch (error) {
-      console.error('Error recording answer:', error);
-      Alert.alert('Error', 'Failed to record your answer. Please try again.');
-    } finally {
-      setRecordingQuestionId(null);
-    }
+  const handleMarkAsAnswered = (questionId: string) => {
+    Alert.prompt(
+      'Answer Question',
+      'Please provide your answer:',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        { 
+          text: 'Submit', 
+          onPress: (answer) => markAsAnswered(questionId, answer || 'No answer provided')
+        }
+      ],
+      'plain-text'
+    );
   };
 
   const handleDeleteQuestion = (questionId: string) => {
     Alert.alert(
       'Delete Question',
-      'Are you sure you want to delete this follow-up question?',
+      'Are you sure you want to delete this question?',
       [
         { text: 'Cancel', style: 'cancel' },
         { 
           text: 'Delete', 
           style: 'destructive',
-          onPress: () => removeFollowUpQuestion(questionId)
+          onPress: () => updateQuestion(questionId, { isAnswered: true })
         }
       ]
     );
   };
 
-  const formatDate = (date: Date) => {
-    return date.toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
+  const renderQuestion = ({ item }: { item: FollowUpQuestion }) => (
+    <View style={styles.questionCard}>
+      <View style={styles.questionHeader}>
+        <View style={styles.questionType}>
+          <Ionicons 
+            name={getQuestionIcon(item.type)} 
+            size={16} 
+            color={getQuestionColor(item.type)} 
+          />
+          <Text style={[styles.questionTypeText, { color: getQuestionColor(item.type) }]}>
+            {item.type.replace('_', ' ').toUpperCase()}
+          </Text>
+        </View>
+        <View style={styles.questionPriority}>
+          <Text style={[styles.priorityText, { color: getPriorityColor(item.priority) }]}>
+            {item.priority.toUpperCase()}
+          </Text>
+        </View>
+      </View>
+      
+      <Text style={styles.questionText}>{item.question}</Text>
+      
+      <View style={styles.questionFooter}>
+        <Text style={styles.questionDate}>
+          {new Date(item.createdAt).toLocaleDateString()}
+        </Text>
+        
+        <View style={styles.questionActions}>
+          {!item.isAnswered && (
+            <TouchableOpacity 
+              style={[styles.actionButton, styles.answerButton]} 
+              onPress={() => handleMarkAsAnswered(item.id)}
+            >
+              <Ionicons name="checkmark" size={16} color="#FFFFFF" />
+              <Text style={styles.actionButtonText}>Answer</Text>
+            </TouchableOpacity>
+          )}
+          
+          <TouchableOpacity 
+            style={[styles.actionButton, styles.deleteButton]} 
+            onPress={() => handleDeleteQuestion(item.id)}
+          >
+            <Ionicons name="trash" size={16} color="#FFFFFF" />
+            <Text style={styles.actionButtonText}>Delete</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+      
+      {item.isAnswered && item.answer && (
+        <View style={styles.answerSection}>
+          <Text style={styles.answerLabel}>Your Answer:</Text>
+          <Text style={styles.answerText}>{item.answer}</Text>
+        </View>
+      )}
+    </View>
+  );
+
+  const getQuestionIcon = (type: string) => {
+    switch (type) {
+      case 'missing_update': return 'time';
+      case 'overdue_recommendation': return 'warning';
+      case 'pattern_change': return 'trending-up';
+      default: return 'help-circle';
+    }
+  };
+
+  const getQuestionColor = (type: string) => {
+    switch (type) {
+      case 'missing_update': return colors.warning;
+      case 'overdue_recommendation': return colors.error;
+      case 'pattern_change': return colors.info;
+      default: return colors.textSecondary;
+    }
+  };
+
+  const getPriorityColor = (priority: string) => {
+    switch (priority) {
+      case 'high': return colors.error;
+      case 'medium': return colors.warning;
+      case 'low': return colors.success;
+      default: return colors.textSecondary;
+    }
   };
 
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <TouchableOpacity 
-          style={styles.backButton} 
-          onPress={() => navigation?.goBack()}
-        >
-          <Ionicons name="arrow-back" size={24} color="#1e293b" />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Follow-up Questions</Text>
-        <View style={styles.placeholder} />
+        <Text style={styles.title}>Follow-up Questions</Text>
+        <Text style={styles.subtitle}>
+          {questions.filter(q => !q.isAnswered).length} unanswered questions
+        </Text>
       </View>
-
-      <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-        {followUpQuestions.length === 0 ? (
-          <View style={styles.emptyState}>
-            <Ionicons name="chatbubble-ellipses" size={64} color="#cbd5e1" />
-            <Text style={styles.emptyStateTitle}>No Follow-up Questions</Text>
-            <Text style={styles.emptyStateText}>
-              When you have follow-up questions, they'll appear here for you to answer.
-            </Text>
-          </View>
-        ) : (
-          followUpQuestions.map((question) => (
-            <View key={question.id} style={styles.questionCard}>
-              <View style={styles.questionHeader}>
-                <View style={styles.questionInfo}>
-                  <Text style={styles.questionText}>{question.question}</Text>
-                  <Text style={styles.questionMeta}>
-                    {formatDate(question.timestamp)} • {question.questionType}
-                  </Text>
-                </View>
-                <TouchableOpacity
-                  style={styles.deleteButton}
-                  onPress={() => handleDeleteQuestion(question.id)}
-                >
-                  <Ionicons name="close" size={20} color="#ef4444" />
-                </TouchableOpacity>
-              </View>
-              
-              <View style={styles.actionButtons}>
-                <TouchableOpacity
-                  style={[
-                    styles.recordButton,
-                    recordingQuestionId === question.id && styles.recordingButton
-                  ]}
-                  onPress={() => handleRecordAnswer(question)}
-                  disabled={recordingQuestionId === question.id}
-                >
-                  <Ionicons 
-                    name={recordingQuestionId === question.id ? "stop" : "mic"} 
-                    size={20} 
-                    color="#ffffff" 
-                  />
-                  <Text style={styles.recordButtonText}>
-                    {recordingQuestionId === question.id ? 'Recording...' : 'Record Answer'}
-                  </Text>
-                </TouchableOpacity>
-              </View>
-            </View>
-          ))
-        )}
-      </ScrollView>
+      
+      {questions.length === 0 ? (
+        <View style={styles.emptyState}>
+          <Ionicons name="help-circle" size={64} color={colors.textSecondary} />
+          <Text style={styles.emptyTitle}>No Follow-up Questions</Text>
+          <Text style={styles.emptySubtitle}>
+            Follow-up questions will appear here when the AI needs more information about your health.
+          </Text>
+        </View>
+      ) : (
+        <FlatList
+          data={questions}
+          renderItem={renderQuestion}
+          keyExtractor={(item) => item.id}
+          contentContainerStyle={styles.listContainer}
+          showsVerticalScrollIndicator={false}
+        />
+      )}
     </View>
   );
 }
@@ -143,8 +161,6 @@ const styles = StyleSheet.create({
     backgroundColor: '#f8fafc',
   },
   header: {
-    flexDirection: 'row',
-    alignItems: 'center',
     paddingHorizontal: 16,
     paddingTop: 50,
     paddingBottom: 12,
@@ -152,21 +168,15 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: '#e2e8f0',
   },
-  backButton: {
-    padding: 8,
-    marginRight: 16,
-  },
-  headerTitle: {
-    ...fontStyles.h3,
+  title: {
+    fontSize: 24,
+    fontWeight: 'bold',
     color: '#1e293b',
-    flex: 1,
   },
-  placeholder: {
-    width: 40,
-  },
-  content: {
-    flex: 1,
-    padding: 16,
+  subtitle: {
+    fontSize: 14,
+    color: '#64748b',
+    marginTop: 4,
   },
   emptyState: {
     alignItems: 'center',
@@ -175,17 +185,21 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     marginTop: 20,
   },
-  emptyStateTitle: {
-    ...fontStyles.h3,
+  emptyTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
     color: '#1e293b',
     marginTop: 16,
     marginBottom: 8,
   },
-  emptyStateText: {
-    ...fontStyles.body,
+  emptySubtitle: {
+    fontSize: 14,
     color: '#64748b',
     textAlign: 'center',
     lineHeight: 20,
+  },
+  listContainer: {
+    padding: 16,
   },
   questionCard: {
     backgroundColor: '#ffffff',
@@ -199,44 +213,88 @@ const styles = StyleSheet.create({
   },
   questionHeader: {
     flexDirection: 'row',
-    alignItems: 'flex-start',
-    marginBottom: 16,
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 12,
   },
-  questionInfo: {
-    flex: 1,
+  questionType: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#e0f2fe',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 8,
+  },
+  questionTypeText: {
+    fontSize: 12,
+    fontWeight: 'bold',
+    marginLeft: 4,
+  },
+  questionPriority: {
+    backgroundColor: '#fef3f2',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 8,
+  },
+  priorityText: {
+    fontSize: 12,
+    fontWeight: 'bold',
   },
   questionText: {
-    ...fontStyles.body,
+    fontSize: 16,
     color: '#1e293b',
     lineHeight: 22,
-    marginBottom: 8,
+    marginBottom: 12,
   },
-  questionMeta: {
-    ...fontStyles.caption,
+  questionFooter: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginTop: 12,
+  },
+  questionDate: {
+    fontSize: 12,
     color: '#64748b',
   },
-  deleteButton: {
-    padding: 4,
-    marginLeft: 8,
-  },
-  actionButtons: {
+  questionActions: {
     flexDirection: 'row',
-    justifyContent: 'flex-end',
   },
-  recordButton: {
+  actionButton: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: colors.accent,
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    borderRadius: 12,
-  },
-  recordingButton: {
-    backgroundColor: '#ef4444',
-  },
-  recordButtonText: {
-    ...fontStyles.bodyMedium,
-    color: '#ffffff',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 10,
     marginLeft: 8,
+  },
+  answerButton: {
+    backgroundColor: colors.success,
+  },
+  deleteButton: {
+    backgroundColor: colors.error,
+  },
+  actionButtonText: {
+    fontSize: 12,
+    fontWeight: 'bold',
+    color: '#ffffff',
+    marginLeft: 4,
+  },
+  answerSection: {
+    marginTop: 16,
+    paddingTop: 16,
+    borderTopWidth: 1,
+    borderTopColor: '#e2e8f0',
+  },
+  answerLabel: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    color: '#1e293b',
+    marginBottom: 8,
+  },
+  answerText: {
+    fontSize: 14,
+    color: '#475569',
+    lineHeight: 20,
   },
 }); 

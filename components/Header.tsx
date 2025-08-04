@@ -1,40 +1,38 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { fontStyles } from '../utils/fonts';
 import { useFollowUpQuestions } from '../contexts/FollowUpQuestionsContext';
 import { colors } from '../utils/colors';
 
 interface HeaderProps {
   title: string;
   onSettingsPress: () => void;
-  onFollowUpPress?: () => void;
+  onFollowUpPress: () => void;
 }
 
 export default function Header({ title, onSettingsPress, onFollowUpPress }: HeaderProps) {
-  const { getUnansweredCount } = useFollowUpQuestions();
-  const unansweredCount = getUnansweredCount();
+  const { questions } = useFollowUpQuestions();
+  const unansweredCount = questions.filter(q => !q.isAnswered).length;
 
   return (
     <View style={styles.header}>
-      <View style={styles.headerContent}>
-        <View style={styles.headerActions}>
-          {onFollowUpPress && (
-            <TouchableOpacity style={styles.actionButton} onPress={onFollowUpPress}>
-              <View style={styles.followUpButton}>
-                <Ionicons name="chatbubble-ellipses" size={24} color="#64748b" />
-                {unansweredCount > 0 && (
-                  <View style={styles.badge}>
-                    <Text style={styles.badgeText}>{unansweredCount}</Text>
-                  </View>
-                )}
-              </View>
-            </TouchableOpacity>
+      <Text style={styles.title}>{title}</Text>
+      <View style={styles.actions}>
+        <TouchableOpacity 
+          style={styles.actionButton} 
+          onPress={onFollowUpPress}
+          disabled={unansweredCount === 0}
+        >
+          <Ionicons name="help-circle" size={24} color={colors.text} />
+          {unansweredCount > 0 && (
+            <View style={styles.badge}>
+              <Text style={styles.badgeText}>{unansweredCount}</Text>
+            </View>
           )}
-          <TouchableOpacity style={styles.actionButton} onPress={onSettingsPress}>
-            <Ionicons name="settings-outline" size={24} color="#64748b" />
-          </TouchableOpacity>
-        </View>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.actionButton} onPress={onSettingsPress}>
+          <Ionicons name="settings" size={24} color={colors.text} />
+        </TouchableOpacity>
       </View>
     </View>
   );
@@ -42,48 +40,44 @@ export default function Header({ title, onSettingsPress, onFollowUpPress }: Head
 
 const styles = StyleSheet.create({
   header: {
-    backgroundColor: '#ffffff',
+    backgroundColor: colors.background,
     borderBottomWidth: 1,
-    borderBottomColor: '#e2e8f0',
-    paddingTop: 50, // Safe area for status bar
-    paddingBottom: 12,
-  },
-  headerContent: {
+    borderBottomColor: colors.border,
+    paddingTop: 50,
+    paddingBottom: 16,
+    paddingHorizontal: 20,
     flexDirection: 'row',
-    justifyContent: 'flex-end',
+    justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: 16,
   },
   title: {
-    ...fontStyles.h3,
-    color: '#1e293b',
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: colors.text,
   },
-  headerActions: {
+  actions: {
     flexDirection: 'row',
     alignItems: 'center',
+    gap: 16,
   },
   actionButton: {
-    padding: 8,
-    marginLeft: 8,
-  },
-  followUpButton: {
     position: 'relative',
+    padding: 8,
   },
   badge: {
     position: 'absolute',
-    top: -4,
-    right: -4,
-    backgroundColor: '#ef4444',
+    top: 0,
+    right: 0,
+    backgroundColor: colors.error,
     borderRadius: 10,
     minWidth: 20,
     height: 20,
-    alignItems: 'center',
     justifyContent: 'center',
+    alignItems: 'center',
   },
   badgeText: {
-    ...fontStyles.caption,
-    color: '#ffffff',
+    color: '#FFFFFF',
     fontSize: 12,
-    fontWeight: '600',
+    fontWeight: 'bold',
   },
 }); 

@@ -1,111 +1,164 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useNotificationSettings } from './NotificationSettingsContext';
+import { sendFollowUpQuestionAlert } from '../utils/notifications';
 
-interface FollowUpQuestion {
+// ============================================================================
+// FOLLOW-UP QUESTIONS CONTEXT - Manages AI-Generated Follow-up Questions
+// ============================================================================
+
+export interface FollowUpQuestion {
   id: string;
   question: string;
-  questionType: string;
-  timestamp: Date;
+  type: 'missing_update' | 'overdue_recommendation' | 'pattern_change';
+  priority: 'high' | 'medium' | 'low';
+  createdAt: Date;
   isAnswered: boolean;
+  answeredAt?: Date;
+  answer?: string;
 }
 
 interface FollowUpQuestionsContextType {
-  followUpQuestions: FollowUpQuestion[];
-  addFollowUpQuestion: (question: string, questionType: string) => void;
-  removeFollowUpQuestion: (id: string) => void;
-  markAsAnswered: (id: string) => void;
-  getUnansweredCount: () => number;
-  clearAllQuestions: () => void;
+  questions: FollowUpQuestion[];
+  addFollowUpQuestions: (newQuestions: FollowUpQuestion[]) => void;
+  updateQuestion: (id: string, updates: Partial<FollowUpQuestion>) => void;
+  markAsAnswered: (id: string, answer?: string) => void;
+  clearQuestions: () => void;
+  isLoading: boolean;
 }
 
 const FollowUpQuestionsContext = createContext<FollowUpQuestionsContextType | undefined>(undefined);
 
-const STORAGE_KEY = 'follow_up_questions';
+interface FollowUpQuestionsProviderProps {
+  children: ReactNode;
+}
 
-export function FollowUpQuestionsProvider({ children }: { children: React.ReactNode }) {
-  const [followUpQuestions, setFollowUpQuestions] = useState<FollowUpQuestion[]>([]);
+export const FollowUpQuestionsProvider: React.FC<FollowUpQuestionsProviderProps> = ({ children }) => {
+  const [questions, setQuestions] = useState<FollowUpQuestion[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const { settings } = useNotificationSettings();
+
+  // ============================================================================
+  // INITIALIZATION
+  // ============================================================================
 
   useEffect(() => {
-    loadFollowUpQuestions();
+    loadQuestions();
   }, []);
 
-  useEffect(() => {
-    saveFollowUpQuestions();
-  }, [followUpQuestions]);
-
-  const loadFollowUpQuestions = async () => {
+  /**
+   * Load follow-up questions from AsyncStorage
+   */
+  const loadQuestions = async () => {
     try {
-      const stored = await AsyncStorage.getItem(STORAGE_KEY);
-      if (stored) {
-        const parsed = JSON.parse(stored);
-        const questionsWithDates = parsed.map((q: any) => ({
-          ...q,
-          timestamp: new Date(q.timestamp)
-        }));
-        setFollowUpQuestions(questionsWithDates);
+      const storedQuestions = await AsyncStorage.getItem('followUpQuestions_default-user');
+      if (storedQuestions) {
+        const parsedQuestions = JSON.parse(storedQuestions);
+        setQuestions(parsedQuestions);
       }
     } catch (error) {
       console.error('Error loading follow-up questions:', error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  const saveFollowUpQuestions = async () => {
+  /**
+   * Save follow-up questions to AsyncStorage
+   */
+  const saveQuestions = async (newQuestions: FollowUpQuestion[]) => {
     try {
-      await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(followUpQuestions));
+      await AsyncStorage.setItem('followUpQuestions_default-user', JSON.stringify(newQuestions));
     } catch (error) {
       console.error('Error saving follow-up questions:', error);
     }
   };
 
-  const addFollowUpQuestion = (question: string, questionType: string) => {
-    const newQuestion: FollowUpQuestion = {
-      id: Date.now().toString(),
-      question,
-      questionType,
-      timestamp: new Date(),
-      isAnswered: false,
-    };
-    setFollowUpQuestions(prev => [newQuestion, ...prev]);
+  // ============================================================================
+  // QUESTION MANAGEMENT
+  // ============================================================================
+
+  /**
+   * Add new follow-up questions and send notifications
+   */
+  const addFollowUpQuestions = (newQuestions: FollowUpQuestion[]) => {
+    setQuestions(prev => {
+      const updatedQuestions = [...prev, ...newQuestions];
+      saveQuestions(updatedQuestions);
+      return updatedQuestions;
+    });
+
+    // Send notification alerts for new follow-up questions
+    if (settings.enabled && settings.followUpAlerts) {
+      newQuestions.forEach(question => {
+        sendFollowUpQuestionAlert(question.question);
+      });
+    }
   };
 
-  const removeFollowUpQuestion = (id: string) => {
-    setFollowUpQuestions(prev => prev.filter(q => q.id !== id));
+  /**
+   * Update a specific follow-up question
+   */
+  const updateQuestion = (id: string, updates: Partial<FollowUpQuestion>) => {
+    setQuestions(prev => {
+      const updatedQuestions = prev.map(q =>
+        q.id === id ? { ...q, ...updates } : q
+      );
+      saveQuestions(updatedQuestions);
+      return updatedQuestions;
+    });
   };
 
-  const markAsAnswered = (id: string) => {
-    setFollowUpQuestions(prev => 
-      prev.map(q => q.id === id ? { ...q, isAnswered: true } : q)
-    );
+  /**
+   * Mark a follow-up question as answered
+   */
+  const markAsAnswered = (id: string, answer?: string) => {
+    updateQuestion(id, { 
+      isAnswered: true, 
+      answeredAt: new Date(),
+      answer 
+    });
   };
 
-  const getUnansweredCount = () => {
-    return followUpQuestions.filter(q => !q.isAnswered).length;
+  /**
+   * Clear all follow-up questions
+   */
+  const clearQuestions = async () => {
+    try {
+      await AsyncStorage.removeItem('followUpQuestions_default-user');
+      setQuestions([]);
+    } catch (error) {
+      console.error('Error clearing follow-up questions:', error);
+    }
   };
 
-  const clearAllQuestions = () => {
-    setFollowUpQuestions([]);
+  // ============================================================================
+  // CONTEXT VALUE
+  // ============================================================================
+
+  const contextValue: FollowUpQuestionsContextType = {
+    questions,
+    addFollowUpQuestions,
+    updateQuestion,
+    markAsAnswered,
+    clearQuestions,
+    isLoading,
   };
 
   return (
-    <FollowUpQuestionsContext.Provider
-      value={{
-        followUpQuestions,
-        addFollowUpQuestion,
-        removeFollowUpQuestion,
-        markAsAnswered,
-        getUnansweredCount,
-        clearAllQuestions,
-      }}
-    >
+    <FollowUpQuestionsContext.Provider value={contextValue}>
       {children}
     </FollowUpQuestionsContext.Provider>
   );
-}
+};
 
-export function useFollowUpQuestions() {
+/**
+ * Hook to use follow-up questions context
+ */
+export const useFollowUpQuestions = (): FollowUpQuestionsContextType => {
   const context = useContext(FollowUpQuestionsContext);
   if (context === undefined) {
     throw new Error('useFollowUpQuestions must be used within a FollowUpQuestionsProvider');
   }
   return context;
-} 
+}; 

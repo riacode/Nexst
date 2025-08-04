@@ -19,8 +19,8 @@ import { useAppointments } from '../contexts/AppointmentsContext';
 export default function PrivacySettingsScreen({ navigation }: any) {
   const { privacySettings, toggleAIProcessing, toggleDataSharing, toggleAnalytics, updateDataRetention, exportUserData, deleteAllData, resetPrivacySettings } = usePrivacy();
   const { clearAllSymptomLogs } = useSymptomLogs();
-  const { clearAllRecommendations } = useRecommendations();
-  const { clearAllAppointments } = useAppointments();
+  const { clearRecommendations } = useRecommendations();
+  const { clearAppointments } = useAppointments();
   const [isExporting, setIsExporting] = useState(false);
 
   const handleExportData = async () => {
@@ -52,9 +52,9 @@ export default function PrivacySettingsScreen({ navigation }: any) {
           onPress: async () => {
             try {
               await deleteAllData();
-              await clearAllSymptomLogs();
-              await clearAllRecommendations();
-              await clearAllAppointments();
+                              await clearAllSymptomLogs();
+              await clearRecommendations();
+              await clearAppointments();
               Alert.alert('Success', 'All data has been deleted.');
             } catch (error) {
               Alert.alert('Error', 'Failed to delete all data. Please try again.');
