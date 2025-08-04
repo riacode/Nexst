@@ -12,19 +12,19 @@ export const clearAllStoredData = async () => {
 
 export const clearOnboardingData = async () => {
   try {
-    // Clear only onboarding and tutorial data
     await AsyncStorage.multiRemove([
-      'onboardingComplete',
+      'hasSeenOnboarding',
       'tutorialState',
       'symptomLogs',
       'recommendations',
       'appointments',
-      'notificationSettings',
-      'privacySettings'
+      'followUpQuestions',
+      'privacySettings',
+      'smartAIContext',
     ]);
-    console.log('✅ Onboarding and tutorial data cleared successfully');
+    console.log('Onboarding data cleared successfully');
   } catch (error) {
-    console.error('❌ Error clearing onboarding data:', error);
+    console.error('Error clearing onboarding data:', error);
   }
 };
 

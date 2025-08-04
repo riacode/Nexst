@@ -41,8 +41,7 @@
           "microphonePermission": "Allow Nexst to access your microphone for recording symptoms."
         }
       ],
-      "expo-font",
-      "expo-notifications"
+      "expo-font"
     ],
     "extra": {
       "eas": {

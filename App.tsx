@@ -5,7 +5,6 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createStackNavigator } from '@react-navigation/stack';
 import { Ionicons } from '@expo/vector-icons';
 import { Alert } from 'react-native';
-import { setupNotificationListeners } from './utils/notifications';
 import SymptomsScreen from './screens/SymptomsScreen';
 import AppointmentsScreen from './screens/AppointmentsScreen';
 import RecommendationsScreen from './screens/RecommendationsScreen';
@@ -20,11 +19,9 @@ import { RecommendationsProvider, useRecommendations } from './contexts/Recommen
 import { SymptomLogsProvider, useSymptomLogs } from './contexts/SymptomLogsContext';
 import { AppointmentsProvider, useAppointments } from './contexts/AppointmentsContext';
 import { OnboardingProvider, useOnboarding } from './contexts/OnboardingContext';
-import { NotificationSettingsProvider, useNotificationSettings } from './contexts/NotificationSettingsContext';
 import { SmartAIProvider } from './contexts/SmartAIContext';
 import { PrivacyProvider, usePrivacy } from './contexts/PrivacyContext';
 import { TutorialProvider, useTutorial } from './contexts/TutorialContext';
-import { NavigationProvider, useNavigationContext } from './contexts/NavigationContext';
 import { FollowUpQuestionsProvider } from './contexts/FollowUpQuestionsContext';
 import OnboardingTutorial from './components/OnboardingTutorial';
 
@@ -35,9 +32,8 @@ function MainTabNavigator() {
   const { clearAllSymptomLogs } = useSymptomLogs();
   const { clearAllRecommendations } = useRecommendations();
   const { clearAllAppointments } = useAppointments();
-  const { settings, updateSettings } = useNotificationSettings();
   const [settingsVisible, setSettingsVisible] = useState(false);
-  const { navigationRef } = useNavigationContext();
+  const navigation = useNavigation();
 
   const handleSettingsPress = () => {
     setSettingsVisible(true);
@@ -94,12 +90,8 @@ function MainTabNavigator() {
     );
   };
 
-  const handleUpdateNotificationSettings = async (enabled: boolean, time: Date, frequency: string) => {
-    await updateSettings(enabled, time, frequency);
-  };
-
   const handleFollowUpPress = () => {
-    navigationRef.current?.navigate('FollowUpQuestions');
+    navigation.navigate('FollowUpQuestions' as never);
   };
 
   return (
@@ -139,10 +131,6 @@ function MainTabNavigator() {
         onClearSymptomLogs={handleClearSymptomLogs}
         onClearAppointments={handleClearAppointments}
         onClearRecommendations={handleClearRecommendations}
-        onUpdateNotificationSettings={handleUpdateNotificationSettings}
-        notificationEnabled={settings.enabled}
-        notificationTime={settings.time}
-        notificationFrequency={settings.frequency}
       />
     </>
   );
@@ -151,20 +139,16 @@ function MainTabNavigator() {
 function AppContent() {
   const { hasSeenOnboarding, markOnboardingComplete } = useOnboarding();
   const { tutorialState, completeOnboarding, hideOnboardingTutorial } = useTutorial();
-  const { navigationRef } = useNavigationContext();
-  const { clearNotificationBadge } = useNotificationSettings();
 
   console.log('AppContent - hasSeenOnboarding:', hasSeenOnboarding);
 
   useEffect(() => {
-    // Set up notification listeners when the app starts
-    const cleanup = setupNotificationListeners();
+    // Set up app initialization when the app starts
     
-    // Clear notification badge when app opens
-    clearNotificationBadge();
-    
-    return cleanup;
-  }, [clearNotificationBadge]);
+    return () => {
+      // cleanup
+    };
+  }, []);
 
   const handleTutorialComplete = async () => {
     await completeOnboarding();
@@ -177,7 +161,7 @@ function AppContent() {
 
   return (
     <>
-      <NavigationContainer ref={navigationRef}>
+      <NavigationContainer>
         <Stack.Navigator>
           {!hasSeenOnboarding ? (
             <Stack.Screen
@@ -228,26 +212,20 @@ function AppContent() {
 
 export default function App() {
   return (
-    <NavigationProvider>
-      <OnboardingProvider>
-        <SymptomLogsProvider>
-          <RecommendationsProvider>
-            <AppointmentsProvider>
-              <NotificationSettingsProvider>
-                <FollowUpQuestionsProvider>
-                  <SmartAIProvider userId="default-user">
-                    <PrivacyProvider>
-                      <TutorialProvider>
-                        <AppContent />
-                      </TutorialProvider>
-                    </PrivacyProvider>
-                  </SmartAIProvider>
-                </FollowUpQuestionsProvider>
-              </NotificationSettingsProvider>
-            </AppointmentsProvider>
-          </RecommendationsProvider>
-        </SymptomLogsProvider>
-      </OnboardingProvider>
-    </NavigationProvider>
+    <OnboardingProvider>
+      <SymptomLogsProvider>
+        <RecommendationsProvider>
+          <AppointmentsProvider>
+            <SmartAIProvider>
+              <PrivacyProvider>
+                <TutorialProvider>
+                  <AppContent />
+                </TutorialProvider>
+              </PrivacyProvider>
+            </SmartAIProvider>
+          </AppointmentsProvider>
+        </RecommendationsProvider>
+      </SymptomLogsProvider>
+    </OnboardingProvider>
   );
 }

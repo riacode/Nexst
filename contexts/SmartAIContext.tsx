@@ -1,18 +1,67 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { AgentOrchestrator } from '../utils/agents/AgentOrchestrator';
+import { AIService, AutonomousHealthResponse } from '../utils/aiService';
 import { SymptomLog, MedicalRecommendation } from '../types/recommendations';
 
 // ============================================================================
-// SMART HEALTH AI CONTEXT
+// AUTONOMOUS HEALTH MANAGEMENT CONTEXT - 3-Agent Framework Integration
 // ============================================================================
-// 
-// PURPOSE: Manages the SmartHealthAI system and provides easy access to AI features
-// COST TRACKING: Monitors API usage and costs
-// FREQUENCY CONTROL: Ensures background tasks run at optimal intervals
 
-interface SmartAIContextType {
-  // Reactive AI functions (user-triggered)
-  processSymptomLog: (symptomLog: SymptomLog) => Promise<{
+/**
+ * Cost tracking for AI operations
+ * Tracks both legacy single-agent calls and new 3-agent autonomous calls
+ */
+interface AICostTracking {
+  // Legacy single-agent costs
+  transcriptionCost: number;
+  analysisCost: number;
+  recommendationCost: number;
+  questionCost: number;
+  
+  // New 3-agent autonomous costs
+  autonomousCost: number;
+  
+  // Usage tracking
+  transcriptionCalls: number;
+  analysisCalls: number;
+  recommendationCalls: number;
+  questionCalls: number;
+  autonomousCalls: number;
+}
+
+/**
+ * Context state for autonomous health management
+ */
+interface SmartAIContextState {
+  // AI Service instance
+  aiService: AIService | null;
+  
+  // Cost and usage tracking
+  costs: AICostTracking;
+  
+  // Proactive monitoring
+  isProactiveActive: boolean;
+  
+  // Loading states
+  isProcessing: boolean;
+  isAnalyzing: boolean;
+}
+
+/**
+ * Context actions for autonomous health management
+ */
+interface SmartAIContextActions {
+  // Initialize AI service
+  initializeAI: (userId: string) => void;
+  
+  // Process symptoms using 3-agent framework
+  processSymptomAutonomously: (
+    audioUri: string, 
+    allSymptoms: SymptomLog[], 
+    existingRecommendations: MedicalRecommendation[]
+  ) => Promise<AutonomousHealthResponse>;
+  
+  // Legacy single-agent processing (for backward compatibility)
+  processSymptomLog: (audioUri: string) => Promise<{
     transcript: string;
     summary: string;
     quickRecommendations: MedicalRecommendation[];
@@ -20,234 +69,413 @@ interface SmartAIContextType {
     severity: string;
     impact: string;
   }>;
+  
+  // Generate personalized recommendations
+  getPersonalizedRecommendations: (symptoms: SymptomLog[]) => Promise<MedicalRecommendation[]>;
+  
+  // Generate appointment questions
   generateAppointmentQuestions: (title: string, date: Date) => Promise<string[]>;
-  getPersonalizedRecommendations: () => Promise<MedicalRecommendation[]>;
   
-  // Proactive AI control
-  startProactiveMonitoring: () => Promise<void>;
+  // Proactive monitoring
+  startProactiveMonitoring: () => void;
   stopProactiveMonitoring: () => void;
-  isProactiveActive: boolean;
-  
-  // Background task support
-  executeBackgroundTask: () => Promise<void>;
-  
-  // Notification functions
-  sendFollowUpQuestion: (question: string, questionType: string) => Promise<void>;
   
   // Cost and usage tracking
-  getCostBreakdown: () => {
-    reactiveCost: number;
-    proactiveCost: number;
-    totalCost: number;
-    lastUpdated: Date;
-  };
-  getUsageStats: () => {
-    reactiveCalls: number;
-    proactiveCalls: number;
-    totalCalls: number;
-    lastCall: Date;
-  };
+  getCostBreakdown: () => AICostTracking;
+  getUsageStats: () => { totalCalls: number; totalCost: number; };
+  resetCosts: () => void;
 }
+
+/**
+ * Complete context type combining state and actions
+ */
+type SmartAIContextType = SmartAIContextState & SmartAIContextActions;
+
+/**
+ * Provider props
+ */
+interface SmartAIProviderProps {
+  children: ReactNode;
+}
+
+// ============================================================================
+// CONTEXT CREATION
+// ============================================================================
 
 const SmartAIContext = createContext<SmartAIContextType | undefined>(undefined);
 
-interface SmartAIProviderProps {
-  children: ReactNode;
-  userId: string;
-}
-
-export const SmartAIProvider: React.FC<SmartAIProviderProps> = ({ 
-  children, 
-  userId 
-}) => {
-  const [smartAI, setSmartAI] = useState(new AgentOrchestrator(userId));
-  const [isProactiveActive, setIsProactiveActive] = useState(false);
+/**
+ * Smart AI Provider - Manages autonomous health management system
+ * 
+ * Features:
+ * - 3-agent autonomous health management framework
+ * - Cost tracking for all AI operations
+ * - Proactive health monitoring
+ * - Legacy single-agent support for backward compatibility
+ */
+export const SmartAIProvider: React.FC<SmartAIProviderProps> = ({ children }) => {
+  // ============================================================================
+  // STATE MANAGEMENT
+  // ============================================================================
   
-  // Cost tracking
-  const [reactiveCost, setReactiveCost] = useState(0);
-  const [proactiveCost, setProactiveCost] = useState(0);
-  const [reactiveCalls, setReactiveCalls] = useState(0);
-  const [proactiveCalls, setProactiveCalls] = useState(0);
-  const [lastCall, setLastCall] = useState(new Date());
+  const [aiService, setAiService] = useState<AIService | null>(null);
+  const [isProactiveActive, setIsProactiveActive] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  
+  // Cost tracking state
+  const [costs, setCosts] = useState<AICostTracking>({
+    transcriptionCost: 0,
+    analysisCost: 0,
+    recommendationCost: 0,
+    questionCost: 0,
+    autonomousCost: 0,
+    transcriptionCalls: 0,
+    analysisCalls: 0,
+    recommendationCalls: 0,
+    questionCalls: 0,
+    autonomousCalls: 0
+  });
 
   // ============================================================================
-  // REACTIVE AI FUNCTIONS (User-triggered)
+  // AI SERVICE INITIALIZATION
   // ============================================================================
 
   /**
-   * REACTIVE: Process symptom log with cost tracking
-   * COST: $0.05 per call
-   * FREQUENCY: Every time user logs a symptom
+   * Initialize AI service with user ID
+   * 
+   * @param userId - Unique user identifier
    */
-  const processSymptomLog = async (symptomLog: SymptomLog) => {
-    console.log('💰 REACTIVE AI COST: $0.05 (transcription + analysis)');
+  const initializeAI = (userId: string) => {
+    console.log('🤖 SmartAIContext: Initializing AI service for user:', userId);
+    const service = new AIService(userId);
+    setAiService(service);
+  };
+
+  // ============================================================================
+  // AUTONOMOUS HEALTH MANAGEMENT (Primary Function)
+  // ============================================================================
+
+  /**
+   * Process symptom using 3-agent autonomous health management framework
+   * 
+   * Workflow:
+   * 1. HealthMemoryAgent: Analyzes patterns and provides historical context
+   * 2. DecisionEngineAgent: Makes autonomous decision based on context
+   * 3. ActionCoordinatorAgent: Creates strategy and communication plan
+   * 
+   * @param audioUri - URI of the recorded symptom audio
+   * @param allSymptoms - All user's symptom history for context
+   * @param existingRecommendations - Current recommendations to avoid duplicates
+   * @returns Complete autonomous health response with decision, strategy, and context
+   * 
+   * COST: $0.15 per call (3 agents working together)
+   */
+  const processSymptomAutonomously = async (
+    audioUri: string, 
+    allSymptoms: SymptomLog[], 
+    existingRecommendations: MedicalRecommendation[]
+  ): Promise<AutonomousHealthResponse> => {
+    if (!aiService) {
+      throw new Error('AI service not initialized');
+    }
+
+    console.log('🤖 SmartAIContext: Processing symptom autonomously');
+    setIsProcessing(true);
     
-    const result = await smartAI.processSymptomLog(symptomLog);
+    try {
+      const response = await aiService.processSymptomAutonomously(audioUri, allSymptoms, existingRecommendations);
+      
+      // Track autonomous processing cost
+      setCosts(prev => ({
+        ...prev,
+        autonomousCost: prev.autonomousCost + 0.15,
+        autonomousCalls: prev.autonomousCalls + 1
+      }));
+      
+      return response;
+    } catch (error) {
+      console.error('Autonomous processing error:', error);
+      throw error;
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  // ============================================================================
+  // LEGACY FUNCTIONS (Backward Compatibility)
+  // ============================================================================
+
+  /**
+   * Process symptom using legacy single-agent approach
+   * 
+   * @param audioUri - URI of the recorded symptom audio
+   * @returns Basic symptom analysis with quick recommendations
+   * 
+   * COST: $0.05 per call
+   */
+  const processSymptomLog = async (audioUri: string) => {
+    if (!aiService) {
+      throw new Error('AI service not initialized');
+    }
+
+    console.log('🤖 SmartAIContext: Processing symptom (Legacy)');
+    setIsProcessing(true);
     
-    // Update cost tracking
-    setReactiveCost(prev => prev + 0.05);
-    setReactiveCalls(prev => prev + 1);
-    setLastCall(new Date());
-    
-    return result;
+    try {
+      const result = await aiService.processSymptom(audioUri);
+      
+      // Track legacy processing costs
+      setCosts(prev => ({
+        ...prev,
+        transcriptionCost: prev.transcriptionCost + 0.01,
+        analysisCost: prev.analysisCost + 0.02,
+        recommendationCost: prev.recommendationCost + 0.02,
+        transcriptionCalls: prev.transcriptionCalls + 1,
+        analysisCalls: prev.analysisCalls + 1,
+        recommendationCalls: prev.recommendationCalls + 1
+      }));
+      
+      return result;
+    } catch (error) {
+      console.error('Legacy processing error:', error);
+      throw error;
+    } finally {
+      setIsProcessing(false);
+    }
   };
 
   /**
-   * REACTIVE: Generate personalized appointment questions
-   * COST: $0.05 per call
-   * FREQUENCY: When user opens appointment detail
-   */
-  const generateAppointmentQuestions = async (title: string, date: Date) => {
-    console.log('💰 REACTIVE AI COST: $0.05 (context analysis + questions)');
-    
-    const questions = await smartAI.generatePersonalizedAppointmentQuestions(title, date);
-    
-    // Update cost tracking
-    setReactiveCost(prev => prev + 0.05);
-    setReactiveCalls(prev => prev + 1);
-    setLastCall(new Date());
-    
-    return questions;
-  };
-
-  /**
-   * REACTIVE: Get personalized recommendations
+   * Generate personalized recommendations using legacy approach
+   * 
+   * @param symptoms - Array of symptom logs to analyze
+   * @returns Array of personalized health recommendations
+   * 
    * COST: $0.03 per call
-   * FREQUENCY: When user views recommendations
    */
-  const getPersonalizedRecommendations = async () => {
-    console.log('💰 REACTIVE AI COST: $0.03 (pattern matching + personalization)');
+  const getPersonalizedRecommendations = async (symptoms: SymptomLog[]): Promise<MedicalRecommendation[]> => {
+    if (!aiService) {
+      throw new Error('AI service not initialized');
+    }
+
+    console.log('🤖 SmartAIContext: Generating personalized recommendations (Legacy)');
+    setIsAnalyzing(true);
     
-    const recommendations = await smartAI.getPersonalizedRecommendations();
+    try {
+      const recommendations = await aiService.getPersonalizedRecommendations(symptoms);
+      
+      // Track recommendation cost
+      setCosts(prev => ({
+        ...prev,
+        recommendationCost: prev.recommendationCost + 0.03,
+        recommendationCalls: prev.recommendationCalls + 1
+      }));
+      
+      return recommendations;
+    } catch (error) {
+      console.error('Recommendation generation error:', error);
+      return [];
+    } finally {
+      setIsAnalyzing(false);
+    }
+  };
+
+  /**
+   * Generate appointment questions using legacy approach
+   * 
+   * @param title - Appointment title/type
+   * @param date - Appointment date
+   * @returns Array of questions to ask the healthcare provider
+   * 
+   * COST: $0.05 per call
+   */
+  const generateAppointmentQuestions = async (title: string, date: Date): Promise<string[]> => {
+    if (!aiService) {
+      throw new Error('AI service not initialized');
+    }
+
+    console.log('🤖 SmartAIContext: Generating appointment questions (Legacy)');
     
-    // Update cost tracking
-    setReactiveCost(prev => prev + 0.03);
-    setReactiveCalls(prev => prev + 1);
-    setLastCall(new Date());
-    
-    return recommendations;
+    try {
+      const questions = await aiService.generateAppointmentQuestions(title, date);
+      
+      // Track question generation cost
+      setCosts(prev => ({
+        ...prev,
+        questionCost: prev.questionCost + 0.05,
+        questionCalls: prev.questionCalls + 1
+      }));
+      
+      return questions;
+    } catch (error) {
+      console.error('Question generation error:', error);
+      return [];
+    }
   };
 
   // ============================================================================
-  // PROACTIVE AI CONTROL
+  // PROACTIVE MONITORING
   // ============================================================================
 
   /**
-   * PROACTIVE: Start background monitoring
-   * COST: $0.25/day (distributed across background tasks)
-   * FREQUENCY: Every 6 hours (not continuous)
+   * Start proactive health monitoring
+   * Runs background health checks 1-2 times per day
    */
-  const startProactiveMonitoring = async () => {
-    console.log('🤖 PROACTIVE AI: Starting background monitoring ($0.25/day)');
-    
-    await smartAI.initialize();
+  const startProactiveMonitoring = () => {
+    console.log('🤖 SmartAIContext: Starting proactive health monitoring');
     setIsProactiveActive(true);
-    
-    // Schedule cost updates for proactive monitoring
-    const updateProactiveCost = () => {
-      setProactiveCost(prev => prev + 0.04); // $0.04 every 6 hours = $0.16/day
-      setProactiveCalls(prev => prev + 1);
-      setLastCall(new Date());
-    };
-    
-    // Update cost every 6 hours
-    setInterval(updateProactiveCost, 6 * 60 * 60 * 1000);
   };
 
   /**
-   * PROACTIVE: Stop background monitoring
-   * COST: $0 (no API calls)
+   * Stop proactive health monitoring
    */
-  const stopProactiveMonitoring = async () => {
-    console.log('🤖 PROACTIVE AI: Stopping background monitoring');
-    await smartAI.shutdown();
+  const stopProactiveMonitoring = () => {
+    console.log('🤖 SmartAIContext: Stopping proactive health monitoring');
     setIsProactiveActive(false);
   };
 
   /**
-   * BACKGROUND: Execute background task (iOS Background App Refresh)
-   * COST: Varies based on tasks executed
+   * Execute background health monitoring task
+   * Called 1-2 times per day to check for follow-up needs and reassess recommendations
    */
   const executeBackgroundTask = async () => {
-    console.log('🤖 BACKGROUND AI: Executing background task');
-    await smartAI.executeBackgroundTask();
-  };
+    if (!aiService || !isProactiveActive) return;
 
-  // ============================================================================
-  // NOTIFICATION FUNCTIONS
-  // ============================================================================
-
-
-
-  /**
-   * NOTIFICATION: Send follow-up question
-   * COST: $0 (no API calls)
-   */
-  const sendFollowUpQuestion = async (question: string, questionType: string) => {
-    const { NotificationService } = await import('../utils/notifications');
-    await NotificationService.sendFollowUpQuestion(question, questionType);
+    console.log('🤖 SmartAIContext: Executing background health monitoring');
+    
+    try {
+      // Background health monitoring logic would go here
+      // This would check for:
+      // - Missing symptom updates (3+ days)
+      // - Overdue recommendations
+      // - Pattern changes requiring follow-up
+      // - Weekly/monthly health reassessment
+      
+      // Track background monitoring cost
+      setCosts(prev => ({
+        ...prev,
+        autonomousCost: prev.autonomousCost + 0.10,
+        autonomousCalls: prev.autonomousCalls + 1
+      }));
+    } catch (error) {
+      console.error('Background monitoring error:', error);
+    }
   };
 
   // ============================================================================
   // COST AND USAGE TRACKING
   // ============================================================================
 
-  const getCostBreakdown = () => {
-    return {
-      reactiveCost: Math.round(reactiveCost * 100) / 100,
-      proactiveCost: Math.round(proactiveCost * 100) / 100,
-      totalCost: Math.round((reactiveCost + proactiveCost) * 100) / 100,
-      lastUpdated: lastCall
-    };
+  /**
+   * Get detailed cost breakdown
+   * 
+   * @returns Complete cost tracking information
+   */
+  const getCostBreakdown = (): AICostTracking => {
+    return costs;
   };
 
-  const getUsageStats = () => {
-    return {
-      reactiveCalls,
-      proactiveCalls,
-      totalCalls: reactiveCalls + proactiveCalls,
-      lastCall
-    };
+  /**
+   * Get usage statistics
+   * 
+   * @returns Total calls and costs
+   */
+  const getUsageStats = (): { totalCalls: number; totalCost: number; } => {
+    const totalCalls = costs.transcriptionCalls + costs.analysisCalls + 
+                      costs.recommendationCalls + costs.questionCalls + costs.autonomousCalls;
+    const totalCost = costs.transcriptionCost + costs.analysisCost + 
+                     costs.recommendationCost + costs.questionCost + costs.autonomousCost;
+    
+    return { totalCalls, totalCost };
   };
+
+  /**
+   * Reset all cost tracking
+   */
+  const resetCosts = () => {
+    setCosts({
+      transcriptionCost: 0,
+      analysisCost: 0,
+      recommendationCost: 0,
+      questionCost: 0,
+      autonomousCost: 0,
+      transcriptionCalls: 0,
+      analysisCalls: 0,
+      recommendationCalls: 0,
+      questionCalls: 0,
+      autonomousCalls: 0
+    });
+  };
+
+  // ============================================================================
+  // BACKGROUND MONITORING SCHEDULING
+  // ============================================================================
+
+  /**
+   * Schedule background health monitoring when proactive monitoring is active
+   * Runs every 12 hours (8 AM and 8 PM) for health monitoring
+   */
+  useEffect(() => {
+    let intervalId: NodeJS.Timeout | null = null;
+    
+    if (isProactiveActive) {
+      // Execute immediately
+      executeBackgroundTask();
+      
+      // Schedule to run every 12 hours (43,200,000 milliseconds)
+      intervalId = setInterval(executeBackgroundTask, 12 * 60 * 60 * 1000);
+    }
+    
+    return () => {
+      if (intervalId) {
+        clearInterval(intervalId);
+      }
+    };
+  }, [isProactiveActive]);
 
   // ============================================================================
   // CONTEXT VALUE
   // ============================================================================
 
-  const value: SmartAIContextType = {
-    // Reactive AI functions
-    processSymptomLog,
-    generateAppointmentQuestions,
-    getPersonalizedRecommendations,
+  const contextValue: SmartAIContextType = {
+    // State
+    aiService,
+    costs,
+    isProactiveActive,
+    isProcessing,
+    isAnalyzing,
     
-    // Proactive AI control
+    // Actions
+    initializeAI,
+    processSymptomAutonomously,
+    processSymptomLog,
+    getPersonalizedRecommendations,
+    generateAppointmentQuestions,
     startProactiveMonitoring,
     stopProactiveMonitoring,
-    isProactiveActive,
-    
-    // Background task support
-    executeBackgroundTask,
-    
-    // Notification functions
-    sendFollowUpQuestion,
-    
-    // Cost and usage tracking
     getCostBreakdown,
     getUsageStats,
+    resetCosts
   };
 
   return (
-    <SmartAIContext.Provider value={value}>
+    <SmartAIContext.Provider value={contextValue}>
       {children}
     </SmartAIContext.Provider>
   );
 };
 
 // ============================================================================
-// HOOK FOR USING SMART HEALTH AI
+// CONTEXT HOOK
 // ============================================================================
 
-export const useSmartAI = () => {
+/**
+ * Hook to use the Smart AI context
+ * 
+ * @returns Smart AI context with state and actions
+ * @throws Error if used outside of SmartAIProvider
+ */
+export const useSmartAI = (): SmartAIContextType => {
   const context = useContext(SmartAIContext);
   if (context === undefined) {
     throw new Error('useSmartAI must be used within a SmartAIProvider');

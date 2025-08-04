@@ -1,9 +1,7 @@
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Modal, Animated, Dimensions, Switch, ScrollView, Alert } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Modal, Animated, Dimensions, ScrollView, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import DateTimePicker from '@react-native-community/datetimepicker';
 import { useTutorial } from '../contexts/TutorialContext';
-import { useNotificationSettings } from '../contexts/NotificationSettingsContext';
 import { clearOnboardingData } from '../utils/testUtils';
 import { colors } from '../utils/colors';
 
@@ -13,10 +11,6 @@ interface SettingsModalProps {
   onClearSymptomLogs: () => void;
   onClearAppointments: () => void;
   onClearRecommendations: () => void;
-  onUpdateNotificationSettings: (enabled: boolean, time: Date, frequency: string) => void;
-  notificationEnabled: boolean;
-  notificationTime: Date;
-  notificationFrequency: string;
 }
 
 const { height: screenHeight } = Dimensions.get('window');
@@ -27,13 +21,8 @@ export default function SettingsModal({
   onClearSymptomLogs, 
   onClearAppointments, 
   onClearRecommendations,
-  onUpdateNotificationSettings,
-  notificationEnabled,
-  notificationTime,
-  notificationFrequency
 }: SettingsModalProps) {
   const { resetTutorials } = useTutorial();
-  const { getAllScheduledNotifications, rescheduleNotifications } = useNotificationSettings();
   const slideAnim = React.useRef(new Animated.Value(screenHeight)).current;
 
   const handleRestartApp = () => {
@@ -121,24 +110,6 @@ export default function SettingsModal({
     });
   };
 
-  const handleNotificationToggle = (value: boolean) => {
-    onUpdateNotificationSettings(value, notificationTime, notificationFrequency);
-  };
-
-  const handleTimeChange = (event: any, selectedTime?: Date) => {
-    if (selectedTime) {
-      onUpdateNotificationSettings(notificationEnabled, selectedTime, notificationFrequency);
-    }
-  };
-
-  const handleFrequencyChange = (frequency: string) => {
-    onUpdateNotificationSettings(notificationEnabled, notificationTime, frequency);
-  };
-
-  const formatTime = (date: Date) => {
-    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-  };
-
   return (
     <Modal
       visible={visible}
@@ -180,84 +151,6 @@ export default function SettingsModal({
           </View>
 
           <ScrollView style={styles.sections} showsVerticalScrollIndicator={false}>
-            {/* Notification Settings */}
-            <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Daily Reminders</Text>
-              
-              <View style={styles.settingRow}>
-                <View style={styles.settingContent}>
-                  <Text style={styles.settingTitle}>Enable Reminders</Text>
-                  <Text style={styles.settingDescription}>
-                    Get reminded to record your symptoms
-                  </Text>
-                </View>
-                <Switch
-                  value={notificationEnabled}
-                  onValueChange={handleNotificationToggle}
-                  trackColor={{ false: '#e2e8f0', true: '#00B39F' }}
-                  thumbColor={notificationEnabled ? '#ffffff' : '#f4f3f4'}
-                />
-              </View>
-
-              {notificationEnabled && (
-                <>
-                  <View style={styles.settingRow}>
-                    <View style={styles.settingContent}>
-                      <Text style={styles.settingTitle}>Reminder Time</Text>
-                      <Text style={styles.settingDescription}>
-                        When to send reminders
-                      </Text>
-                    </View>
-                    <DateTimePicker
-                      value={notificationTime}
-                      mode="time"
-                      display="default"
-                      onChange={handleTimeChange}
-                      style={styles.inlineTimePicker}
-                      textColor="#1e293b"
-                    />
-                  </View>
-
-                  <View style={styles.settingRow}>
-                    <View style={styles.settingContent}>
-                      <Text style={styles.settingTitle}>Frequency</Text>
-                      <Text style={styles.settingDescription}>
-                        How often to send reminders
-                      </Text>
-                    </View>
-                    <View style={styles.frequencyButtons}>
-                      {['Daily', 'Weekdays', 'Weekly'].map((freq) => (
-                        <TouchableOpacity
-                          key={freq}
-                          style={[
-                            styles.frequencyButton,
-                            notificationFrequency === freq && styles.frequencyButtonActive
-                          ]}
-                          onPress={() => handleFrequencyChange(freq)}
-                        >
-                          <Text style={[
-                            styles.frequencyText,
-                            notificationFrequency === freq && styles.frequencyTextActive
-                          ]}>
-                            {freq}
-                          </Text>
-                        </TouchableOpacity>
-                      ))}
-                    </View>
-                  </View>
-
-                  {/* Apply Changes Button */}
-                  <TouchableOpacity
-                    style={styles.applyButton}
-                    onPress={rescheduleNotifications}
-                  >
-                    <Text style={styles.applyButtonText}>Apply Changes</Text>
-                  </TouchableOpacity>
-
-                </>
-              )}
-            </View>
-
             {/* App Settings */}
             <View style={styles.section}>
               <Text style={styles.sectionTitle}>App Settings</Text>
@@ -418,80 +311,6 @@ const styles = StyleSheet.create({
     color: '#64748b',
     marginBottom: 16,
     fontStyle: 'italic',
-  },
-  settingRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingVertical: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#f1f5f9',
-  },
-  settingContent: {
-    flex: 1,
-    marginRight: 16,
-  },
-  settingTitle: {
-    fontSize: 16,
-    fontWeight: '500',
-    color: '#1e293b',
-    marginBottom: 2,
-  },
-  settingDescription: {
-    fontSize: 14,
-    color: '#64748b',
-  },
-  timeButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#f8fafc',
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 8,
-    gap: 6,
-  },
-  timeText: {
-    fontSize: 16,
-    fontWeight: '500',
-    color: '#1e293b',
-  },
-  inlineTimePicker: {
-    width: 120,
-    height: 40,
-  },
-  frequencyButtons: {
-    flexDirection: 'row',
-    gap: 8,
-  },
-  frequencyButton: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 6,
-    backgroundColor: '#f1f5f9',
-  },
-  frequencyButtonActive: {
-    backgroundColor: '#00B39F',
-  },
-  frequencyText: {
-    fontSize: 14,
-    fontWeight: '500',
-    color: '#64748b',
-  },
-  frequencyTextActive: {
-    color: '#ffffff',
-  },
-  applyButton: {
-    backgroundColor: colors.accent,
-    paddingHorizontal: 20,
-    paddingVertical: 12,
-    borderRadius: 8,
-    marginTop: 16,
-    alignItems: 'center',
-  },
-  applyButtonText: {
-    color: '#ffffff',
-    fontSize: 16,
-    fontWeight: '600',
   },
 
   options: {
