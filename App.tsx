@@ -216,13 +216,15 @@ export default function App() {
       <SymptomLogsProvider>
         <RecommendationsProvider>
           <AppointmentsProvider>
-            <SmartAIProvider>
-              <PrivacyProvider>
-                <TutorialProvider>
-                  <AppContent />
-                </TutorialProvider>
-              </PrivacyProvider>
-            </SmartAIProvider>
+            <FollowUpQuestionsProvider>
+              <SmartAIProvider>
+                <PrivacyProvider>
+                  <TutorialProvider>
+                    <AppContent />
+                  </TutorialProvider>
+                </PrivacyProvider>
+              </SmartAIProvider>
+            </FollowUpQuestionsProvider>
           </AppointmentsProvider>
         </RecommendationsProvider>
       </SymptomLogsProvider>
