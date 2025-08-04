@@ -76,14 +76,13 @@ export default function RecommendationsScreen({ route, navigation }: any) {
   const handleCancelRecommendation = (recommendationId: string) => {
     Alert.prompt(
       'Cancel Recommendation',
-      'Please provide a reason for cancelling:',
+      'Why are you cancelling this recommendation?',
       [
         { text: 'Cancel', style: 'cancel' },
-        { 
-          text: 'Confirm', 
-          style: 'destructive',
+        {
+          text: 'Confirm',
           onPress: (reason) => {
-            cancelRecommendation(recommendationId);
+            cancelRecommendation(recommendationId, reason || 'No reason provided');
           }
         }
       ],
@@ -91,8 +90,8 @@ export default function RecommendationsScreen({ route, navigation }: any) {
     );
   };
 
-  const handleToggleActionItem = (recommendationId: string, actionIndex: number) => {
-    toggleActionItem(recommendationId, actionIndex);
+  const handleToggleActionItem = (recommendationId: string, actionId: string) => {
+    toggleActionItem(recommendationId, actionId);
   };
 
   const handleActionItemPress = (action: ActionItem, recommendationId: string) => {
@@ -103,13 +102,7 @@ export default function RecommendationsScreen({ route, navigation }: any) {
     }
     
     // Otherwise, toggle the action item
-    const recommendation = recommendations.find(rec => rec.id === recommendationId);
-    if (recommendation) {
-      const actionIndex = recommendation.actionItems.findIndex((item: ActionItem) => item.id === action.id);
-      if (actionIndex !== -1) {
-        handleToggleActionItem(recommendationId, actionIndex);
-      }
-    }
+    handleToggleActionItem(recommendationId, action.id);
   };
 
   const CollapsibleSection = ({ 

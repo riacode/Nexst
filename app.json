@@ -1,35 +1,53 @@
 {
   "expo": {
     "name": "Nexst",
-    "slug": "nexst",
-    "version": "1.0.0",
+    "slug": "Nexst",
+    "version": "1.0.1",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
+    "newArchEnabled": true,
     "splash": {
       "image": "./assets/splash-icon.png",
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
-    "assetBundlePatterns": [
-      "**/*"
-    ],
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.nexst.app"
+      "bundleIdentifier": "com.gargexpo.nexst",
+      "buildNumber": "3",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "package": "com.nexst.app"
+      "edgeToEdgeEnabled": true,
+      "permissions": [
+        "android.permission.RECORD_AUDIO",
+        "android.permission.MODIFY_AUDIO_SETTINGS"
+      ]
     },
     "web": {
       "favicon": "./assets/favicon.png"
     },
     "plugins": [
-      "expo-notifications"
-    ]
+      [
+        "expo-av",
+        {
+          "microphonePermission": "Allow Nexst to access your microphone for recording symptoms."
+        }
+      ],
+      "expo-font"
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "32ee8202-9279-4b38-9eec-4d1899c80d19"
+      }
+    },
+    "owner": "gargexpo"
   }
 }

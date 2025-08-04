@@ -1,9 +1,7 @@
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Modal, Animated, Dimensions, ScrollView, Alert, Switch } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Modal, Animated, Dimensions, ScrollView, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import DateTimePicker from '@react-native-community/datetimepicker';
 import { useTutorial } from '../contexts/TutorialContext';
-import { useNotificationSettings } from '../contexts/NotificationSettingsContext';
 import { clearOnboardingData } from '../utils/testUtils';
 import { colors } from '../utils/colors';
 
@@ -25,13 +23,7 @@ export default function SettingsModal({
   onClearRecommendations,
 }: SettingsModalProps) {
   const { resetTutorials } = useTutorial();
-  const { settings, updateSettings } = useNotificationSettings();
   const slideAnim = React.useRef(new Animated.Value(screenHeight)).current;
-  const backdropAnim = React.useRef(new Animated.Value(0)).current;
-
-  // Notification settings state
-  const [showTimePicker, setShowTimePicker] = useState(false);
-  const [tempTime, setTempTime] = useState(new Date());
 
   const handleRestartApp = () => {
     Alert.alert(
@@ -65,6 +57,7 @@ export default function SettingsModal({
       ]
     );
   };
+  const backdropAnim = React.useRef(new Animated.Value(0)).current;
 
   React.useEffect(() => {
     if (visible) {
@@ -98,6 +91,8 @@ export default function SettingsModal({
     }
   }, [visible, slideAnim, backdropAnim]);
 
+
+
   const handleClose = () => {
     Animated.parallel([
       Animated.timing(slideAnim, {
@@ -115,211 +110,137 @@ export default function SettingsModal({
     });
   };
 
-  // ============================================================================
-  // NOTIFICATION SETTINGS HANDLERS
-  // ============================================================================
-
-  const handleToggleNotifications = async (enabled: boolean) => {
-    await updateSettings({ enabled });
-  };
-
-  const handleToggleDailyReminder = async (enabled: boolean) => {
-    await updateSettings({ dailyReminderEnabled: enabled });
-  };
-
-  const handleToggleRecommendationAlerts = async (enabled: boolean) => {
-    await updateSettings({ recommendationAlerts: enabled });
-  };
-
-  const handleToggleFollowUpAlerts = async (enabled: boolean) => {
-    await updateSettings({ followUpAlerts: enabled });
-  };
-
-  const handleToggleAppointmentReminders = async (enabled: boolean) => {
-    await updateSettings({ appointmentReminders: enabled });
-  };
-
-  const handleTimeChange = (event: any, selectedTime?: Date) => {
-    setShowTimePicker(false);
-    
-    if (selectedTime) {
-      setTempTime(selectedTime);
-      const newTime = {
-        hour: selectedTime.getHours(),
-        minute: selectedTime.getMinutes()
-      };
-      updateSettings({ dailyReminderTime: newTime });
-    }
-  };
-
-  const openTimePicker = () => {
-    const currentTime = new Date();
-    currentTime.setHours(settings.dailyReminderTime.hour, settings.dailyReminderTime.minute, 0, 0);
-    setTempTime(currentTime);
-    setShowTimePicker(true);
-  };
-
-  const formatTime = (time: { hour: number; minute: number }) => {
-    const hour = time.hour % 12 || 12;
-    const minute = time.minute.toString().padStart(2, '0');
-    const ampm = time.hour >= 12 ? 'PM' : 'AM';
-    return `${hour}:${minute} ${ampm}`;
-  };
-
-  // ============================================================================
-  // RENDER
-  // ============================================================================
-
   return (
     <Modal
       visible={visible}
-      transparent
+      transparent={true}
       animationType="none"
       onRequestClose={handleClose}
+      statusBarTranslucent={true}
     >
-      <Animated.View style={[styles.backdrop, { opacity: backdropAnim }]}>
-        <TouchableOpacity style={styles.backdropTouchable} onPress={handleClose} />
-      </Animated.View>
+      <View style={styles.overlay}>
+        <Animated.View 
+          style={[
+            styles.backdrop,
+            {
+              opacity: backdropAnim
+            }
+          ]}
+        >
+          <TouchableOpacity 
+            style={styles.backdropTouchable} 
+            activeOpacity={1} 
+            onPress={handleClose}
+          />
+        </Animated.View>
+        <Animated.View 
+          style={[
+            styles.modalContent,
+            {
+              transform: [{ translateY: slideAnim }]
+            }
+          ]}
+        >
+          <View style={styles.handle} />
+          
+          <View style={styles.header}>
+            <Text style={styles.title}>Settings</Text>
+            <TouchableOpacity onPress={handleClose} style={styles.closeButton}>
+              <Ionicons name="close" size={24} color="#64748b" />
+            </TouchableOpacity>
+          </View>
 
-      <Animated.View style={[styles.modalContainer, { transform: [{ translateY: slideAnim }] }]}>
-        <View style={styles.handle} />
-        
-        <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-          <Text style={styles.title}>Settings</Text>
-
-          {/* Notification Settings Section */}
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Notifications</Text>
-            
-            {/* Global Notification Toggle */}
-                         <View style={styles.settingRow}>
-               <View style={styles.settingInfo}>
-                 <Ionicons name="notifications" size={20} color={colors.text} />
-                 <Text style={styles.settingLabel}>Enable Notifications</Text>
-               </View>
-              <Switch
-                value={settings.enabled}
-                onValueChange={handleToggleNotifications}
-                trackColor={{ false: colors.border, true: colors.accent }}
-                thumbColor="#FFFFFF"
-              />
+          <ScrollView style={styles.sections} showsVerticalScrollIndicator={false}>
+            {/* App Settings */}
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>App Settings</Text>
+              
+              <TouchableOpacity 
+                style={styles.option} 
+                onPress={handleRestartApp}
+              >
+                <View style={styles.optionIcon}>
+                  <Ionicons name="refresh-circle" size={24} color="#00B39F" />
+                </View>
+                <View style={styles.optionContent}>
+                  <Text style={styles.optionTitle}>Restart App</Text>
+                  <Text style={styles.optionDescription}>
+                    Reset everything and start fresh with onboarding
+                  </Text>
+                </View>
+                <Ionicons name="chevron-forward" size={20} color="#cbd5e1" />
+              </TouchableOpacity>
             </View>
 
-            {/* Daily Reminder Settings */}
-            {settings.enabled && (
-              <>
-                                 <View style={styles.settingRow}>
-                   <View style={styles.settingInfo}>
-                     <Ionicons name="time" size={20} color={colors.text} />
-                     <Text style={styles.settingLabel}>Daily Health Check-in</Text>
-                   </View>
-                  <Switch
-                    value={settings.dailyReminderEnabled}
-                    onValueChange={handleToggleDailyReminder}
-                    trackColor={{ false: colors.border, true: colors.accent }}
-                    thumbColor="#FFFFFF"
-                  />
+            {/* Delete Data */}
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>Delete Data</Text>
+              <Text style={styles.sectionDescription}>
+                These actions cannot be undone
+              </Text>
+              
+              <TouchableOpacity 
+                style={styles.option} 
+                onPress={onClearSymptomLogs}
+              >
+                <View style={styles.optionIcon}>
+                  <Ionicons name="pulse" size={24} color="#ef4444" />
                 </View>
-
-                {settings.dailyReminderEnabled && (
-                                     <TouchableOpacity style={styles.timePickerRow} onPress={openTimePicker}>
-                     <View style={styles.settingInfo}>
-                       <Ionicons name="time" size={20} color={colors.text} />
-                       <Text style={styles.settingLabel}>Reminder Time</Text>
-                     </View>
-                    <Text style={styles.timeText}>{formatTime(settings.dailyReminderTime)}</Text>
-                  </TouchableOpacity>
-                )}
-
-                {/* Alert Type Toggles */}
-                                 <View style={styles.settingRow}>
-                   <View style={styles.settingInfo}>
-                     <Ionicons name="medical" size={20} color={colors.text} />
-                     <Text style={styles.settingLabel}>New Recommendations</Text>
-                   </View>
-                  <Switch
-                    value={settings.recommendationAlerts}
-                    onValueChange={handleToggleRecommendationAlerts}
-                    trackColor={{ false: colors.border, true: colors.accent }}
-                    thumbColor="#FFFFFF"
-                  />
+                <View style={styles.optionContent}>
+                  <Text style={styles.optionTitle}>Clear All Symptom Logs</Text>
+                  <Text style={styles.optionDescription}>
+                    Delete all recordings, summaries, and logs
+                  </Text>
                 </View>
+                <Ionicons name="chevron-forward" size={20} color="#cbd5e1" />
+              </TouchableOpacity>
 
-                                 <View style={styles.settingRow}>
-                   <View style={styles.settingInfo}>
-                     <Ionicons name="help-circle" size={20} color={colors.text} />
-                     <Text style={styles.settingLabel}>Follow-up Questions</Text>
-                   </View>
-                  <Switch
-                    value={settings.followUpAlerts}
-                    onValueChange={handleToggleFollowUpAlerts}
-                    trackColor={{ false: colors.border, true: colors.accent }}
-                    thumbColor="#FFFFFF"
-                  />
+              <TouchableOpacity 
+                style={styles.option} 
+                onPress={onClearRecommendations}
+              >
+                <View style={styles.optionIcon}>
+                  <Ionicons name="bulb" size={24} color="#ef4444" />
                 </View>
-
-                                 <View style={styles.settingRow}>
-                   <View style={styles.settingInfo}>
-                     <Ionicons name="calendar" size={20} color={colors.text} />
-                     <Text style={styles.settingLabel}>Appointment Reminders</Text>
-                   </View>
-                  <Switch
-                    value={settings.appointmentReminders}
-                    onValueChange={handleToggleAppointmentReminders}
-                    trackColor={{ false: colors.border, true: colors.accent }}
-                    thumbColor="#FFFFFF"
-                  />
+                <View style={styles.optionContent}>
+                  <Text style={styles.optionTitle}>Clear All Recommendations</Text>
+                  <Text style={styles.optionDescription}>
+                    Delete all health recommendations
+                  </Text>
                 </View>
-              </>
-            )}
-          </View>
+                <Ionicons name="chevron-forward" size={20} color="#cbd5e1" />
+              </TouchableOpacity>
 
-          {/* Data Management Section */}
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Data Management</Text>
-            
-            <TouchableOpacity style={styles.actionButton} onPress={onClearSymptomLogs}>
-              <Ionicons name="trash" size={20} color={colors.error} />
-              <Text style={styles.actionButtonText}>Clear Symptom Logs</Text>
-            </TouchableOpacity>
-            
-            <TouchableOpacity style={styles.actionButton} onPress={onClearRecommendations}>
-              <Ionicons name="trash" size={20} color={colors.error} />
-              <Text style={styles.actionButtonText}>Clear Recommendations</Text>
-            </TouchableOpacity>
-            
-            <TouchableOpacity style={styles.actionButton} onPress={onClearAppointments}>
-              <Ionicons name="trash" size={20} color={colors.error} />
-              <Text style={styles.actionButtonText}>Clear Appointments</Text>
-            </TouchableOpacity>
-          </View>
+              <TouchableOpacity 
+                style={styles.option} 
+                onPress={onClearAppointments}
+              >
+                <View style={styles.optionIcon}>
+                  <Ionicons name="calendar" size={24} color="#ef4444" />
+                </View>
+                <View style={styles.optionContent}>
+                  <Text style={styles.optionTitle}>Clear All Appointments</Text>
+                  <Text style={styles.optionDescription}>
+                    Delete all upcoming and past appointments
+                  </Text>
+                </View>
+                <Ionicons name="chevron-forward" size={20} color="#cbd5e1" />
+              </TouchableOpacity>
+            </View>
+          </ScrollView>
 
-          {/* App Management Section */}
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>App Management</Text>
-            
-            <TouchableOpacity style={styles.actionButton} onPress={handleRestartApp}>
-              <Ionicons name="refresh" size={20} color={colors.warning} />
-              <Text style={styles.actionButtonText}>Restart App</Text>
-            </TouchableOpacity>
-          </View>
-        </ScrollView>
-      </Animated.View>
 
-      {/* Time Picker Modal */}
-      {showTimePicker && (
-        <DateTimePicker
-          value={tempTime}
-          mode="time"
-          display="spinner"
-          onChange={handleTimeChange}
-        />
-      )}
+        </Animated.View>
+      </View>
     </Modal>
   );
 }
 
 const styles = StyleSheet.create({
+  overlay: {
+    flex: 1,
+    justifyContent: 'flex-end',
+  },
   backdrop: {
     position: 'absolute',
     top: 0,
@@ -331,85 +252,98 @@ const styles = StyleSheet.create({
   backdropTouchable: {
     flex: 1,
   },
-  modalContainer: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    backgroundColor: colors.background,
+  modalContent: {
+    backgroundColor: '#ffffff',
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
-    maxHeight: '80%',
+    paddingBottom: 40,
+    maxHeight: screenHeight * 0.8,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: -2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 8,
+    elevation: 10,
   },
   handle: {
     width: 40,
     height: 4,
-    backgroundColor: colors.border,
+    backgroundColor: '#e2e8f0',
     borderRadius: 2,
     alignSelf: 'center',
     marginTop: 12,
     marginBottom: 8,
   },
-  content: {
-    paddingHorizontal: 24,
-    paddingBottom: 32,
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f1f5f9',
   },
   title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: colors.text,
-    marginBottom: 24,
+    fontSize: 20,
+    fontWeight: '600',
+    color: '#1e293b',
+  },
+  closeButton: {
+    padding: 4,
+  },
+  sections: {
+    paddingHorizontal: 20,
+    paddingBottom: 20,
   },
   section: {
-    marginBottom: 32,
+    marginTop: 20,
   },
   sectionTitle: {
     fontSize: 18,
     fontWeight: '600',
-    color: colors.text,
+    color: '#1e293b',
+    marginBottom: 12,
+  },
+  sectionDescription: {
+    fontSize: 14,
+    color: '#64748b',
     marginBottom: 16,
+    fontStyle: 'italic',
   },
-  settingRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
+
+  options: {
+    paddingHorizontal: 20,
+    paddingTop: 16,
   },
-  settingInfo: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flex: 1,
-  },
-  settingLabel: {
-    fontSize: 16,
-    color: colors.text,
-    marginLeft: 12,
-  },
-  timePickerRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
-  },
-  timeText: {
-    fontSize: 16,
-    color: colors.accent,
-    fontWeight: '500',
-  },
-  actionButton: {
+  option: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingVertical: 16,
     borderBottomWidth: 1,
-    borderBottomColor: colors.border,
+    borderBottomColor: '#f1f5f9',
   },
-  actionButtonText: {
+  optionIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#fef2f2',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 16,
+  },
+  optionContent: {
+    flex: 1,
+  },
+  optionTitle: {
     fontSize: 16,
-    color: colors.text,
-    marginLeft: 12,
+    fontWeight: '500',
+    color: '#1e293b',
+    marginBottom: 2,
+  },
+  optionDescription: {
+    fontSize: 14,
+    color: '#64748b',
   },
 }); 
