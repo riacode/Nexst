@@ -42,6 +42,7 @@ export const transcribeAudio = async (audioUri: string): Promise<string> => {
       name: 'audio.m4a',
     } as any);
     formData.append('model', 'whisper-1');
+    formData.append('language', 'en');
 
     const response = await fetch('https://api.openai.com/v1/audio/transcriptions', {
       method: 'POST',
@@ -79,7 +80,7 @@ export const generateSummary = async (transcript: string): Promise<string> => {
 
   try {
     const requestBody = {
-      model: 'gpt-4',
+      model: 'gpt-3.5-turbo', // Less critical - basic summarization
       messages: [
         {
           role: 'system',

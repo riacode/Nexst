@@ -25,6 +25,13 @@ export type HealthDomain =
   | 'preventive'           // Vaccinations, screenings, check-ups
   | 'general_wellness';    // Energy, fatigue, general health
 
+export interface CompletedRecommendation {
+  id: string;
+  title: string;
+  symptomsTriggering: string[];
+  completedAt: Date;
+}
+
 export interface MedicalRecommendation {
   priority: 'HIGH' | 'MEDIUM' | 'LOW';
   title: string;

@@ -5,6 +5,7 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createStackNavigator } from '@react-navigation/stack';
 import { Ionicons } from '@expo/vector-icons';
 import { Alert } from 'react-native';
+import { configureNotifications } from './utils/notifications';
 
 import SymptomsScreen from './screens/SymptomsScreen';
 import AppointmentsScreen from './screens/AppointmentsScreen';
@@ -215,6 +216,11 @@ function AppContent() {
 }
 
 export default function App() {
+  useEffect(() => {
+    // Configure notifications on app start
+    configureNotifications();
+  }, []);
+
   return (
     <OnboardingProvider>
       <SymptomLogsProvider>

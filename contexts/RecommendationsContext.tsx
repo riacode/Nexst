@@ -1,14 +1,17 @@
 import React, { createContext, useContext, useState, ReactNode } from 'react';
-import { MedicalRecommendation } from '../types/recommendations';
+import { MedicalRecommendation, CompletedRecommendation } from '../types/recommendations';
+import { sendRecommendationNotification } from '../utils/notifications';
 
 interface RecommendationsContextType {
   recommendations: MedicalRecommendation[];
+  completedRecommendations: CompletedRecommendation[];
   addRecommendations: (newRecommendations: MedicalRecommendation[]) => void;
   updateRecommendation: (id: string, updates: Partial<MedicalRecommendation>) => void;
   completeRecommendation: (id: string) => void;
   cancelRecommendation: (id: string, reason: string) => void;
   toggleActionItem: (recommendationId: string, actionId: string) => void;
   clearAllRecommendations: () => void;
+  clearAllCompletedRecommendations: () => void;
 }
 
 const RecommendationsContext = createContext<RecommendationsContextType | undefined>(undefined);
@@ -27,6 +30,7 @@ interface RecommendationsProviderProps {
 
 export const RecommendationsProvider: React.FC<RecommendationsProviderProps> = ({ children }) => {
   const [recommendations, setRecommendations] = useState<MedicalRecommendation[]>([]);
+  const [completedRecommendations, setCompletedRecommendations] = useState<CompletedRecommendation[]>([]);
 
   const addRecommendations = (newRecommendations: MedicalRecommendation[]) => {
     setRecommendations(prev => {
@@ -35,6 +39,15 @@ export const RecommendationsProvider: React.FC<RecommendationsProviderProps> = (
       const uniqueNewRecommendations = newRecommendations.filter(
         newRec => !existingTitles.includes(newRec.title)
       );
+      
+      // Send notifications for new recommendations
+      uniqueNewRecommendations.forEach(recommendation => {
+        sendRecommendationNotification(
+          recommendation.title,
+          recommendation.symptomsTriggering || []
+        );
+      });
+      
       return [...prev, ...uniqueNewRecommendations];
     });
   };
@@ -46,10 +59,22 @@ export const RecommendationsProvider: React.FC<RecommendationsProviderProps> = (
   };
 
   const completeRecommendation = (id: string) => {
-    updateRecommendation(id, {
-      isCompleted: true,
-      completedAt: new Date()
-    });
+    const recommendation = recommendations.find(rec => rec.id === id);
+    if (recommendation) {
+      // Create completed recommendation with minimal data
+      const completedRec: CompletedRecommendation = {
+        id: recommendation.id!,
+        title: recommendation.title,
+        symptomsTriggering: recommendation.symptomsTriggering,
+        completedAt: new Date()
+      };
+      
+      // Add to completed recommendations
+      setCompletedRecommendations(prev => [...prev, completedRec]);
+      
+      // Remove from active recommendations
+      setRecommendations(prev => prev.filter(rec => rec.id !== id));
+    }
   };
 
   const cancelRecommendation = (id: string, reason: string) => {
@@ -85,14 +110,20 @@ export const RecommendationsProvider: React.FC<RecommendationsProviderProps> = (
     setRecommendations([]);
   };
 
+  const clearAllCompletedRecommendations = () => {
+    setCompletedRecommendations([]);
+  };
+
   const value: RecommendationsContextType = {
     recommendations,
+    completedRecommendations,
     addRecommendations,
     updateRecommendation,
     completeRecommendation,
     cancelRecommendation,
     toggleActionItem,
     clearAllRecommendations,
+    clearAllCompletedRecommendations,
   };
 
   return (

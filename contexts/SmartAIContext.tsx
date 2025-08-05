@@ -14,14 +14,14 @@ import { useRecommendations } from './RecommendationsContext';
 
 interface SmartAIContextType {
   // Reactive AI functions (user-triggered)
-  processSymptomLog: (symptomLog: SymptomLog) => Promise<{
+  transcribeAndSummarize: (audioUri: string) => Promise<{
     transcript: string;
     summary: string;
-    quickRecommendations: MedicalRecommendation[];
     healthDomain: string;
     severity: string;
     impact: string;
   }>;
+  analyzeForRecommendations: (symptomLog: SymptomLog) => Promise<MedicalRecommendation[]>;
   generateAppointmentQuestions: (title: string, date: Date) => Promise<string[]>;
   getPersonalizedRecommendations: () => Promise<MedicalRecommendation[]>;
   
@@ -80,56 +80,69 @@ export const SmartAIProvider: React.FC<SmartAIProviderProps> = ({
   // ============================================================================
 
   /**
-   * REACTIVE: Process symptom log with 3-agent autonomous system
-   * COST: $0.15 per call (3 agents working together)
-   * FREQUENCY: Every time user logs a symptom
+   * REACTIVE: Transcribe and summarize audio recording
+   * COST: $0.02 per call (transcription + optimized analysis)
+   * FREQUENCY: Every time user records a symptom
    */
-  const processSymptomLog = async (symptomLog: SymptomLog) => {
-    console.log('💰 REACTIVE AI COST: $0.15 (3-agent autonomous system)');
+  const transcribeAndSummarize = async (audioUri: string) => {
+    console.log('💰 REACTIVE AI COST: $0.02 (transcription + optimized analysis)');
+    
+    // Use the legacy processSymptom method which does transcription and basic analysis
+    const result = await smartAI.processSymptom(audioUri);
+    
+    // Update cost tracking
+    setReactiveCost(prev => prev + 0.02);
+    setReactiveCalls(prev => prev + 1);
+    setLastCall(new Date());
+    
+    return {
+      transcript: result.transcript,
+      summary: result.summary, // This is the actual summary of what user said
+      healthDomain: result.healthDomain,
+      severity: result.severity,
+      impact: result.impact
+    };
+  };
+
+  /**
+   * REACTIVE: Analyze symptom log for recommendations (quality-focused)
+   * COST: $0.08 per call (1-2 high-quality recommendations)
+   * FREQUENCY: Background analysis after log is created
+   */
+  const analyzeForRecommendations = async (symptomLog: SymptomLog) => {
+    console.log('💰 REACTIVE AI COST: $0.08 (quality-focused recommendations)');
     
     // Get all symptom logs and recommendations for context
     const allSymptoms: SymptomLog[] = symptomLogs || [];
     const existingRecommendations: MedicalRecommendation[] = recommendations || [];
     
-    const result = await smartAI.processSymptomAutonomously(
-      symptomLog.audioURI || '', 
+    // Use simplified recommendation generation (no duplication)
+    const newRecommendations = await smartAI.generateRecommendationsFromSymptom(
+      symptomLog, 
       allSymptoms, 
       existingRecommendations
     );
     
-    // Get basic analysis from legacy method (includes transcript, domain, severity, impact)
-    const basicAnalysis = await smartAI.processSymptom(symptomLog.audioURI || '');
-    
-    // Convert autonomous response to legacy format for compatibility
-    const legacyResult = {
-      transcript: basicAnalysis.transcript,
-      summary: result.decision.reasoning,
-      quickRecommendations: basicAnalysis.quickRecommendations, // Use basic recommendations for now
-      healthDomain: basicAnalysis.healthDomain,
-      severity: basicAnalysis.severity,
-      impact: basicAnalysis.impact
-    };
-    
     // Update cost tracking
-    setReactiveCost(prev => prev + 0.15);
+    setReactiveCost(prev => prev + 0.08);
     setReactiveCalls(prev => prev + 1);
     setLastCall(new Date());
     
-    return legacyResult;
+    return newRecommendations;
   };
 
   /**
    * REACTIVE: Generate personalized appointment questions
-   * COST: $0.05 per call
+   * COST: $0.02 per call (GPT-3.5-turbo)
    * FREQUENCY: When user opens appointment detail
    */
   const generateAppointmentQuestions = async (title: string, date: Date) => {
-    console.log('💰 REACTIVE AI COST: $0.05 (context analysis + questions)');
+    console.log('💰 REACTIVE AI COST: $0.02 (context analysis + questions with GPT-3.5-turbo)');
     
     const questions = await smartAI.generateAppointmentQuestions(title, date);
     
     // Update cost tracking
-    setReactiveCost(prev => prev + 0.05);
+    setReactiveCost(prev => prev + 0.02);
     setReactiveCalls(prev => prev + 1);
     setLastCall(new Date());
     
@@ -228,7 +241,8 @@ export const SmartAIProvider: React.FC<SmartAIProviderProps> = ({
 
   const value: SmartAIContextType = {
     // Reactive AI functions
-    processSymptomLog,
+    transcribeAndSummarize,
+    analyzeForRecommendations,
     generateAppointmentQuestions,
     getPersonalizedRecommendations,
     
@@ -239,8 +253,6 @@ export const SmartAIProvider: React.FC<SmartAIProviderProps> = ({
     
     // Background task support
     executeBackgroundTask,
-    
-
     
     // Cost and usage tracking
     getCostBreakdown,

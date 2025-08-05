@@ -166,7 +166,7 @@ export class AIService {
       Focus on symptoms, concerns, and preparation. Return as JSON array.`;
       
       const response = await makeOpenAIRequest({
-        model: 'gpt-4',
+        model: 'gpt-3.5-turbo', // Less critical - appointment questions
         messages: [
           { role: 'system', content: 'You are a health assistant helping patients prepare for doctor visits.' },
           { role: 'user', content: prompt }
@@ -221,6 +221,110 @@ export class AIService {
         recommendations: [],
         trends: { overall: 'stable', frequency: 0, severity: 'mild' }
       };
+    }
+  }
+
+  /**
+   * Generate recommendations from symptom (Optimized - single AI call)
+   * 
+   * @param symptomLog - The symptom log to analyze
+   * @param allSymptoms - All user's symptom history
+   * @param existingRecommendations - Current recommendations to avoid duplicates
+   * @returns Array of personalized health recommendations
+   * 
+   * COST: $0.08 per call (single GPT-4 call with comprehensive analysis)
+   */
+  async generateRecommendationsFromSymptom(
+    symptomLog: SymptomLog, 
+    allSymptoms: SymptomLog[], 
+    existingRecommendations: MedicalRecommendation[]
+  ): Promise<MedicalRecommendation[]> {
+    console.log('🤖 AI: Generating optimized recommendations from symptom');
+    
+    try {
+      // Single comprehensive AI call that analyzes everything at once
+      const response = await makeOpenAIRequest({
+        model: 'gpt-4',
+        messages: [
+          {
+            role: 'system',
+            content: `You are a health AI assistant. Generate the RIGHT NUMBER of HIGH-QUALITY recommendations that are SPECIFICALLY tied to the new symptom.
+            
+            IMPORTANT: Generate exactly the right number of recommendations for this specific problem - not too few, not too many. Focus on the most important next steps that directly address the symptom.
+            
+            Return JSON array with:
+            - title: specific recommendation title
+            - description: clear, actionable description
+            - priority: one of [HIGH, MEDIUM, LOW] (be conservative - only HIGH if urgent)
+            - urgency: one of [immediate, within days, within weeks]
+            - category: one of [lifestyle, medication, appointment, monitoring, emergency]
+            - medicalRationale: specific explanation of how this addresses the symptom
+            - riskLevel: one of [low, medium, high]
+            - symptomCorrelation: specific symptom this addresses (use exact symptom summary)
+            
+            CRITERIA:
+            - Must directly address the new symptom
+            - Must be actionable and specific
+            - Generate the appropriate number of recommendations for this specific problem
+            - Include all important next steps, but avoid overwhelming the user
+            - Avoid generic "general wellness" recommendations unless directly relevant
+            - Only recommend if there's a clear, direct benefit for the specific symptom`
+          },
+          {
+            role: 'user',
+            content: `Generate recommendations for this SPECIFIC symptom:
+            
+            SYMPTOM TO ADDRESS:
+            - Summary: "${symptomLog.summary}"
+            - Details: ${symptomLog.transcript}
+            - Health Domain: ${symptomLog.healthDomain}
+            - Severity: ${symptomLog.severity}
+            - Impact: ${symptomLog.impact}
+            
+            REQUIREMENTS:
+            - Generate the RIGHT NUMBER of recommendations that DIRECTLY address this specific symptom
+            - Each recommendation must have a clear, direct connection to the symptom
+            - Focus on actionable steps that will help with this specific issue
+            - Include all important next steps, but avoid overwhelming the user
+            - Avoid generic wellness advice unless directly relevant to this symptom
+            
+            EXISTING RECOMMENDATIONS (avoid duplicates):
+            ${existingRecommendations.map(r => `- ${r.title}`).join('\n')}`
+          }
+        ],
+        max_tokens: 1200,
+        temperature: 0.3
+      });
+      
+      const content = response.choices[0]?.message?.content || '[]';
+      const recommendationsData = JSON.parse(content);
+      
+      // Convert to MedicalRecommendation format
+      const recommendations: MedicalRecommendation[] = recommendationsData.map((rec: any, index: number) => ({
+        id: `rec-${Date.now()}-${index}`,
+        title: rec.title,
+        description: rec.description,
+        category: rec.category || 'lifestyle',
+        priority: rec.priority || 'MEDIUM',
+        actionItems: [],
+        urgency: rec.urgency || 'within days',
+        healthDomain: symptomLog.healthDomain,
+        medicalRationale: rec.medicalRationale || rec.description,
+        symptomsTriggering: [rec.symptomCorrelation || symptomLog.summary], // Use specific symptom correlation
+        severityIndicators: [],
+        followUpRequired: false,
+        riskLevel: rec.riskLevel || 'low',
+        interventionType: rec.category === 'emergency' ? 'emergency_care' : 
+                         rec.category === 'appointment' ? 'professional_care' : 'self_care',
+        createdAt: new Date(),
+        isCompleted: false,
+        isCancelled: false
+      }));
+      
+      return recommendations;
+    } catch (error) {
+      console.error('Optimized recommendations error:', error);
+      return [];
     }
   }
 

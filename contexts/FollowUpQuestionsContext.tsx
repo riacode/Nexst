@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { sendFollowUpQuestionNotification } from '../utils/notifications';
 
 interface FollowUpQuestion {
   id: string;
@@ -65,7 +66,18 @@ export function FollowUpQuestionsProvider({ children }: { children: React.ReactN
       timestamp: new Date(),
       isAnswered: false,
     };
-    setFollowUpQuestions(prev => [newQuestion, ...prev]);
+    
+    setFollowUpQuestions(prev => {
+      const updatedQuestions = [newQuestion, ...prev];
+      
+      // Send notification for new follow-up questions
+      const unansweredCount = updatedQuestions.filter(q => !q.isAnswered).length;
+      if (unansweredCount > 0) {
+        sendFollowUpQuestionNotification(unansweredCount);
+      }
+      
+      return updatedQuestions;
+    });
   };
 
   const removeFollowUpQuestion = (id: string) => {

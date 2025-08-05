@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { fontStyles } from '../utils/fonts';
-import { MedicalRecommendation, ActionItem } from '../types/recommendations';
+import { MedicalRecommendation, ActionItem, CompletedRecommendation } from '../types/recommendations';
 import { useRecommendations } from '../contexts/RecommendationsContext';
 import { useTutorial } from '../contexts/TutorialContext';
 import FeatureTutorial from '../components/FeatureTutorial';
@@ -12,7 +12,7 @@ import { colors, gradients, getPriorityColor as getPriorityColorUtil } from '../
 
 export default function RecommendationsScreen({ route, navigation }: any) {
   // Get recommendations from global context
-  const { recommendations, completeRecommendation, cancelRecommendation, toggleActionItem } = useRecommendations();
+  const { recommendations, completedRecommendations, completeRecommendation, cancelRecommendation, toggleActionItem } = useRecommendations();
   const { tutorialState, completeRecommendationTutorial } = useTutorial();
   const activeAlert = route?.params?.activeAlert;
   const [completedCollapsed, setCompletedCollapsed] = useState(false);
@@ -184,78 +184,101 @@ export default function RecommendationsScreen({ route, navigation }: any) {
     </TouchableOpacity>
   );
 
+  const renderCompletedRecommendation = (recommendation: CompletedRecommendation) => (
+    <View key={recommendation.id} style={styles.recommendationCard}>
+      {/* Title */}
+      <Text style={styles.recommendationTitleCompleted}>
+        {recommendation.title}
+      </Text>
+
+      {/* Symptom Correlation */}
+      {recommendation.symptomsTriggering && recommendation.symptomsTriggering.length > 0 && (
+        <View style={styles.symptomCorrelation}>
+          <Ionicons name="link" size={16} color="#666" />
+          <Text style={styles.symptomCorrelationText}>
+            Addressed: {recommendation.symptomsTriggering.join(', ')}
+          </Text>
+        </View>
+      )}
+
+      {/* Completion Date */}
+      <View style={styles.completedInfo}>
+        <Ionicons name="checkmark-circle" size={16} color={colors.accent} />
+        <Text style={styles.completedText}>
+          Completed on {recommendation.completedAt.toLocaleDateString()}
+        </Text>
+      </View>
+    </View>
+  );
+
   const renderRecommendation = (recommendation: MedicalRecommendation) => (
     <View key={recommendation.id} style={[
       styles.recommendationCard,
       recommendation.isCompleted && styles.recommendationCardCompleted,
       recommendation.isCancelled && styles.recommendationCardCancelled
     ]}>
-      {/* Problem Section */}
-      <View style={styles.problemSection}>
-        <View style={styles.problemHeader}>
-          <Ionicons 
-            name={getCategoryIcon(recommendation.category)} 
-            size={24} 
-            color={getPriorityColor(recommendation.priority)} 
-          />
-          <View style={styles.problemTitleContainer}>
-            <Text style={[
-              styles.problemTitle,
-              recommendation.isCompleted && styles.problemTitleCompleted,
-              recommendation.isCancelled && styles.problemTitleCancelled
-            ]}>
-              {recommendation.title}
-            </Text>
-            <View style={[
-              styles.priorityBadge,
-              { backgroundColor: getPriorityColor(recommendation.priority) }
-            ]}>
-              <Text style={styles.priorityText}>
-                {getPriorityLabel(recommendation.priority)}
-              </Text>
-            </View>
-          </View>
-        </View>
-        
-        <Text style={[
-          styles.problemDescription,
-          recommendation.isCompleted && styles.problemDescriptionCompleted,
-          recommendation.isCancelled && styles.problemDescriptionCancelled
+      {/* 1. Title - The recommendation */}
+      <Text style={[
+        styles.recommendationTitle,
+        recommendation.isCompleted && styles.recommendationTitleCompleted,
+        recommendation.isCancelled && styles.recommendationTitleCancelled
+      ]}>
+        {recommendation.title}
+      </Text>
+
+      {/* 2. Severity Label */}
+      <View style={styles.severityContainer}>
+        <View style={[
+          styles.severityBadge,
+          { backgroundColor: getPriorityColor(recommendation.priority) }
         ]}>
-          {recommendation.description}
-        </Text>
-      </View>
-
-      {/* Solutions Section */}
-      <View style={styles.solutionsSection}>
-        <Text style={styles.solutionsTitle}>Solutions:</Text>
-        <View style={styles.actionItemsContainer}>
-          {recommendation.actionItems.map(action => renderActionItem(action, recommendation.id!))}
+          <Text style={styles.severityText}>
+            {getPriorityLabel(recommendation.priority)}
+          </Text>
         </View>
       </View>
 
-      {/* Why This Helps */}
-      <View style={styles.whySection}>
-        <Text style={styles.whyTitle}>Why this helps:</Text>
-        <Text style={styles.whyText}>{recommendation.medicalRationale}</Text>
+      {/* 3. Short Description */}
+      <Text style={[
+        styles.recommendationDescription,
+        recommendation.isCompleted && styles.recommendationDescriptionCompleted,
+        recommendation.isCancelled && styles.recommendationDescriptionCancelled
+      ]}>
+        {recommendation.description}
+      </Text>
+
+      {/* 4. Symptom Correlation */}
+      {recommendation.symptomsTriggering && recommendation.symptomsTriggering.length > 0 && (
+        <View style={styles.symptomCorrelation}>
+          <Ionicons name="link" size={16} color="#666" />
+          <Text style={styles.symptomCorrelationText}>
+            Addresses: {recommendation.symptomsTriggering.join(', ')}
+          </Text>
+        </View>
+      )}
+
+      {/* 5. Reasoning */}
+      <View style={styles.reasoningSection}>
+        <Text style={styles.reasoningTitle}>Why this helps:</Text>
+        <Text style={styles.reasoningText}>{recommendation.medicalRationale}</Text>
       </View>
 
-      {/* Action Buttons */}
+      {/* 6. Action Buttons - Done, Not for me */}
       {!recommendation.isCompleted && !recommendation.isCancelled && (
         <View style={styles.recommendationActions}>
           <TouchableOpacity
-            style={styles.completeButton}
+            style={styles.doneButton}
             onPress={() => handleCompleteRecommendation(recommendation.id!)}
           >
             <Ionicons name="checkmark" size={20} color="#ffffff" />
-            <Text style={styles.completeButtonText}>Mark Complete</Text>
+            <Text style={styles.doneButtonText}>Done</Text>
           </TouchableOpacity>
           <TouchableOpacity
-            style={styles.cancelButton}
+            style={styles.notForMeButton}
             onPress={() => handleCancelRecommendation(recommendation.id!)}
           >
             <Ionicons name="close" size={20} color="#ef4444" />
-            <Text style={styles.cancelButtonText}>Not for me</Text>
+            <Text style={styles.notForMeButtonText}>Not for me</Text>
           </TouchableOpacity>
         </View>
       )}
@@ -287,7 +310,6 @@ export default function RecommendationsScreen({ route, navigation }: any) {
   );
 
   const activeRecommendations = recommendations.filter(rec => !rec.isCompleted && !rec.isCancelled);
-  const completedRecommendations = recommendations.filter(rec => rec.isCompleted);
   const cancelledRecommendations = recommendations.filter(rec => rec.isCancelled);
 
   return (
@@ -305,7 +327,6 @@ export default function RecommendationsScreen({ route, navigation }: any) {
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         {activeRecommendations.length > 0 && (
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Current Recommendations</Text>
             {activeRecommendations.map(renderRecommendation)}
           </View>
         )}
@@ -317,7 +338,7 @@ export default function RecommendationsScreen({ route, navigation }: any) {
             onToggle={() => setCompletedCollapsed(!completedCollapsed)}
             count={completedRecommendations.length}
           >
-            {completedRecommendations.map(renderRecommendation)}
+            {completedRecommendations.map(renderCompletedRecommendation)}
           </CollapsibleSection>
         )}
 
@@ -342,7 +363,6 @@ export default function RecommendationsScreen({ route, navigation }: any) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    paddingTop: 50,
   },
   content: {
     flex: 1,
@@ -353,13 +373,13 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     ...fontStyles.h3,
-    color: '#ffffff',
+    color: '#1e293b',
     marginBottom: 12,
     marginRight: 8,
   },
   sectionHeaderTitle: {
     ...fontStyles.h3,
-    color: '#ffffff',
+    color: '#1e293b',
     marginRight: 8,
   },
   sectionHeader: {
@@ -608,5 +628,114 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   
+  // Symptom Correlation
+  symptomCorrelation: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 8,
+    paddingTop: 8,
+    borderTopWidth: 1,
+    borderTopColor: '#f0f0f0',
+    gap: 6,
+  },
+  symptomCorrelationText: {
+    ...fontStyles.caption,
+    color: '#666666',
+    fontStyle: 'italic',
+  },
+  
+  // New Recommendation Format Styles
+  recommendationTitle: {
+    ...fontStyles.h3,
+    color: '#1e293b',
+    marginBottom: 12,
+    fontWeight: '600',
+  },
+  recommendationTitleCompleted: {
+    color: '#00B39F',
+  },
+  recommendationTitleCancelled: {
+    color: colors.accentElectric,
+  },
+  severityContainer: {
+    marginBottom: 12,
+  },
+  severityBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+    alignSelf: 'flex-start',
+  },
+  severityText: {
+    ...fontStyles.caption,
+    color: '#ffffff',
+    fontWeight: '600',
+  },
+  recommendationDescription: {
+    ...fontStyles.body,
+    color: '#64748b',
+    lineHeight: 22,
+    marginBottom: 12,
+  },
+  recommendationDescriptionCompleted: {
+    color: '#00B39F',
+  },
+  recommendationDescriptionCancelled: {
+    color: colors.accentElectric,
+  },
+  reasoningSection: {
+    marginTop: 16,
+    marginBottom: 16,
+    padding: 12,
+    backgroundColor: '#f0f9ff',
+    borderRadius: 8,
+    borderLeftWidth: 3,
+    borderLeftColor: '#00B39F',
+  },
+  reasoningTitle: {
+    ...fontStyles.bodyMedium,
+    color: '#1e293b',
+    fontWeight: '600',
+    marginBottom: 4,
+  },
+  reasoningText: {
+    ...fontStyles.body,
+    color: '#374151',
+    lineHeight: 20,
+  },
+  doneButton: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#00B39F',
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+    gap: 8,
+  },
+  doneButtonText: {
+    ...fontStyles.bodyMedium,
+    color: '#ffffff',
+    fontWeight: '600',
+  },
+  notForMeButton: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#fef2f2',
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#fecaca',
+    gap: 8,
+  },
+  notForMeButtonText: {
+    ...fontStyles.bodyMedium,
+    color: '#ef4444',
+    fontWeight: '600',
+  },
 
 }); 

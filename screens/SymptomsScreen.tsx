@@ -35,7 +35,8 @@ export default function SymptomScreen({ navigation }: any) {
     const { markOnboardingComplete } = useOnboarding();
     const { tutorialState, completeSymptomTutorial } = useTutorial();
     const { 
-        processSymptomLog, 
+        transcribeAndSummarize,
+        analyzeForRecommendations,
         startProactiveMonitoring, 
         isProactiveActive 
     } = useSmartAI();
@@ -77,44 +78,7 @@ export default function SymptomScreen({ navigation }: any) {
         }
     }, [isProactiveActive, startProactiveMonitoring]);
 
-    // Generate recommendations and follow-up questions when symptoms are added
-    useEffect(() => {
-        const checkForRecommendations = async () => {
-            try {
-                // Only generate recommendations if we have symptom logs
-                if (symptomLogs.length >= 1) {
-                    // Use SmartHealthAI for personalized recommendations
-                    const symptomRecommendations = await processSymptomLog(symptomLogs[0]);
-                    
-                    if (symptomRecommendations.quickRecommendations.length > 0) {
-                        // Add to global recommendations context
-                        addRecommendations(symptomRecommendations.quickRecommendations);
-                        
 
-                        
-                        // Create alert for highest priority recommendation
-                        const highPriorityRec = symptomRecommendations.quickRecommendations.find((rec: MedicalRecommendation) => rec.priority === 'HIGH');
-                        if (highPriorityRec) {
-                            setActiveAlert({
-                                id: Date.now().toString(),
-                                recommendation: highPriorityRec,
-                                isRead: false,
-                                createdAt: new Date()
-                            });
-                            setAlertVisible(true);
-                        }
-                    }
-                }
-                
-                // Note: Follow-up questions and missed period checks are now handled by proactive AI
-                // They will be triggered automatically by the background monitoring system
-            } catch (error) {
-                console.error('Error generating recommendations:', error);
-            }
-        };
-        
-        checkForRecommendations();
-    }, [symptomLogs, addRecommendations, processSymptomLog]);
 
     // pulsating animation for first recording of the day
     useEffect(() => {
@@ -168,6 +132,10 @@ export default function SymptomScreen({ navigation }: any) {
                 if (recording) {
                     await recording.stopAndUnloadAsync();
                     const uri = recording.getURI();
+                    // Reset recording state immediately when recording stops
+                    setRecording(null);
+                    setIsRecording(false);
+                    
                     if (uri) {
                         setAudioURI(uri);
                         setIsProcessing(true);
@@ -187,36 +155,47 @@ export default function SymptomScreen({ navigation }: any) {
                                 impact: 'low' // Will be updated by AI
                             };
                             
-                            // Use SmartHealthAI to process the symptom log
-                            console.log("🤖 SMART HEALTH AI: Processing symptom log");
-                            const processedLog = await processSymptomLog(symptomLog);
+                            // Step 1: Transcribe and summarize the audio
+                            console.log("🎤 TRANSCRIBING: Converting audio to text and summary");
+                            const transcription = await transcribeAndSummarize(uri);
                             
-                            // Update the log with processed data
+                            // Step 2: Create the symptom log with transcription data
                             const newLog = {
                                 ...symptomLog,
-                                summary: processedLog.summary,
-                                transcript: processedLog.transcript,
-                                healthDomain: processedLog.healthDomain as HealthDomain,
-                                severity: processedLog.severity as 'mild' | 'moderate' | 'severe',
-                                impact: processedLog.impact as 'low' | 'medium' | 'high'
+                                summary: transcription.summary,
+                                transcript: transcription.transcript,
+                                healthDomain: transcription.healthDomain as HealthDomain,
+                                severity: transcription.severity as 'mild' | 'moderate' | 'severe',
+                                impact: transcription.impact as 'low' | 'medium' | 'high'
                             };
                             
-                            // Add to global symptom logs
+                            // Step 3: Add to global symptom logs immediately
                             addSymptomLog(newLog);
                             
+                            // Stop processing and show microphone immediately after log is added
+                            setIsProcessing(false);
                             setStatus("Recording saved!");
+                            
+                            // Step 4: Analyze for recommendations in background (separate process)
+                            console.log("🤖 AI ANALYSIS: Analyzing for recommendations in background");
+                            try {
+                                const recommendations = await analyzeForRecommendations(newLog);
+                                if (recommendations.length > 0) {
+                                    addRecommendations(recommendations);
+                                }
+                            } catch (error) {
+                                console.error("Background AI analysis error:", error);
+                                // Don't fail the recording if AI analysis fails
+                            }
                         } catch (error) {
                             console.error("SmartHealthAI processing error:", error);
                             setStatus("Failed to process audio.");
                             Alert.alert("Error", "Failed to process audio. Please try again.");
-                        } finally {
                             setIsProcessing(false);
                         }
                     }
                     console.log("Audio saved at: ", uri);
                 }
-                setRecording(null);
-                setIsRecording(false);
             } catch (error) {
                 setStatus("Failed to stop recording.");
                 console.error("Error saving audio: ", error);

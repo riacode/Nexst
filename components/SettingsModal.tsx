@@ -2,8 +2,10 @@ import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Modal, Animated, Dimensions, Switch, ScrollView, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import DateTimePicker from '@react-native-community/datetimepicker';
+import * as Updates from 'expo-updates';
 import { useTutorial } from '../contexts/TutorialContext';
-import { clearOnboardingData } from '../utils/testUtils';
+import { useOnboarding } from '../contexts/OnboardingContext';
+import { clearAllStoredData } from '../utils/testUtils';
 import { colors } from '../utils/colors';
 
 interface SettingsModalProps {
@@ -32,29 +34,63 @@ export default function SettingsModal({
   notificationFrequency
 }: SettingsModalProps) {
   const { resetTutorials } = useTutorial();
+  const { resetOnboarding } = useOnboarding();
   const slideAnim = React.useRef(new Animated.Value(screenHeight)).current;
 
   const handleRestartApp = () => {
     Alert.alert(
       'Restart App',
-      'This will reset the app to its initial state and clear all data. Are you sure?',
+      'This will completely reset the app to its initial state and clear ALL data including symptoms, recommendations, appointments, and settings. This action cannot be undone. Are you sure?',
       [
         { text: 'Cancel', style: 'cancel' },
         {
-          text: 'Restart',
+          text: 'Restart App',
           style: 'destructive',
           onPress: async () => {
             try {
+              console.log('🔄 Starting complete app reset...');
+              
+              // Clear all stored data (symptoms, recommendations, appointments, settings, etc.)
+              await clearAllStoredData();
+              
               // Reset all tutorials
               await resetTutorials();
               
-              // Clear all data
-              await clearOnboardingData();
+              // Reset onboarding state
+              await resetOnboarding();
+              
+              // Clear all context data
+              onClearSymptomLogs();
+              onClearAppointments();
+              onClearRecommendations();
+              
+              console.log('✅ App reset complete - all data cleared');
               
               // Close the settings modal
               handleClose();
+              
+              // Show success message
+              Alert.alert(
+                'App Reset Complete',
+                'All data has been cleared and the app has been reset to its initial state. The app will now restart to complete the reset.',
+                [
+                  { 
+                    text: 'OK',
+                    onPress: async () => {
+                      try {
+                        // Force app restart to complete the reset
+                        await Updates.reloadAsync();
+                      } catch (error) {
+                        console.error('❌ Error restarting app:', error);
+                        // If Updates.reloadAsync fails, just close the modal
+                        handleClose();
+                      }
+                    }
+                  }
+                ]
+              );
             } catch (error) {
-              console.error('Error restarting app:', error);
+              console.error('❌ Error restarting app:', error);
               Alert.alert(
                 'Error',
                 'Failed to restart the app. Please try again.',

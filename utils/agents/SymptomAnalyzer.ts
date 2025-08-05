@@ -53,36 +53,74 @@ export class SymptomAnalyzer {
    * @returns Complete analysis of the symptom recording
    */
   async analyzeSymptom(audioUri: string): Promise<SymptomAnalysisResult> {
-    console.log('🔍 SymptomAnalyzer: Analyzing symptom recording');
+    console.log('🔍 SymptomAnalyzer: Analyzing symptom recording (optimized)');
     
     try {
       // Step 1: Transcribe audio to text
       const transcript = await this.transcribeAudio(audioUri);
       
-      // Step 2: Generate symptom summary
-      const summary = await this.generateSummary(transcript);
-      
-      // Step 3: Classify health domain and severity
-      const classification = await this.classifySymptom(transcript, summary);
-      
-      // Step 4: Generate immediate recommendations
-      const recommendations = await this.generateImmediateRecommendations(transcript, summary, classification);
-      
-      // Step 5: Assess impact on daily life
-      const impact = await this.assessImpact(transcript, summary, classification);
+      // Step 2: Single comprehensive analysis call (combines summary, classification, impact)
+      const analysis = await this.comprehensiveAnalysis(transcript);
       
       return {
         transcript,
-        summary,
-        recommendations,
-        healthDomain: classification.healthDomain,
-        severity: classification.severity,
-        impact
+        summary: analysis.summary,
+        recommendations: [], // Recommendations now generated separately
+        healthDomain: analysis.healthDomain,
+        severity: analysis.severity,
+        impact: analysis.impact
       };
     } catch (error) {
       console.error('SymptomAnalyzer error:', error);
       return this.getFallbackResult(audioUri);
     }
+  }
+
+  // ============================================================================
+  // COMPREHENSIVE ANALYSIS (Optimized - single call)
+  // ============================================================================
+
+  /**
+   * Comprehensive analysis combining summary, classification, and impact assessment
+   * 
+   * @param transcript - Transcribed audio text
+   * @returns Combined analysis result
+   */
+  private async comprehensiveAnalysis(transcript: string): Promise<{
+    summary: string;
+    healthDomain: HealthDomain;
+    severity: 'mild' | 'moderate' | 'severe';
+    impact: 'low' | 'medium' | 'high';
+  }> {
+    const response = await makeOpenAIRequest({
+      model: 'gpt-3.5-turbo', // Less critical - basic analysis
+      messages: [
+        {
+          role: 'system',
+          content: `Analyze the symptom and return JSON with:
+          - summary: 5-word summary of the health concern
+          - healthDomain: one of [general_wellness, cardiovascular, respiratory, digestive, musculoskeletal, neurological, mental_health, skin, sleep, energy, pain_management, stress_management]
+          - severity: one of [mild, moderate, severe]
+          - impact: one of [low, medium, high] (impact on daily life)`
+        },
+        { 
+          role: 'user', 
+          content: `Analyze symptom: ${transcript}`
+        }
+      ],
+      max_tokens: 200,
+      temperature: 0.2
+    });
+    
+    const content = response.choices[0]?.message?.content || '{}';
+    const analysis = JSON.parse(content);
+    
+    return {
+      summary: analysis.summary || 'General health concern',
+      healthDomain: analysis.healthDomain || 'general_wellness',
+      severity: analysis.severity || 'mild',
+      impact: analysis.impact || 'low'
+    };
   }
 
   // ============================================================================
@@ -141,7 +179,7 @@ export class SymptomAnalyzer {
     severity: 'mild' | 'moderate' | 'severe';
   }> {
     const response = await makeOpenAIRequest({
-      model: 'gpt-4',
+      model: 'gpt-3.5-turbo', // Less critical - basic classification
       messages: [
         {
           role: 'system',
@@ -182,7 +220,7 @@ export class SymptomAnalyzer {
     classification: { healthDomain: HealthDomain; severity: 'mild' | 'moderate' | 'severe'; }
   ): Promise<MedicalRecommendation[]> {
     const response = await makeOpenAIRequest({
-      model: 'gpt-4',
+      model: 'gpt-3.5-turbo', // Less critical - basic recommendations
       messages: [
         {
           role: 'system',
@@ -227,7 +265,7 @@ export class SymptomAnalyzer {
     classification: { healthDomain: HealthDomain; severity: 'mild' | 'moderate' | 'severe'; }
   ): Promise<'low' | 'medium' | 'high'> {
     const response = await makeOpenAIRequest({
-      model: 'gpt-4',
+      model: 'gpt-3.5-turbo', // Less critical - impact assessment
       messages: [
         {
           role: 'system',
