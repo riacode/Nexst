@@ -692,18 +692,22 @@
         0 8px 40px rgba(178, 152, 255, 0.1);
     }
 
-    /* Nexst animation */
-    .nexst-animate {
-      color: rgba(15, 23, 42, 0.7);
-      animation: highlightNexst 2s ease-in-out 1s forwards;
+    /* Text fade animation */
+    .fade-text {
+      color: #0F172A;
+      animation: fadeToLight 1.5s ease-in-out 2s forwards;
     }
 
-    @keyframes highlightNexst {
+    .nexst-stay {
+      color: #0F172A;
+    }
+
+    @keyframes fadeToLight {
       0% {
-        color: rgba(15, 23, 42, 0.7);
+        color: #0F172A;
       }
       100% {
-        color: #0F172A;
+        color: rgba(15, 23, 42, 0.7);
       }
     }
 
@@ -811,7 +815,7 @@
     <div class="container">
       <div class="hero-content">
         <div class="hero-text scroll-animate">
-                  <h1><span style="color: rgba(15, 23, 42, 0.7);">Know your </span><span class="nexst-animate">nexst</span><span style="color: rgba(15, 23, 42, 0.7);"> step.</span></h1>
+                  <h1><span class="fade-text">Know your </span><span class="nexst-stay">nexst</span><span class="fade-text"> step.</span></h1>
           <p class="hero-subtitle">
             Log your symptoms and let Nexst's AI agents translate them into personalized health guidance and doctor-ready questions. It works autonomously behind the scenes, delivering fast, accurate, and private insights.
           </p>
