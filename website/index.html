@@ -692,8 +692,19 @@
         0 8px 40px rgba(178, 152, 255, 0.1);
     }
 
+    /* Nexst animation */
+    @keyframes highlightNexst {
+      0% {
+        color: rgba(15, 23, 42, 0.7);
+      }
+      100% {
+        color: #0F172A;
+      }
+    }
 
-
+    .nexst-animate {
+      animation: highlightNexst 1.5s ease-in-out 0.5s forwards;
+    }
 
   </style>
 
@@ -799,7 +810,7 @@
     <div class="container">
       <div class="hero-content">
         <div class="hero-text scroll-animate">
-                  <h1><span style="color: rgba(15, 23, 42, 0.7);">Know your </span><span style="color: #0F172A;">nexst</span><span style="color: rgba(15, 23, 42, 0.7);"> step.</span></h1>
+                  <h1><span style="color: rgba(15, 23, 42, 0.7);">Know your </span><span class="nexst-animate" style="color: rgba(15, 23, 42, 0.7);">nexst</span><span style="color: rgba(15, 23, 42, 0.7);"> step.</span></h1>
           <p class="hero-subtitle">
             Log your symptoms and let Nexst's AI agents translate them into personalized health guidance and doctor-ready questions. It works autonomously behind the scenes, delivering fast, accurate, and private insights.
           </p>
@@ -841,7 +852,7 @@
           <div class="feature-number">02</div>
           <h2>Get Smart<br> and Speed,<br> Not Scary.</h2>
           <p class="feature-description">
-            Get immediate recommended next steps based on your symptoms. Nexst's agents spots trends and severity you might miss.
+            Get immediate next steps based on your symptoms. Nexst's agents assess your health holistically and spot trends you might miss.
           </p>
         </div>
         <div class="feature-visual scroll-animate">
