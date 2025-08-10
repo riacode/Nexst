@@ -65,8 +65,14 @@ export const NotificationSettingsProvider: React.FC<NotificationSettingsProvider
 
   // Apply daily reminder when settings change
   useEffect(() => {
+    // Only schedule reminders if they're enabled and we're not in the initial load
     if (settings.dailyReminderEnabled) {
-      sendDailyReminderNotification(settings.dailyReminderTime, true);
+      // Add a small delay to prevent immediate scheduling during app startup
+      const timer = setTimeout(() => {
+        sendDailyReminderNotification(settings.dailyReminderTime, true);
+      }, 1000);
+      
+      return () => clearTimeout(timer);
     } else {
       sendDailyReminderNotification(settings.dailyReminderTime, false);
     }

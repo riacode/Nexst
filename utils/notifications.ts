@@ -125,19 +125,23 @@ export const sendRecommendationNotification = async (recommendationTitle: string
       ? `Addresses: ${symptomsAddressed.join(', ')}`
       : '';
 
+    // Get current badge count and increment it
+    const currentBadgeCount = await getBadgeCount();
+    const newBadgeCount = currentBadgeCount + 1;
+
     await Notifications.scheduleNotificationAsync({
       content: {
         title: 'New Health Recommendation',
         body: `${recommendationTitle}${symptomsText ? `\n${symptomsText}` : ''}`,
         data: { type: 'recommendation' },
-        badge: 1, // Set badge for this notification
+        badge: newBadgeCount, // Set the new badge count
       },
       trigger: null, // Send immediately
     });
     
-    // Increment badge count
-    await incrementBadgeCount();
-    console.log('✅ Recommendation notification sent with badge');
+    // Update the badge count
+    await setBadgeCount(newBadgeCount);
+    console.log('✅ Recommendation notification sent with badge count:', newBadgeCount);
   } catch (error) {
     console.error('Error sending recommendation notification:', error);
   }
@@ -158,19 +162,23 @@ export const sendFollowUpQuestionNotification = async (questionCount: number) =>
       ? 'You have a new follow-up question about your health.'
       : `You have ${questionCount} new follow-up questions about your health.`;
 
+    // Get current badge count and increment it
+    const currentBadgeCount = await getBadgeCount();
+    const newBadgeCount = currentBadgeCount + 1;
+
     await Notifications.scheduleNotificationAsync({
       content: {
         title: 'Follow-up Questions',
         body,
         data: { type: 'follow_up_questions' },
-        badge: 1, // Set badge for this notification
+        badge: newBadgeCount, // Set the new badge count
       },
       trigger: null, // Send immediately
     });
     
-    // Increment badge count
-    await incrementBadgeCount();
-    console.log('✅ Follow-up question notification sent with badge');
+    // Update the badge count
+    await setBadgeCount(newBadgeCount);
+    console.log('✅ Follow-up question notification sent with badge count:', newBadgeCount);
   } catch (error) {
     console.error('Error sending follow-up question notification:', error);
   }
@@ -197,24 +205,54 @@ export const sendDailyReminderNotification = async (time: Date, enabled: boolean
     // Cancel existing daily reminders
     await Notifications.cancelAllScheduledNotificationsAsync();
 
-    // Schedule new daily reminder
-    const trigger = {
+    // Calculate next occurrence of the specified time
+    const now = new Date();
+    let nextReminder = new Date();
+    nextReminder.setHours(time.getHours(), time.getMinutes(), 0, 0);
+    
+    // If the time has already passed today, schedule for tomorrow
+    if (nextReminder <= now) {
+      nextReminder.setDate(nextReminder.getDate() + 1);
+    }
+    
+    console.log('Current time:', now.toLocaleTimeString());
+    console.log('Next reminder scheduled for:', nextReminder.toLocaleTimeString());
+
+    // Schedule the first reminder
+    const firstTrigger = {
+      date: nextReminder,
+    };
+
+    const firstNotificationId = await Notifications.scheduleNotificationAsync({
+      content: {
+        title: 'Daily Health Check-in',
+        body: 'Time to record your daily symptom log. Tap to open Nexst.',
+        data: { type: 'daily_reminder' },
+        badge: 0, // No badge increment for reminders
+      },
+      trigger: firstTrigger,
+    });
+    
+    // Schedule recurring daily reminders starting from the next day
+    const recurringTrigger = {
       hour: time.getHours(),
       minute: time.getMinutes(),
       repeats: true,
     };
 
-    const notificationId = await Notifications.scheduleNotificationAsync({
+    const recurringNotificationId = await Notifications.scheduleNotificationAsync({
       content: {
         title: 'Daily Health Check-in',
         body: 'Time to record your daily symptom log. Tap to open Nexst.',
         data: { type: 'daily_reminder' },
-        badge: 1,
+        badge: 0, // No badge increment for reminders
       },
-      trigger,
+      trigger: recurringTrigger,
     });
     
-    console.log('✅ Daily reminder notification scheduled for', time.toLocaleTimeString(), 'with ID:', notificationId);
+    console.log('✅ Daily reminder notifications scheduled:');
+    console.log('  - First reminder:', firstNotificationId, 'for', nextReminder.toLocaleTimeString());
+    console.log('  - Recurring reminders:', recurringNotificationId, 'starting daily at', time.toLocaleTimeString());
   } catch (error) {
     console.error('Error scheduling daily reminder notification:', error);
   }
@@ -231,19 +269,23 @@ export const sendHealthNotification = async (title: string, body: string, data?:
       return;
     }
 
+    // Get current badge count and increment it
+    const currentBadgeCount = await getBadgeCount();
+    const newBadgeCount = currentBadgeCount + 1;
+
     await Notifications.scheduleNotificationAsync({
       content: {
         title,
         body,
         data: data || {},
-        badge: 1,
+        badge: newBadgeCount,
       },
       trigger: null, // Send immediately
     });
     
-    // Increment badge count
-    await incrementBadgeCount();
-    console.log('✅ Health notification sent with badge');
+    // Update the badge count
+    await setBadgeCount(newBadgeCount);
+    console.log('✅ Health notification sent with badge count:', newBadgeCount);
   } catch (error) {
     console.error('Error sending health notification:', error);
   }
