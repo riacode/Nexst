@@ -5,7 +5,9 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createStackNavigator } from '@react-navigation/stack';
 import { Ionicons } from '@expo/vector-icons';
 import { Alert } from 'react-native';
-import { configureNotifications } from './utils/notifications';
+import { configureNotifications, clearBadgeCount, getNotificationPermissionsStatus } from './utils/notifications';
+import * as Notifications from 'expo-notifications';
+import { NotificationSettingsProvider, useNotificationSettings } from './contexts/NotificationSettingsContext';
 
 import SymptomsScreen from './screens/SymptomsScreen';
 import AppointmentsScreen from './screens/AppointmentsScreen';
@@ -37,6 +39,7 @@ function MainTabNavigator() {
   const { clearAllRecommendations } = useRecommendations();
   const { clearAllAppointments } = useAppointments();
   const [settingsVisible, setSettingsVisible] = useState(false);
+  const { settings, updateSettings, clearAllNotifications } = useNotificationSettings();
 
   const handleSettingsPress = () => {
     setSettingsVisible(true);
@@ -134,10 +137,10 @@ function MainTabNavigator() {
         onClearSymptomLogs={handleClearSymptomLogs}
         onClearAppointments={handleClearAppointments}
         onClearRecommendations={handleClearRecommendations}
-        onUpdateNotificationSettings={() => {}}
-        notificationEnabled={false}
-        notificationTime={new Date()}
-        notificationFrequency="daily"
+        onUpdateNotificationSettings={updateSettings}
+        notificationEnabled={settings.enabled}
+        notificationTime={settings.dailyReminderTime}
+        notificationFrequency={settings.frequency}
       />
     </>
   );
@@ -219,6 +222,42 @@ export default function App() {
   useEffect(() => {
     // Configure notifications on app start
     configureNotifications();
+    
+    // Clear badge count when app opens
+    clearBadgeCount();
+    
+    // Check notification permissions status
+    const checkPermissions = async () => {
+      try {
+        const status = await getNotificationPermissionsStatus();
+        console.log('Notification permissions status:', status);
+      } catch (error) {
+        console.error('Error checking notification permissions:', error);
+      }
+    };
+    
+    checkPermissions();
+    
+    // Set up notification response listener
+    const subscription = Notifications.addNotificationResponseReceivedListener(response => {
+      const { data } = response.notification.request.content;
+      console.log('Notification response received:', data);
+      
+      // Handle different notification types
+      if (data?.type === 'daily_reminder') {
+        // Navigate to symptoms screen for daily check-in
+        console.log('Daily reminder tapped - should navigate to symptoms screen');
+      } else if (data?.type === 'recommendation') {
+        // Navigate to recommendations screen
+        console.log('Recommendation notification tapped - should navigate to recommendations screen');
+      } else if (data?.type === 'follow_up_questions') {
+        // Navigate to follow-up questions screen
+        console.log('Follow-up question notification tapped - should navigate to follow-up questions screen');
+      }
+    });
+    
+    // Cleanup subscription
+    return () => subscription.remove();
   }, []);
 
   return (
@@ -227,13 +266,15 @@ export default function App() {
         <RecommendationsProvider>
           <AppointmentsProvider>
             <FollowUpQuestionsProvider>
-              <SmartAIProvider userId="default-user">
-                <PrivacyProvider>
-                  <TutorialProvider>
-                    <AppContent />
-                  </TutorialProvider>
-                </PrivacyProvider>
-              </SmartAIProvider>
+              <NotificationSettingsProvider>
+                <SmartAIProvider userId="default-user">
+                  <PrivacyProvider>
+                    <TutorialProvider>
+                      <AppContent />
+                    </TutorialProvider>
+                  </PrivacyProvider>
+                </SmartAIProvider>
+              </NotificationSettingsProvider>
             </FollowUpQuestionsProvider>
           </AppointmentsProvider>
         </RecommendationsProvider>

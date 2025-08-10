@@ -14,10 +14,15 @@ interface SettingsModalProps {
   onClearSymptomLogs: () => void;
   onClearAppointments: () => void;
   onClearRecommendations: () => void;
-  onUpdateNotificationSettings: (enabled: boolean, time: Date, frequency: string) => void;
+  onUpdateNotificationSettings: (newSettings: Partial<{
+    enabled: boolean;
+    dailyReminderEnabled: boolean;
+    dailyReminderTime: Date;
+    frequency: 'Daily' | 'Weekdays' | 'Weekly';
+  }>) => Promise<void>;
   notificationEnabled: boolean;
   notificationTime: Date;
-  notificationFrequency: string;
+  notificationFrequency: 'Daily' | 'Weekdays' | 'Weekly';
 }
 
 const { height: screenHeight } = Dimensions.get('window');
@@ -156,17 +161,20 @@ export default function SettingsModal({
   };
 
   const handleNotificationToggle = (value: boolean) => {
-    onUpdateNotificationSettings(value, notificationTime, notificationFrequency);
+    onUpdateNotificationSettings({ 
+      enabled: value, 
+      dailyReminderEnabled: value 
+    });
   };
 
   const handleTimeChange = (event: any, selectedTime?: Date) => {
     if (selectedTime) {
-      onUpdateNotificationSettings(notificationEnabled, selectedTime, notificationFrequency);
+      onUpdateNotificationSettings({ dailyReminderTime: selectedTime });
     }
   };
 
-  const handleFrequencyChange = (frequency: string) => {
-    onUpdateNotificationSettings(notificationEnabled, notificationTime, frequency);
+  const handleFrequencyChange = (frequency: 'Daily' | 'Weekdays' | 'Weekly') => {
+    onUpdateNotificationSettings({ frequency });
   };
 
   const formatTime = (date: Date) => {
@@ -260,20 +268,24 @@ export default function SettingsModal({
                       </Text>
                     </View>
                     <View style={styles.frequencyButtons}>
-                      {['Daily', 'Weekdays', 'Weekly'].map((freq) => (
+                      {([
+                        { display: 'Daily', value: 'Daily' as const },
+                        { display: 'Weekdays', value: 'Weekdays' as const },
+                        { display: 'Weekly', value: 'Weekly' as const }
+                      ] as const).map(({ display, value }) => (
                         <TouchableOpacity
-                          key={freq}
+                          key={display}
                           style={[
                             styles.frequencyButton,
-                            notificationFrequency === freq && styles.frequencyButtonActive
+                            notificationFrequency === display && styles.frequencyButtonActive
                           ]}
-                          onPress={() => handleFrequencyChange(freq)}
+                          onPress={() => handleFrequencyChange(value)}
                         >
                           <Text style={[
                             styles.frequencyText,
-                            notificationFrequency === freq && styles.frequencyTextActive
+                            notificationFrequency === display && styles.frequencyTextActive
                           ]}>
-                            {freq}
+                            {display}
                           </Text>
                         </TouchableOpacity>
                       ))}

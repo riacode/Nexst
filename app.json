@@ -17,7 +17,9 @@
       "bundleIdentifier": "com.gargexpo.nexst",
       "buildNumber": "3",
       "infoPlist": {
-        "ITSAppUsesNonExemptEncryption": false
+        "ITSAppUsesNonExemptEncryption": false,
+        "UIBackgroundModes": ["remote-notification"],
+        "NSUserNotificationUsageDescription": "Nexst uses notifications to keep you updated about your health recommendations and daily reminders."
       }
     },
     "android": {
@@ -28,7 +30,10 @@
       "edgeToEdgeEnabled": true,
       "permissions": [
         "android.permission.RECORD_AUDIO",
-        "android.permission.MODIFY_AUDIO_SETTINGS"
+        "android.permission.MODIFY_AUDIO_SETTINGS",
+        "android.permission.POST_NOTIFICATIONS",
+        "android.permission.VIBRATE",
+        "android.permission.WAKE_LOCK"
       ]
     },
     "web": {
@@ -41,6 +46,7 @@
           "microphonePermission": "Allow Nexst to access your microphone for recording symptoms."
         }
       ],
+      "expo-notifications",
       "expo-font"
     ],
     "extra": {

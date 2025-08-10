@@ -3,6 +3,7 @@ import { AIService } from '../utils/aiService';
 import { SymptomLog, MedicalRecommendation } from '../types/recommendations';
 import { useSymptomLogs } from './SymptomLogsContext';
 import { useRecommendations } from './RecommendationsContext';
+import { sendRecommendationNotification } from '../utils/notifications';
 
 // ============================================================================
 // SMART HEALTH AI CONTEXT
@@ -122,6 +123,12 @@ export const SmartAIProvider: React.FC<SmartAIProviderProps> = ({
       allSymptoms, 
       existingRecommendations
     );
+    
+    // Send notification for each new recommendation
+    for (const recommendation of newRecommendations) {
+      const symptomsAddressed = recommendation.symptomsTriggering || [];
+      await sendRecommendationNotification(recommendation.title, symptomsAddressed);
+    }
     
     // Update cost tracking
     setReactiveCost(prev => prev + 0.08);
