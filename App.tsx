@@ -5,9 +5,17 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createStackNavigator } from '@react-navigation/stack';
 import { Ionicons } from '@expo/vector-icons';
 import { Alert } from 'react-native';
-import { configureNotifications, clearBadgeCount, getNotificationPermissionsStatus, setBadgeCount, synchronizeBadgeCount } from './utils/notifications';
+import {
+  configureNotifications,
+  clearBadgeCount,
+  getNotificationPermissionsStatus,
+  synchronizeBadgeCount,
+  clearAllScheduledNotificationsAndBadge,
+  setBadgeCount,
+} from './utils/notifications';
 import * as Notifications from 'expo-notifications';
 import { NotificationSettingsProvider, useNotificationSettings } from './contexts/NotificationSettingsContext';
+import { StorageManager } from './utils/storage';
 
 import SymptomsScreen from './screens/SymptomsScreen';
 import AppointmentsScreen from './screens/AppointmentsScreen';
@@ -223,8 +231,40 @@ export default function App() {
     // Configure notifications on app start
     configureNotifications();
     
-    // Clear badge count when app opens
-    clearBadgeCount();
+    // Clear all scheduled notifications and badge count when app opens
+    const clearNotifications = async () => {
+      try {
+        await clearAllScheduledNotificationsAndBadge();
+      } catch (error) {
+        console.error('Error clearing notifications on app start:', error);
+        // Fallback to just clearing badge count
+        await clearBadgeCount();
+      }
+    };
+    
+    clearNotifications();
+    
+    // Migrate and clean up any corrupted data
+    const migrateData = async () => {
+      try {
+        await StorageManager.migrateCorruptedData();
+        
+        // Migrate any legacy (non-encrypted) data to encrypted format
+        await StorageManager.migrateLegacyData();
+        
+        // Check data health after migration
+        const health = await StorageManager.checkDataHealth();
+        if (health.healthy) {
+          console.log(`✅ Data health check passed: ${health.totalKeys} keys verified`);
+        } else {
+          console.warn(`⚠️ Data health issues found:`, health.errors);
+        }
+      } catch (error) {
+        console.error('Error during data migration:', error);
+      }
+    };
+    
+    migrateData();
     
     // Check notification permissions status
     const checkPermissions = async () => {
@@ -238,12 +278,14 @@ export default function App() {
     
     checkPermissions();
     
-    // Ensure badge count starts at 0
+    // Ensure badge count starts at 0 and stays synchronized
     const initializeBadgeCount = async () => {
       try {
-        // Synchronize badge count with actual notifications instead of just setting to 0
-        await synchronizeBadgeCount();
-        console.log('✅ Badge count synchronized on app start');
+        // Wait a bit for notifications to be cleared, then synchronize
+        setTimeout(async () => {
+          await synchronizeBadgeCount();
+          console.log('✅ Badge count synchronized on app start');
+        }, 2000);
       } catch (error) {
         console.error('Error synchronizing badge count:', error);
         // Fallback to setting badge count to 0

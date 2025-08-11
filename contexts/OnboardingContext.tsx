@@ -30,20 +30,20 @@ export const OnboardingProvider: React.FC<OnboardingProviderProps> = ({ children
   useEffect(() => {
     const loadOnboardingStatus = async () => {
       try {
-        const onboardingComplete = await StorageManager.load<string>('onboardingComplete');
-        if (onboardingComplete) {
-          // Validate onboarding status
-          const validation = ValidationUtils.validateRequired(onboardingComplete, 'onboardingComplete');
-          if (validation.isValid) {
-            setHasSeenOnboarding(true);
-          } else {
-            console.warn('Invalid onboarding status found:', validation.error);
-            setHasSeenOnboarding(false);
-          }
+        setIsLoading(true);
+        // Use safeLoad with a default value to prevent crashes
+        const onboardingComplete = await StorageManager.safeLoad<string>('onboardingComplete', 'false');
+        
+        if (onboardingComplete === 'true') {
+          setHasSeenOnboarding(true);
+        } else {
+          setHasSeenOnboarding(false);
         }
       } catch (error) {
         console.error('Error loading encrypted onboarding status:', error);
         setHasSeenOnboarding(false);
+      } finally {
+        setIsLoading(false);
       }
     };
 

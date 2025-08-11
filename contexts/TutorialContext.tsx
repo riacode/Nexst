@@ -17,7 +17,6 @@ interface TutorialContextType {
   completeSymptomTutorial: () => Promise<void>;
   completeRecommendationTutorial: () => Promise<void>;
   completeAppointmentTutorial: () => Promise<void>;
-  showOnboardingTutorial: () => Promise<void>;
   hideOnboardingTutorial: () => Promise<void>;
   resetTutorials: () => Promise<void>;
 }
@@ -54,10 +53,13 @@ export const TutorialProvider: React.FC<TutorialProviderProps> = ({ children }) 
       try {
         const stored = await StorageManager.load<TutorialState>('tutorialState');
         if (stored) {
+          // Fix any corrupted data first
+          const fixedState = ValidationUtils.fixCorruptedDates(stored);
+          
           // Validate tutorial state before setting
-          const validation = ValidationUtils.validateTutorialState(stored);
+          const validation = ValidationUtils.validateTutorialState(fixedState);
           if (validation.isValid) {
-            setTutorialState(stored);
+            setTutorialState(fixedState);
           } else {
             console.warn('Invalid tutorial state found:', validation.errors);
             setTutorialState(DEFAULT_TUTORIAL_STATE);

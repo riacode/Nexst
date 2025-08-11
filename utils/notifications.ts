@@ -48,7 +48,6 @@ export const requestNotificationPermissions = async (): Promise<boolean> => {
           allowAlert: true,
           allowBadge: true,
           allowSound: true,
-          allowAnnouncements: true,
         },
       });
       finalStatus = status;
@@ -218,7 +217,7 @@ export const sendDailyReminderNotification = async (time: Date, enabled: boolean
     console.log('Current time:', now.toLocaleTimeString());
     console.log('Next reminder scheduled for:', nextReminder.toLocaleTimeString());
 
-    // Use only the recurring trigger for better precision and to prevent duplicates
+    // Use daily trigger for recurring reminders at the same time each day
     const recurringTrigger = {
       hour: time.getHours(),
       minute: time.getMinutes(),
@@ -230,7 +229,7 @@ export const sendDailyReminderNotification = async (time: Date, enabled: boolean
         title: 'Daily Health Check-in',
         body: 'Time to record your daily symptom log. Tap to open Nexst.',
         data: { type: 'daily_reminder' },
-        badge: 0, // No badge increment for reminders
+        badge: 0, // Daily reminders should NEVER affect badge count
       },
       trigger: recurringTrigger,
     });
@@ -238,6 +237,7 @@ export const sendDailyReminderNotification = async (time: Date, enabled: boolean
     console.log('✅ Daily reminder notifications scheduled:');
     console.log('  - Recurring reminders:', notificationId, 'starting daily at', time.toLocaleTimeString());
     console.log('  - Next reminder will be at:', nextReminder.toLocaleTimeString());
+    console.log('  - Badge count: 0 (daily reminders excluded from badge counting)');
   } catch (error) {
     console.error('Error scheduling daily reminder notification:', error);
   }
@@ -315,23 +315,66 @@ export const cancelAllNotifications = async () => {
 /**
  * Synchronize badge count with actual notification count
  * This ensures the badge count accurately reflects the number of actionable notifications
+ * Only counts recommendations and follow-up questions, NOT daily reminders
  */
 export const synchronizeBadgeCount = async (): Promise<void> => {
   try {
     // Get all scheduled notifications
     const scheduledNotifications = await Notifications.getAllScheduledNotificationsAsync();
     
-    // Count only actionable notifications (exclude daily reminders)
-    const actionableCount = scheduledNotifications.filter(notification => {
+    // Filter to only count actionable notifications (exclude daily reminders and other non-actionable types)
+    const actionableNotifications = scheduledNotifications.filter(notification => {
       const { data } = notification.content;
-      return data?.type !== 'daily_reminder';
-    }).length;
+      const notificationType = data?.type;
+      
+      // Only count these specific actionable notification types
+      const isActionable = notificationType === 'recommendation' || 
+                          notificationType === 'follow_up_questions' ||
+                          notificationType === 'health_notification';
+      
+      // Log what we're filtering for debugging
+      if (notificationType === 'daily_reminder') {
+        console.log('🔔 Excluding daily reminder from badge count:', notification.content.title);
+      } else if (isActionable) {
+        console.log('✅ Counting actionable notification:', notificationType, '-', notification.content.title);
+      } else {
+        console.log('⚠️ Unknown notification type:', notificationType, '-', notification.content.title);
+      }
+      
+      return isActionable;
+    });
     
-    // Update badge count to match
+    const actionableCount = actionableNotifications.length;
+    
+    // Update badge count to match only actionable notifications
     await setBadgeCount(actionableCount);
-    console.log('✅ Badge count synchronized:', actionableCount);
+    console.log(`✅ Badge count synchronized: ${actionableCount} actionable notifications (excluded daily reminders)`);
+    
+    // Log summary for debugging
+    if (scheduledNotifications.length > 0) {
+      const dailyReminderCount = scheduledNotifications.filter(n => n.content.data?.type === 'daily_reminder').length;
+      console.log(`📊 Notification summary: ${scheduledNotifications.length} total, ${actionableCount} actionable, ${dailyReminderCount} daily reminders`);
+    }
   } catch (error) {
     console.error('Error synchronizing badge count:', error);
+  }
+};
+
+/**
+ * Clear all scheduled notifications and reset badge count
+ * This ensures a clean slate for notifications
+ */
+export const clearAllScheduledNotificationsAndBadge = async (): Promise<void> => {
+  try {
+    // Cancel all scheduled notifications
+    await Notifications.cancelAllScheduledNotificationsAsync();
+    
+    // Reset badge count to 0
+    await setBadgeCount(0);
+    
+    console.log('✅ All scheduled notifications cancelled and badge count reset to 0');
+  } catch (error) {
+    console.error('Error clearing all notifications and badge:', error);
   }
 };
 

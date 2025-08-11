@@ -6,13 +6,33 @@ import { SymptomLog, MedicalRecommendation } from '../types/recommendations';
 
 export class ValidationUtils {
   /**
+   * Helper function to safely convert date strings to Date objects
+   */
+  private static parseDateSafely(dateValue: any): Date | null {
+    if (dateValue instanceof Date) {
+      return dateValue;
+    }
+    
+    if (typeof dateValue === 'string') {
+      const parsedDate = new Date(dateValue);
+      return isNaN(parsedDate.getTime()) ? null : parsedDate;
+    }
+    
+    return null;
+  }
+
+  /**
    * Validate symptom log data
    */
   static validateSymptomLog(log: Partial<SymptomLog>): { isValid: boolean; errors: string[] } {
     const errors: string[] = [];
 
     if (!log.id) errors.push('Symptom log must have an ID');
-    if (!log.timestamp) errors.push('Symptom log must have a timestamp');
+    if (!log.timestamp) {
+      errors.push('Symptom log must have a timestamp');
+    } else if (!this.parseDateSafely(log.timestamp)) {
+      errors.push('Symptom log must have a valid timestamp');
+    }
     if (!log.summary || log.summary.trim().length === 0) errors.push('Symptom log must have a summary');
     if (!log.transcript || log.transcript.trim().length === 0) errors.push('Symptom log must have a transcript');
     
@@ -63,7 +83,7 @@ export class ValidationUtils {
       errors.push('Appointment must have a title');
     }
     
-    if (!appointment.date || !(appointment.date instanceof Date)) {
+    if (!appointment.date || !this.parseDateSafely(appointment.date)) {
       errors.push('Appointment must have a valid date');
     }
 
@@ -154,6 +174,39 @@ export class ValidationUtils {
   }
 
   /**
+   * Fix corrupted date data in objects
+   */
+  static fixCorruptedDates(obj: any): any {
+    if (!obj || typeof obj !== 'object') {
+      return obj;
+    }
+
+    const fixed = { ...obj };
+    
+    for (const [key, value] of Object.entries(fixed)) {
+      if (key.toLowerCase().includes('time') || key.toLowerCase().includes('date')) {
+        if (value && !(value instanceof Date)) {
+          const parsedDate = this.parseDateSafely(value);
+          if (parsedDate) {
+            fixed[key] = parsedDate;
+          } else {
+            // If we can't parse the date, set it to a default
+            if (key.toLowerCase().includes('time')) {
+              fixed[key] = new Date(2024, 0, 1, 9, 0, 0); // 9:00 AM default
+            } else {
+              fixed[key] = new Date(); // Current date default
+            }
+          }
+        }
+      } else if (typeof value === 'object' && value !== null) {
+        fixed[key] = this.fixCorruptedDates(value);
+      }
+    }
+
+    return fixed;
+  }
+
+  /**
    * Validate date range
    */
   static validateDateRange(startDate: Date, endDate: Date): { isValid: boolean; error?: string } {
@@ -187,12 +240,19 @@ export class ValidationUtils {
       errors.push('Daily reminder enabled must be a boolean');
     }
 
-    if (settings.dailyReminderTime && !(settings.dailyReminderTime instanceof Date)) {
-      errors.push('Daily reminder time must be a valid date');
+    // Handle both Date objects and date strings (from storage)
+    if (settings.dailyReminderTime) {
+      const parsedDate = this.parseDateSafely(settings.dailyReminderTime);
+      if (!parsedDate) {
+        errors.push('Daily reminder time must be a valid date');
+      }
     }
 
-    if (settings.time && !(settings.time instanceof Date)) {
-      errors.push('Notification time must be a valid date');
+    if (settings.time) {
+      const parsedDate = this.parseDateSafely(settings.time);
+      if (!parsedDate) {
+        errors.push('Notification time must be a valid date');
+      }
     }
 
     if (settings.frequency && !['Daily', 'Weekdays', 'Weekly'].includes(settings.frequency)) {
@@ -229,7 +289,16 @@ export class ValidationUtils {
     }
 
     if (!question.timestamp || !(question.timestamp instanceof Date)) {
-      errors.push('Valid timestamp is required');
+      // Handle both Date objects and date strings (from storage)
+      if (typeof question.timestamp !== 'string') {
+        errors.push('Valid timestamp is required');
+      } else {
+        // Try to parse the date string
+        const parsedDate = new Date(question.timestamp);
+        if (isNaN(parsedDate.getTime())) {
+          errors.push('Valid timestamp string is required');
+        }
+      }
     }
 
     if (typeof question.isAnswered !== 'boolean') {
@@ -270,7 +339,16 @@ export class ValidationUtils {
     }
 
     if (settings.lastPrivacyUpdate && !(settings.lastPrivacyUpdate instanceof Date)) {
-      errors.push('Last privacy update must be a valid date');
+      // Handle both Date objects and date strings (from storage)
+      if (typeof settings.lastPrivacyUpdate !== 'string') {
+        errors.push('Last privacy update must be a valid date or date string');
+      } else {
+        // Try to parse the date string
+        const parsedDate = new Date(settings.lastPrivacyUpdate);
+        if (isNaN(parsedDate.getTime())) {
+          errors.push('Last privacy update must be a valid date string');
+        }
+      }
     }
 
     return {
@@ -285,8 +363,8 @@ export class ValidationUtils {
   static validateTutorialState(state: any): { isValid: boolean; errors: string[] } {
     const errors: string[] = [];
 
-    if (!state) {
-      errors.push('Tutorial state is required');
+    if (!state || typeof state !== 'object') {
+      errors.push('Tutorial state must be an object');
       return { isValid: false, errors };
     }
 
@@ -306,13 +384,10 @@ export class ValidationUtils {
       errors.push('Has seen appointment tutorial must be a boolean');
     }
 
-    if (typeof state.hasSeenPrivacyTutorial !== 'boolean') {
-      errors.push('Has seen privacy tutorial must be a boolean');
+    if (typeof state.showOnboardingTutorial !== 'boolean') {
+      errors.push('Show onboarding tutorial must be a boolean');
     }
 
-    return {
-      isValid: errors.length === 0,
-      errors
-    };
+    return { isValid: errors.length === 0, errors };
   }
 } 

@@ -32,6 +32,7 @@ interface NotificationSettingsContextType {
   cancelAllScheduledNotifications: () => Promise<void>;
   checkPermissionsStatus: () => Promise<any>;
   synchronizeBadgeCount: () => Promise<void>;
+  clearAllScheduledNotificationsAndBadge: () => Promise<void>;
 }
 
 const NotificationSettingsContext = createContext<NotificationSettingsContextType | undefined>(undefined);
@@ -42,7 +43,7 @@ const defaultSettings: NotificationSettings = {
   enabled: true,
   time: new Date(),
   frequency: 'Daily',
-  dailyReminderEnabled: true,
+  dailyReminderEnabled: false, // Start with daily reminders disabled to prevent badge count issues
   dailyReminderTime: new Date(2024, 0, 1, 9, 0, 0), // 9:00 AM default
 };
 
@@ -67,16 +68,13 @@ export const NotificationSettingsProvider: React.FC<NotificationSettingsProvider
       try {
         const stored = await StorageManager.load<NotificationSettings>(NOTIFICATION_SETTINGS_KEY);
         if (stored) {
+          // Fix any corrupted date data first
+          const fixedSettings = ValidationUtils.fixCorruptedDates(stored);
+          
           // Validate settings before setting state
-          const validation = ValidationUtils.validateNotificationSettings(stored);
+          const validation = ValidationUtils.validateNotificationSettings(fixedSettings);
           if (validation.isValid) {
-            // Ensure dates are properly converted from stored JSON
-            const validatedSettings = {
-              ...stored,
-              time: stored.time ? new Date(stored.time) : defaultSettings.time,
-              dailyReminderTime: stored.dailyReminderTime ? new Date(stored.dailyReminderTime) : defaultSettings.dailyReminderTime,
-            };
-            setSettings(validatedSettings);
+            setSettings(fixedSettings);
           } else {
             console.warn('Invalid notification settings found:', validation.errors);
             // Use default settings if stored ones are invalid
@@ -91,6 +89,8 @@ export const NotificationSettingsProvider: React.FC<NotificationSettingsProvider
 
     loadSettings();
   }, []);
+
+
 
   // Save notification settings to encrypted storage
   const updateSettings = async (newSettings: Partial<NotificationSettings>) => {
@@ -171,6 +171,17 @@ export const NotificationSettingsProvider: React.FC<NotificationSettingsProvider
     }
   };
 
+  const clearAllScheduledNotificationsAndBadge = async () => {
+    try {
+      await cancelAllNotifications();
+      await clearBadgeCount();
+      await synchronizeBadgeCount();
+      console.log('✅ All scheduled notifications cancelled and badges cleared/synchronized');
+    } catch (error) {
+      console.error('Error clearing all scheduled notifications and badges:', error);
+    }
+  };
+
   const value: NotificationSettingsContextType = {
     settings,
     updateSettings,
@@ -181,6 +192,7 @@ export const NotificationSettingsProvider: React.FC<NotificationSettingsProvider
     cancelAllScheduledNotifications,
     checkPermissionsStatus,
     synchronizeBadgeCount,
+    clearAllScheduledNotificationsAndBadge,
   };
 
   return (

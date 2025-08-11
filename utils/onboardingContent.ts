@@ -43,13 +43,6 @@ export const onboardingSteps: OnboardingStep[] = [
     color: '#8b5cf6',
   },
   {
-    id: 'privacy',
-    title: 'Your Privacy Matters',
-    description: 'Everything stays on your device. I never share your health information without your explicit permission.',
-    icon: 'shield-checkmark',
-    color: '#ef4444',
-  },
-  {
     id: 'ready',
     title: "You're All Set!",
     description: 'Ready to start? Tap the mic button to record your first symptom check-in.',

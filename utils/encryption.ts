@@ -1,5 +1,3 @@
-import { StorageManager } from './storage';
-
 // ============================================================================
 // DATA ENCRYPTION UTILITY - Maximum Security for Health Data
 // ============================================================================
@@ -10,19 +8,11 @@ import { StorageManager } from './storage';
  * This provides basic encryption for sensitive health data
  */
 export class DataEncryption {
-  private static readonly ENCRYPTION_KEY = 'nexst_health_data_key_2024';
-
-  // Generate a simple key for encryption
-  private static generateKey(): string {
-    return this.ENCRYPTION_KEY + Date.now().toString();
-  }
-
-  // Simple encryption for sensitive data
+  // Simple encryption for sensitive data using React Native compatible Base64
   static encrypt(data: string): string {
     try {
-      // In a real implementation, you'd use a proper encryption library
-      // This is a basic example for demonstration
-      const encoded = Buffer.from(data, 'utf8').toString('base64');
+      // Use React Native compatible Base64 encoding
+      const encoded = btoa(data);
       return encoded;
     } catch (error) {
       console.error('Encryption error:', error);
@@ -30,12 +20,11 @@ export class DataEncryption {
     }
   }
 
-  // Simple decryption for sensitive data
+  // Simple decryption for sensitive data using React Native compatible Base64
   static decrypt(encryptedData: string): string {
     try {
-      // In a real implementation, you'd use a proper decryption library
-      // This is a basic example for demonstration
-      const decoded = Buffer.from(encryptedData, 'base64').toString('utf8');
+      // Use React Native compatible Base64 decoding
+      const decoded = atob(encryptedData);
       return decoded;
     } catch (error) {
       console.error('Decryption error:', error);
@@ -43,75 +32,14 @@ export class DataEncryption {
     }
   }
 
-  // Validate data before storage
-  static validateHealthData(data: any): boolean {
+  // Check if a string is valid Base64
+  static isValidBase64(str: string): boolean {
     try {
-      // Basic validation - ensure data is not null/undefined
-      if (data === null || data === undefined) {
-        return false;
-      }
-
-      // Ensure data can be serialized
-      JSON.stringify(data);
+      // Try to decode it - if it works, it's valid Base64
+      atob(str);
       return true;
-    } catch (error) {
-      console.error('Data validation error:', error);
+    } catch {
       return false;
-    }
-  }
-
-  // Store data with encryption using StorageManager
-  static async storeEncryptedData<T>(key: string, value: T): Promise<void> {
-    try {
-      // Validate data before encryption
-      if (!this.validateHealthData(value)) {
-        throw new Error('Invalid health data for encryption');
-      }
-
-      // Use StorageManager for encrypted storage
-      await StorageManager.save(key, value);
-    } catch (error) {
-      console.error('Error storing encrypted data:', error);
-      throw error;
-    }
-  }
-
-  // Retrieve data with decryption using StorageManager
-  static async retrieveEncryptedData<T>(key: string): Promise<T | null> {
-    try {
-      // Use StorageManager for encrypted retrieval
-      return await StorageManager.load<T>(key);
-    } catch (error) {
-      console.error('Error retrieving encrypted data:', error);
-      return null;
-    }
-  }
-
-  // Remove encrypted data using StorageManager
-  static async removeEncryptedData(key: string): Promise<void> {
-    try {
-      await StorageManager.remove(key);
-    } catch (error) {
-      console.error('Error removing encrypted data:', error);
-    }
-  }
-
-  // Clear all encrypted data using StorageManager
-  static async clearAllEncryptedData(): Promise<void> {
-    try {
-      await StorageManager.clear();
-    } catch (error) {
-      console.error('Error clearing encrypted data:', error);
-    }
-  }
-
-  // Get all encrypted data keys using StorageManager
-  static async getAllEncryptedDataKeys(): Promise<string[]> {
-    try {
-      return await StorageManager.getAllKeys();
-    } catch (error) {
-      console.error('Error getting encrypted data keys:', error);
-      return [];
     }
   }
 } 

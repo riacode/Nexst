@@ -54,10 +54,13 @@ export const PrivacyProvider: React.FC<PrivacyProviderProps> = ({ children }) =>
       try {
         const stored = await StorageManager.load<PrivacySettings>('privacySettings');
         if (stored) {
+          // Fix any corrupted data first
+          const fixedSettings = ValidationUtils.fixCorruptedDates(stored);
+          
           // Validate privacy settings before setting state
-          const validation = ValidationUtils.validatePrivacySettings(stored);
+          const validation = ValidationUtils.validatePrivacySettings(fixedSettings);
           if (validation.isValid) {
-            setPrivacySettings(stored);
+            setPrivacySettings(fixedSettings);
           } else {
             console.warn('Invalid privacy settings found:', validation.errors);
             setPrivacySettings(defaultPrivacySettings);

@@ -16,6 +16,20 @@ import { onboardingSteps, OnboardingStep } from '../utils/onboardingContent';
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 
+// Calculate responsive dimensions
+const isSmallScreen = screenWidth < 375; // iPhone SE, small Android phones
+const isLargeScreen = screenWidth > 414; // iPhone Pro Max, large Android phones
+const isTablet = screenWidth > 768;
+
+// Responsive sizing
+const containerMaxWidth = isTablet ? Math.min(screenWidth * 0.6, 500) : Math.min(screenWidth * 0.9, 400);
+const stepContainerWidth = isSmallScreen ? screenWidth * 0.85 : Math.min(screenWidth * 0.8, 350);
+const contentMaxWidth = stepContainerWidth * 0.9;
+const iconSize = isSmallScreen ? 28 : isLargeScreen ? 36 : 32;
+const iconContainerSize = isSmallScreen ? 50 : isLargeScreen ? 70 : 60;
+const titleFontSize = isSmallScreen ? 20 : isLargeScreen ? 26 : 24;
+const descriptionFontSize = isSmallScreen ? 12 : isLargeScreen ? 14 : 13;
+
 interface OnboardingTutorialProps {
   visible: boolean;
   onComplete: () => void;
@@ -51,7 +65,7 @@ export default function OnboardingTutorial({ visible, onComplete, onSkip }: Onbo
       const nextStep = currentStep + 1;
       setCurrentStep(nextStep);
       scrollViewRef.current?.scrollTo({
-        x: nextStep * screenWidth,
+        x: nextStep * stepContainerWidth,
         animated: true,
       });
     } else {
@@ -64,7 +78,7 @@ export default function OnboardingTutorial({ visible, onComplete, onSkip }: Onbo
       const prevStep = currentStep - 1;
       setCurrentStep(prevStep);
       scrollViewRef.current?.scrollTo({
-        x: prevStep * screenWidth,
+        x: prevStep * stepContainerWidth,
         animated: true,
       });
     }
@@ -75,14 +89,19 @@ export default function OnboardingTutorial({ visible, onComplete, onSkip }: Onbo
   };
 
   const renderStep = (step: OnboardingStep, index: number) => (
-    <View key={step.id} style={styles.stepContainer}>
-      <View style={styles.stepContent}>
-        <View style={[styles.iconContainer, { backgroundColor: step.color + '20' }]}>
-          <Ionicons name={step.icon as any} size={32} color={step.color} />
+    <View key={step.id} style={[styles.stepContainer, { width: stepContainerWidth }]}>
+      <View style={[styles.stepContent, { maxWidth: contentMaxWidth }]}>
+        <View style={[styles.iconContainer, { 
+          backgroundColor: step.color + '20',
+          width: iconContainerSize,
+          height: iconContainerSize,
+          borderRadius: iconContainerSize / 2,
+        }]}>
+          <Ionicons name={step.icon as any} size={iconSize} color={step.color} />
         </View>
         
-        <Text style={styles.stepTitle}>{step.title}</Text>
-        <Text style={styles.stepDescription}>{step.description}</Text>
+        <Text style={[styles.stepTitle, { fontSize: titleFontSize }]}>{step.title}</Text>
+        <Text style={[styles.stepDescription, { fontSize: descriptionFontSize }]}>{step.description}</Text>
         
         {step.illustration && (
           <View style={styles.illustrationContainer}>
@@ -128,7 +147,7 @@ export default function OnboardingTutorial({ visible, onComplete, onSkip }: Onbo
             pagingEnabled
             showsHorizontalScrollIndicator={false}
             onMomentumScrollEnd={(event) => {
-              const newIndex = Math.round(event.nativeEvent.contentOffset.x / screenWidth);
+              const newIndex = Math.round(event.nativeEvent.contentOffset.x / stepContainerWidth);
               setCurrentStep(newIndex);
             }}
             scrollEnabled={false}
@@ -177,14 +196,14 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
     justifyContent: 'flex-start',
     alignItems: 'center',
-    paddingHorizontal: 20,
+    paddingHorizontal: isSmallScreen ? 16 : 20,
     paddingTop: screenHeight * 0.1,
   },
   container: {
     backgroundColor: '#ffffff',
     borderRadius: 16,
     width: '100%',
-    maxWidth: 320,
+    maxWidth: containerMaxWidth,
     maxHeight: screenHeight * 0.7,
     shadowColor: '#000',
     shadowOffset: {
@@ -231,7 +250,6 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   stepContainer: {
-    width: 280,
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
@@ -240,15 +258,11 @@ const styles = StyleSheet.create({
   },
   stepContent: {
     alignItems: 'center',
-    maxWidth: 260,
     width: '100%',
     flex: 1,
     justifyContent: 'center',
   },
   iconContainer: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 24,
@@ -264,8 +278,6 @@ const styles = StyleSheet.create({
     ...fontStyles.body,
     color: '#64748b',
     textAlign: 'left',
-    lineHeight: 18,
-    fontSize: 13,
     width: '100%',
   },
   illustrationContainer: {
