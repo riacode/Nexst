@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { StorageManager } from '../utils/storage';
+import { ValidationUtils } from '../utils/validation';
 
 interface PrivacySettings {
   aiProcessingEnabled: boolean;
@@ -47,44 +48,91 @@ interface PrivacyProviderProps {
 export const PrivacyProvider: React.FC<PrivacyProviderProps> = ({ children }) => {
   const [privacySettings, setPrivacySettings] = useState<PrivacySettings>(defaultPrivacySettings);
 
-  // Load privacy settings from storage
+  // Load privacy settings from encrypted storage
   useEffect(() => {
     const loadPrivacySettings = async () => {
       try {
-        const stored = await AsyncStorage.getItem('privacySettings');
+        const stored = await StorageManager.load<PrivacySettings>('privacySettings');
         if (stored) {
-          const parsed = JSON.parse(stored);
-          setPrivacySettings({
-            ...parsed,
-            lastPrivacyUpdate: parsed.lastPrivacyUpdate ? new Date(parsed.lastPrivacyUpdate) : null,
-          });
+          // Validate privacy settings before setting state
+          const validation = ValidationUtils.validatePrivacySettings(stored);
+          if (validation.isValid) {
+            setPrivacySettings(stored);
+          } else {
+            console.warn('Invalid privacy settings found:', validation.errors);
+            setPrivacySettings(defaultPrivacySettings);
+          }
         }
       } catch (error) {
-        console.error('Error loading privacy settings:', error);
+        console.error('Error loading encrypted privacy settings:', error);
+        setPrivacySettings(defaultPrivacySettings);
       }
     };
 
     loadPrivacySettings();
   }, []);
 
-  // Save privacy settings to storage
-  const savePrivacySettings = async (settings: PrivacySettings) => {
+  const updatePrivacySettings = async (newSettings: Partial<PrivacySettings>) => {
     try {
-      await AsyncStorage.setItem('privacySettings', JSON.stringify(settings));
-      setPrivacySettings(settings);
+      const updatedSettings = { ...privacySettings, ...newSettings };
+      
+      // Validate settings before storage
+      const validation = ValidationUtils.validatePrivacySettings(updatedSettings);
+      if (!validation.isValid) {
+        throw new Error(`Invalid privacy settings: ${validation.errors.join(', ')}`);
+      }
+
+      setPrivacySettings(updatedSettings);
+      
+      // Save to encrypted storage
+      await StorageManager.save('privacySettings', updatedSettings);
     } catch (error) {
-      console.error('Error saving privacy settings:', error);
+      console.error('Error saving encrypted privacy settings:', error);
+      throw error;
     }
   };
 
+  // Get all user data from encrypted storage
+  const getAllUserData = async () => {
+    try {
+      const keys = await StorageManager.getAllKeys();
+      const data: { [key: string]: any } = {};
+      
+      for (const key of keys) {
+        const value = await StorageManager.load(key);
+        data[key] = value;
+      }
+      
+      return data;
+    } catch (error) {
+      console.error('Error reading encrypted user data:', error);
+      return {};
+    }
+  };
 
+  // Delete all user data from encrypted storage
+  const deleteAllUserData = async () => {
+    try {
+      const keys = await StorageManager.getAllKeys();
+      const keysToDelete = keys.filter(key => 
+        key !== 'privacySettings' && 
+        key !== 'onboardingComplete'
+      );
+      
+      await StorageManager.multiRemove(keysToDelete);
+      console.log('✅ All user data deleted from encrypted storage');
+    } catch (error) {
+      console.error('Error deleting encrypted user data:', error);
+      throw error;
+    }
+  };
 
   const toggleAIProcessing = async () => {
     const updated = {
       ...privacySettings,
       aiProcessingEnabled: !privacySettings.aiProcessingEnabled,
     };
-    await savePrivacySettings(updated);
+    await updatePrivacySettings(updated);
   };
 
   const toggleDataSharing = async () => {
@@ -92,7 +140,7 @@ export const PrivacyProvider: React.FC<PrivacyProviderProps> = ({ children }) =>
       ...privacySettings,
       dataSharingEnabled: !privacySettings.dataSharingEnabled,
     };
-    await savePrivacySettings(updated);
+    await updatePrivacySettings(updated);
   };
 
   const toggleAnalytics = async () => {
@@ -100,7 +148,7 @@ export const PrivacyProvider: React.FC<PrivacyProviderProps> = ({ children }) =>
       ...privacySettings,
       analyticsEnabled: !privacySettings.analyticsEnabled,
     };
-    await savePrivacySettings(updated);
+    await updatePrivacySettings(updated);
   };
 
   const updateDataRetention = async (days: number) => {
@@ -108,23 +156,13 @@ export const PrivacyProvider: React.FC<PrivacyProviderProps> = ({ children }) =>
       ...privacySettings,
       dataRetentionDays: days,
     };
-    await savePrivacySettings(updated);
+    await updatePrivacySettings(updated);
   };
 
   const exportUserData = async (): Promise<string> => {
     try {
-      // Get all user data from AsyncStorage
-      const keys = await AsyncStorage.getAllKeys();
-      const data: Record<string, any> = {};
-      
-      for (const key of keys) {
-        if (key !== 'privacySettings') { // Don't include privacy settings in export
-          const value = await AsyncStorage.getItem(key);
-          if (value) {
-            data[key] = JSON.parse(value);
-          }
-        }
-      }
+      // Get all user data from encrypted storage
+      const data = await getAllUserData();
 
       // Add export metadata
       const exportData = {
@@ -143,15 +181,9 @@ export const PrivacyProvider: React.FC<PrivacyProviderProps> = ({ children }) =>
 
   const deleteAllData = async () => {
     try {
-      // Get all keys except privacy settings
-      const keys = await AsyncStorage.getAllKeys();
-      const keysToDelete = keys.filter(key => key !== 'privacySettings');
-      
-      // Delete all user data
-      await AsyncStorage.multiRemove(keysToDelete);
-      
+      await deleteAllUserData();
       // Reset privacy settings to defaults
-      await savePrivacySettings(defaultPrivacySettings);
+      await updatePrivacySettings(defaultPrivacySettings);
     } catch (error) {
       console.error('Error deleting user data:', error);
       throw new Error('Failed to delete user data');
@@ -159,7 +191,7 @@ export const PrivacyProvider: React.FC<PrivacyProviderProps> = ({ children }) =>
   };
 
   const resetPrivacySettings = async () => {
-    await savePrivacySettings(defaultPrivacySettings);
+    await updatePrivacySettings(defaultPrivacySettings);
   };
 
   return (

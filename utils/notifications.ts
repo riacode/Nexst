@@ -17,7 +17,7 @@ export const configureNotifications = () => {
         return {
           shouldShowAlert: true,
           shouldPlaySound: true,
-          shouldSetBadge: true,
+          shouldSetBadge: false, // Daily reminders should NOT affect badge count
           shouldShowBanner: true,
           shouldShowList: true,
         };
@@ -139,7 +139,7 @@ export const sendRecommendationNotification = async (recommendationTitle: string
       trigger: null, // Send immediately
     });
     
-    // Update the badge count
+    // Update the badge count to ensure consistency
     await setBadgeCount(newBadgeCount);
     console.log('✅ Recommendation notification sent with badge count:', newBadgeCount);
   } catch (error) {
@@ -176,7 +176,7 @@ export const sendFollowUpQuestionNotification = async (questionCount: number) =>
       trigger: null, // Send immediately
     });
     
-    // Update the badge count
+    // Update the badge count to ensure consistency
     await setBadgeCount(newBadgeCount);
     console.log('✅ Follow-up question notification sent with badge count:', newBadgeCount);
   } catch (error) {
@@ -218,29 +218,14 @@ export const sendDailyReminderNotification = async (time: Date, enabled: boolean
     console.log('Current time:', now.toLocaleTimeString());
     console.log('Next reminder scheduled for:', nextReminder.toLocaleTimeString());
 
-    // Schedule the first reminder
-    const firstTrigger = {
-      date: nextReminder,
-    };
-
-    const firstNotificationId = await Notifications.scheduleNotificationAsync({
-      content: {
-        title: 'Daily Health Check-in',
-        body: 'Time to record your daily symptom log. Tap to open Nexst.',
-        data: { type: 'daily_reminder' },
-        badge: 0, // No badge increment for reminders
-      },
-      trigger: firstTrigger,
-    });
-    
-    // Schedule recurring daily reminders starting from the next day
+    // Use only the recurring trigger for better precision and to prevent duplicates
     const recurringTrigger = {
       hour: time.getHours(),
       minute: time.getMinutes(),
       repeats: true,
     };
 
-    const recurringNotificationId = await Notifications.scheduleNotificationAsync({
+    const notificationId = await Notifications.scheduleNotificationAsync({
       content: {
         title: 'Daily Health Check-in',
         body: 'Time to record your daily symptom log. Tap to open Nexst.',
@@ -251,8 +236,8 @@ export const sendDailyReminderNotification = async (time: Date, enabled: boolean
     });
     
     console.log('✅ Daily reminder notifications scheduled:');
-    console.log('  - First reminder:', firstNotificationId, 'for', nextReminder.toLocaleTimeString());
-    console.log('  - Recurring reminders:', recurringNotificationId, 'starting daily at', time.toLocaleTimeString());
+    console.log('  - Recurring reminders:', notificationId, 'starting daily at', time.toLocaleTimeString());
+    console.log('  - Next reminder will be at:', nextReminder.toLocaleTimeString());
   } catch (error) {
     console.error('Error scheduling daily reminder notification:', error);
   }
@@ -324,6 +309,29 @@ export const cancelAllNotifications = async () => {
     console.log('✅ All scheduled notifications cancelled');
   } catch (error) {
     console.error('Error cancelling all notifications:', error);
+  }
+};
+
+/**
+ * Synchronize badge count with actual notification count
+ * This ensures the badge count accurately reflects the number of actionable notifications
+ */
+export const synchronizeBadgeCount = async (): Promise<void> => {
+  try {
+    // Get all scheduled notifications
+    const scheduledNotifications = await Notifications.getAllScheduledNotificationsAsync();
+    
+    // Count only actionable notifications (exclude daily reminders)
+    const actionableCount = scheduledNotifications.filter(notification => {
+      const { data } = notification.content;
+      return data?.type !== 'daily_reminder';
+    }).length;
+    
+    // Update badge count to match
+    await setBadgeCount(actionableCount);
+    console.log('✅ Badge count synchronized:', actionableCount);
+  } catch (error) {
+    console.error('Error synchronizing badge count:', error);
   }
 };
 

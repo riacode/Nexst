@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { StorageManager } from '../utils/storage';
+import { ValidationUtils } from '../utils/validation';
 import { useOnboarding } from './OnboardingContext';
 
 interface TutorialState {
@@ -21,7 +22,7 @@ interface TutorialContextType {
   resetTutorials: () => Promise<void>;
 }
 
-const defaultTutorialState: TutorialState = {
+const DEFAULT_TUTORIAL_STATE: TutorialState = {
   hasSeenOnboarding: false,
   hasSeenSymptomTutorial: false,
   hasSeenRecommendationTutorial: false,
@@ -44,33 +45,49 @@ interface TutorialProviderProps {
 }
 
 export const TutorialProvider: React.FC<TutorialProviderProps> = ({ children }) => {
-  const [tutorialState, setTutorialState] = useState<TutorialState>(defaultTutorialState);
+  const [tutorialState, setTutorialState] = useState<TutorialState>(DEFAULT_TUTORIAL_STATE);
   const { resetOnboarding } = useOnboarding();
 
-  // Load tutorial state from storage
+  // Load tutorial state from encrypted storage
   useEffect(() => {
     const loadTutorialState = async () => {
       try {
-        const stored = await AsyncStorage.getItem('tutorialState');
+        const stored = await StorageManager.load<TutorialState>('tutorialState');
         if (stored) {
-          const parsed = JSON.parse(stored);
-          setTutorialState({ ...defaultTutorialState, ...parsed });
+          // Validate tutorial state before setting
+          const validation = ValidationUtils.validateTutorialState(stored);
+          if (validation.isValid) {
+            setTutorialState(stored);
+          } else {
+            console.warn('Invalid tutorial state found:', validation.errors);
+            setTutorialState(DEFAULT_TUTORIAL_STATE);
+          }
         }
       } catch (error) {
-        console.error('Error loading tutorial state:', error);
+        console.error('Error loading encrypted tutorial state:', error);
+        setTutorialState(DEFAULT_TUTORIAL_STATE);
       }
     };
 
     loadTutorialState();
   }, []);
 
-  // Save tutorial state to storage
+  // Save tutorial state to encrypted storage
   const saveTutorialState = async (state: TutorialState) => {
     try {
-      await AsyncStorage.setItem('tutorialState', JSON.stringify(state));
+      // Validate state before storage
+      const validation = ValidationUtils.validateTutorialState(state);
+      if (!validation.isValid) {
+        throw new Error(`Invalid tutorial state: ${validation.errors.join(', ')}`);
+      }
+
       setTutorialState(state);
+      
+      // Save to encrypted storage
+      await StorageManager.save('tutorialState', state);
     } catch (error) {
-      console.error('Error saving tutorial state:', error);
+      console.error('Error saving encrypted tutorial state:', error);
+      throw error;
     }
   };
 
@@ -124,7 +141,7 @@ export const TutorialProvider: React.FC<TutorialProviderProps> = ({ children }) 
   };
 
   const resetTutorials = async () => {
-    await saveTutorialState(defaultTutorialState);
+    await saveTutorialState(DEFAULT_TUTORIAL_STATE);
     await resetOnboarding();
   };
 

@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { SymptomLog } from '../types/recommendations';
+import { StorageManager } from '../utils/storage';
+import { ValidationUtils } from '../utils/validation';
 
 interface SymptomLogsContextType {
   symptomLogs: SymptomLog[];
@@ -19,43 +20,74 @@ interface SymptomLogsProviderProps {
 
 export const SymptomLogsProvider: React.FC<SymptomLogsProviderProps> = ({ children }) => {
   const [symptomLogs, setSymptomLogs] = useState<SymptomLog[]>([]);
+  const [userId, setUserId] = useState<string | null>(null); // Assuming userId is managed elsewhere
 
-  // Load symptom logs from AsyncStorage on mount
+  // Load symptom logs from encrypted storage on mount
   useEffect(() => {
-    loadSymptomLogs();
-  }, []);
-
-  const loadSymptomLogs = async () => {
-    try {
-      const key = 'symptom_logs_default-user';
-      const logsJson = await AsyncStorage.getItem(key);
-      if (logsJson) {
-        const logs: SymptomLog[] = JSON.parse(logsJson);
-        // Convert timestamp strings back to Date objects
-        const logsWithDates = logs.map(log => ({
-          ...log,
-          timestamp: new Date(log.timestamp)
-        }));
-        setSymptomLogs(logsWithDates);
+    const loadSymptomLogs = async () => {
+      try {
+        const key = `symptomLogs_${userId}`;
+        const logsJson = await StorageManager.load<SymptomLog[]>(key);
+        
+        if (logsJson && Array.isArray(logsJson)) {
+          // Validate each log before setting state
+          const validLogs = logsJson.filter(log => {
+            const validation = ValidationUtils.validateSymptomLog(log);
+            if (!validation.isValid) {
+              console.warn('Invalid symptom log found:', validation.errors);
+            }
+            return validation.isValid;
+          });
+          
+          setSymptomLogs(validLogs);
+        }
+      } catch (error) {
+        console.error('Error loading encrypted symptom logs:', error);
       }
-    } catch (error) {
-      console.error('Error loading symptom logs:', error);
+    };
+
+    if (userId) {
+      loadSymptomLogs();
     }
-  };
+  }, [userId]);
 
   const saveSymptomLogs = async (logs: SymptomLog[]) => {
     try {
-      const key = 'symptom_logs_default-user';
-      await AsyncStorage.setItem(key, JSON.stringify(logs));
+      // Validate all logs before storage
+      const validLogs = logs.filter(log => {
+        const validation = ValidationUtils.validateSymptomLog(log);
+        if (!validation.isValid) {
+          console.warn('Invalid symptom log found:', validation.errors);
+        }
+        return validation.isValid;
+      });
+
+      // Save to encrypted storage
+      const key = `symptomLogs_${userId}`;
+      await StorageManager.save(key, validLogs);
     } catch (error) {
-      console.error('Error saving symptom logs:', error);
+      console.error('Error saving encrypted symptom logs:', error);
     }
   };
 
-  const addSymptomLog = (log: SymptomLog) => {
-    const newLogs = [log, ...symptomLogs];
-    setSymptomLogs(newLogs);
-    saveSymptomLogs(newLogs);
+  const addSymptomLog = async (log: SymptomLog) => {
+    try {
+      // Validate symptom log before storage
+      const validation = ValidationUtils.validateSymptomLog(log);
+      if (!validation.isValid) {
+        throw new Error(`Invalid symptom log: ${validation.errors.join(', ')}`);
+      }
+
+      const updatedLogs = [...symptomLogs, log];
+      setSymptomLogs(updatedLogs);
+      
+      // Save to encrypted storage
+      const key = `symptomLogs_${userId}`;
+      await StorageManager.save(key, updatedLogs);
+    } catch (error) {
+      console.error('Error saving encrypted symptom log:', error);
+      throw error;
+    }
   };
 
   const updateSymptomLog = (id: string, updates: Partial<SymptomLog>) => {

@@ -91,4 +91,23 @@ export interface SymptomPattern {
   impact: 'low' | 'medium' | 'high';
   seasonalPattern?: boolean;
   timeOfDayPattern?: 'morning' | 'afternoon' | 'evening' | 'night';
+}
+
+export interface FollowUpQuestion {
+  id: string;
+  question: string;
+  questionType: string;
+  timestamp: Date;
+  isAnswered: boolean;
+}
+
+export interface Appointment {
+  id: string;
+  title: string;
+  description: string;
+  date: Date;
+  isCompleted: boolean;
+  completedAt?: Date;
+  cancelledAt?: Date;
+  cancelledReason?: string;
 } 

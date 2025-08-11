@@ -1,31 +1,42 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { DataEncryption } from './encryption';
 
 // ============================================================================
-// SHARED STORAGE UTILITY - Reduces AsyncStorage Code Duplication
+// ENCRYPTED STORAGE MANAGER - Maximum Security for User Data
 // ============================================================================
 
+/**
+ * Secure storage manager that encrypts all data before storage
+ * All user data is encrypted to maximize security and privacy
+ */
 export class StorageManager {
   /**
-   * Save data to AsyncStorage with error handling
+   * Save data to AsyncStorage with encryption
    */
   static async save<T>(key: string, data: T): Promise<void> {
     try {
-      await AsyncStorage.setItem(key, JSON.stringify(data));
+      // Encrypt data before storage for maximum security
+      const encryptedData = DataEncryption.encrypt(JSON.stringify(data));
+      await AsyncStorage.setItem(key, encryptedData);
     } catch (error) {
-      console.error(`Error saving data for key ${key}:`, error);
+      console.error(`Error saving encrypted data for key ${key}:`, error);
       throw error;
     }
   }
 
   /**
-   * Load data from AsyncStorage with error handling
+   * Load data from AsyncStorage with decryption
    */
   static async load<T>(key: string): Promise<T | null> {
     try {
-      const data = await AsyncStorage.getItem(key);
-      return data ? JSON.parse(data) : null;
+      const encryptedData = await AsyncStorage.getItem(key);
+      if (!encryptedData) return null;
+      
+      // Decrypt data after retrieval
+      const decryptedData = DataEncryption.decrypt(encryptedData);
+      return JSON.parse(decryptedData);
     } catch (error) {
-      console.error(`Error loading data for key ${key}:`, error);
+      console.error(`Error loading encrypted data for key ${key}:`, error);
       return null;
     }
   }
@@ -78,11 +89,11 @@ export class StorageManager {
 }
 
 // ============================================================================
-// CONVENIENCE FUNCTIONS FOR COMMON PATTERNS
+// USER-SPECIFIC ENCRYPTED STORAGE FUNCTIONS
 // ============================================================================
 
 /**
- * Save data with user-specific key
+ * Save user data with encryption and user-specific key
  */
 export const saveUserData = async <T>(userId: string, key: string, data: T): Promise<void> => {
   const fullKey = `${key}_${userId}`;
@@ -90,7 +101,7 @@ export const saveUserData = async <T>(userId: string, key: string, data: T): Pro
 };
 
 /**
- * Load data with user-specific key
+ * Load user data with decryption and user-specific key
  */
 export const loadUserData = async <T>(userId: string, key: string): Promise<T | null> => {
   const fullKey = `${key}_${userId}`;
@@ -98,7 +109,7 @@ export const loadUserData = async <T>(userId: string, key: string): Promise<T | 
 };
 
 /**
- * Remove data with user-specific key
+ * Remove user data with user-specific key
  */
 export const removeUserData = async (userId: string, key: string): Promise<void> => {
   const fullKey = `${key}_${userId}`;

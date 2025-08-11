@@ -1,11 +1,13 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { StorageManager } from '../utils/storage';
+import { ValidationUtils } from '../utils/validation';
 import { 
   sendDailyReminderNotification, 
   clearBadgeCount, 
-  getScheduledNotifications,
+  getScheduledNotifications as getScheduledNotificationsUtil,
   cancelAllNotifications,
-  getNotificationPermissionsStatus
+  getNotificationPermissionsStatus,
+  synchronizeBadgeCount
 } from '../utils/notifications';
 
 // ============================================================================
@@ -29,6 +31,7 @@ interface NotificationSettingsContextType {
   getScheduledNotifications: () => Promise<any[]>;
   cancelAllScheduledNotifications: () => Promise<void>;
   checkPermissionsStatus: () => Promise<any>;
+  synchronizeBadgeCount: () => Promise<void>;
 }
 
 const NotificationSettingsContext = createContext<NotificationSettingsContextType | undefined>(undefined);
@@ -58,53 +61,68 @@ interface NotificationSettingsProviderProps {
 export const NotificationSettingsProvider: React.FC<NotificationSettingsProviderProps> = ({ children }) => {
   const [settings, setSettings] = useState<NotificationSettings>(defaultSettings);
 
-  // Load settings from storage on mount
+  // Load notification settings from encrypted storage
   useEffect(() => {
+    const loadSettings = async () => {
+      try {
+        const stored = await StorageManager.load<NotificationSettings>(NOTIFICATION_SETTINGS_KEY);
+        if (stored) {
+          // Validate settings before setting state
+          const validation = ValidationUtils.validateNotificationSettings(stored);
+          if (validation.isValid) {
+            // Ensure dates are properly converted from stored JSON
+            const validatedSettings = {
+              ...stored,
+              time: stored.time ? new Date(stored.time) : defaultSettings.time,
+              dailyReminderTime: stored.dailyReminderTime ? new Date(stored.dailyReminderTime) : defaultSettings.dailyReminderTime,
+            };
+            setSettings(validatedSettings);
+          } else {
+            console.warn('Invalid notification settings found:', validation.errors);
+            // Use default settings if stored ones are invalid
+            setSettings(defaultSettings);
+          }
+        }
+      } catch (error) {
+        console.error('Error loading encrypted notification settings:', error);
+        setSettings(defaultSettings);
+      }
+    };
+
     loadSettings();
   }, []);
 
-  // Apply daily reminder when settings change
-  useEffect(() => {
-    // Only schedule reminders if they're enabled and we're not in the initial load
-    if (settings.dailyReminderEnabled) {
-      // Add a small delay to prevent immediate scheduling during app startup
-      const timer = setTimeout(() => {
-        sendDailyReminderNotification(settings.dailyReminderTime, true);
-      }, 1000);
-      
-      return () => clearTimeout(timer);
-    } else {
-      sendDailyReminderNotification(settings.dailyReminderTime, false);
-    }
-  }, [settings.dailyReminderEnabled, settings.dailyReminderTime]);
-
-  const loadSettings = async () => {
+  // Save notification settings to encrypted storage
+  const updateSettings = async (newSettings: Partial<NotificationSettings>) => {
     try {
-      const stored = await AsyncStorage.getItem(NOTIFICATION_SETTINGS_KEY);
-      if (stored) {
-        const parsed = JSON.parse(stored);
-        // Convert time strings back to Date objects
-        parsed.time = new Date(parsed.time);
-        parsed.dailyReminderTime = new Date(parsed.dailyReminderTime);
-        setSettings(parsed);
+      const updatedSettings = { ...settings, ...newSettings };
+      
+      // Validate settings before storage
+      const validation = ValidationUtils.validateNotificationSettings(updatedSettings);
+      if (!validation.isValid) {
+        throw new Error(`Invalid notification settings: ${validation.errors.join(', ')}`);
+      }
+
+      setSettings(updatedSettings);
+      
+      // Save to encrypted storage
+      await StorageManager.save(NOTIFICATION_SETTINGS_KEY, updatedSettings);
+      
+      // Handle daily reminder scheduling
+      if (updatedSettings.dailyReminderEnabled) {
+        // Add delay to prevent immediate scheduling on app startup
+        // and ensure the settings are properly saved first
+        setTimeout(() => {
+          sendDailyReminderNotification(updatedSettings.dailyReminderTime, true);
+        }, 1000);
+      } else {
+        // Disable daily reminders
+        sendDailyReminderNotification(updatedSettings.dailyReminderTime, false);
       }
     } catch (error) {
-      console.error('Error loading notification settings:', error);
+      console.error('Error saving encrypted notification settings:', error);
+      throw error;
     }
-  };
-
-  const saveSettings = async (newSettings: NotificationSettings) => {
-    try {
-      await AsyncStorage.setItem(NOTIFICATION_SETTINGS_KEY, JSON.stringify(newSettings));
-    } catch (error) {
-      console.error('Error saving notification settings:', error);
-    }
-  };
-
-  const updateSettings = async (newSettings: Partial<NotificationSettings>) => {
-    const updated = { ...settings, ...newSettings };
-    setSettings(updated);
-    await saveSettings(updated);
   };
 
   const toggleNotifications = async (enabled: boolean) => {
@@ -118,7 +136,9 @@ export const NotificationSettingsProvider: React.FC<NotificationSettingsProvider
   const clearAllNotifications = async () => {
     try {
       await clearBadgeCount();
-      console.log('✅ All notification badges cleared');
+      // Also synchronize badge count to ensure consistency
+      await synchronizeBadgeCount();
+      console.log('✅ All notification badges cleared and synchronized');
     } catch (error) {
       console.error('Error clearing notification badges:', error);
     }
@@ -126,7 +146,7 @@ export const NotificationSettingsProvider: React.FC<NotificationSettingsProvider
 
   const getScheduledNotifications = async () => {
     try {
-      return await getScheduledNotifications();
+      return await getScheduledNotificationsUtil();
     } catch (error) {
       console.error('Error getting scheduled notifications:', error);
       return [];
@@ -160,6 +180,7 @@ export const NotificationSettingsProvider: React.FC<NotificationSettingsProvider
     getScheduledNotifications,
     cancelAllScheduledNotifications,
     checkPermissionsStatus,
+    synchronizeBadgeCount,
   };
 
   return (

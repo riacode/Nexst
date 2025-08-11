@@ -1,18 +1,19 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { StorageManager } from './storage';
 
 export const clearAllStoredData = async () => {
   try {
-    // Clear all AsyncStorage data
-    await AsyncStorage.clear();
-    console.log('✅ All stored data cleared successfully');
+    // Clear all encrypted data through StorageManager
+    await StorageManager.clear();
+    console.log('✅ All encrypted stored data cleared successfully');
   } catch (error) {
-    console.error('❌ Error clearing stored data:', error);
+    console.error('❌ Error clearing encrypted stored data:', error);
   }
 };
 
 export const clearOnboardingData = async () => {
   try {
-    await AsyncStorage.multiRemove([
+    // Clear specific onboarding keys through StorageManager
+    const keysToRemove = [
       'hasSeenOnboarding',
       'tutorialState',
       'symptomLogs',
@@ -21,25 +22,26 @@ export const clearOnboardingData = async () => {
       'followUpQuestions',
       'privacySettings',
       'smartAIContext',
-    ]);
-    console.log('Onboarding data cleared successfully');
+    ];
+    await StorageManager.multiRemove(keysToRemove);
+    console.log('✅ Onboarding encrypted data cleared successfully');
   } catch (error) {
-    console.error('Error clearing onboarding data:', error);
+    console.error('❌ Error clearing onboarding encrypted data:', error);
   }
 };
 
 export const logStoredData = async () => {
   try {
-    const keys = await AsyncStorage.getAllKeys();
+    const keys = await StorageManager.getAllKeys();
     const data: { [key: string]: any } = {};
     
     for (const key of keys) {
-      const value = await AsyncStorage.getItem(key);
+      const value = await StorageManager.load(key);
       data[key] = value;
     }
     
-    console.log('📱 Current stored data:', data);
+    console.log('📱 Current encrypted stored data:', data);
   } catch (error) {
-    console.error('❌ Error reading stored data:', error);
+    console.error('❌ Error reading encrypted stored data:', error);
   }
 }; 

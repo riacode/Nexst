@@ -5,7 +5,7 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createStackNavigator } from '@react-navigation/stack';
 import { Ionicons } from '@expo/vector-icons';
 import { Alert } from 'react-native';
-import { configureNotifications, clearBadgeCount, getNotificationPermissionsStatus, setBadgeCount } from './utils/notifications';
+import { configureNotifications, clearBadgeCount, getNotificationPermissionsStatus, setBadgeCount, synchronizeBadgeCount } from './utils/notifications';
 import * as Notifications from 'expo-notifications';
 import { NotificationSettingsProvider, useNotificationSettings } from './contexts/NotificationSettingsContext';
 
@@ -241,10 +241,13 @@ export default function App() {
     // Ensure badge count starts at 0
     const initializeBadgeCount = async () => {
       try {
-        await setBadgeCount(0);
-        console.log('✅ Badge count initialized to 0');
+        // Synchronize badge count with actual notifications instead of just setting to 0
+        await synchronizeBadgeCount();
+        console.log('✅ Badge count synchronized on app start');
       } catch (error) {
-        console.error('Error initializing badge count:', error);
+        console.error('Error synchronizing badge count:', error);
+        // Fallback to setting badge count to 0
+        await setBadgeCount(0);
       }
     };
     

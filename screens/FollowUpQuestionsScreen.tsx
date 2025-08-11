@@ -1,10 +1,12 @@
-import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Alert } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Alert, FlatList } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { fontStyles } from '../utils/fonts';
 import { colors } from '../utils/colors';
+import { fontStyles } from '../utils/fonts';
 import { useFollowUpQuestions } from '../contexts/FollowUpQuestionsContext';
 import { useSymptomLogs } from '../contexts/SymptomLogsContext';
+import { DateUtils } from '../utils/dateUtils';
+import { FollowUpQuestion } from '../types/recommendations';
 
 interface FollowUpQuestionsScreenProps {
   navigation?: any;
@@ -70,6 +72,31 @@ export default function FollowUpQuestionsScreen({ navigation }: FollowUpQuestion
     });
   };
 
+  const renderQuestion = ({ item }: { item: FollowUpQuestion }) => (
+    <View style={styles.questionContainer}>
+      <Text style={styles.questionText}>{item.question}</Text>
+      <Text style={styles.questionMeta}>
+        {DateUtils.formatDate(item.timestamp)} • {item.questionType}
+      </Text>
+      <View style={styles.questionActions}>
+        <TouchableOpacity
+          style={[styles.actionButton, item.isAnswered && styles.answeredButton]}
+          onPress={() => markAsAnswered(item.id)}
+        >
+          <Text style={[styles.actionButtonText, item.isAnswered && styles.answeredButtonText]}>
+            {item.isAnswered ? 'Answered' : 'Mark as Answered'}
+          </Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.actionButton, styles.deleteButton]}
+          onPress={() => handleDeleteQuestion(item.id)}
+        >
+          <Text style={styles.deleteButtonText}>Delete</Text>
+        </TouchableOpacity>
+      </View>
+    </View>
+  );
+
   return (
     <View style={styles.container}>
       <View style={styles.header}>
@@ -93,44 +120,12 @@ export default function FollowUpQuestionsScreen({ navigation }: FollowUpQuestion
             </Text>
           </View>
         ) : (
-          followUpQuestions.map((question) => (
-            <View key={question.id} style={styles.questionCard}>
-              <View style={styles.questionHeader}>
-                <View style={styles.questionInfo}>
-                  <Text style={styles.questionText}>{question.question}</Text>
-                  <Text style={styles.questionMeta}>
-                    {formatDate(question.timestamp)} • {question.questionType}
-                  </Text>
-                </View>
-                <TouchableOpacity
-                  style={styles.deleteButton}
-                  onPress={() => handleDeleteQuestion(question.id)}
-                >
-                  <Ionicons name="close" size={20} color="#ef4444" />
-                </TouchableOpacity>
-              </View>
-              
-              <View style={styles.actionButtons}>
-                <TouchableOpacity
-                  style={[
-                    styles.recordButton,
-                    recordingQuestionId === question.id && styles.recordingButton
-                  ]}
-                  onPress={() => handleRecordAnswer(question)}
-                  disabled={recordingQuestionId === question.id}
-                >
-                  <Ionicons 
-                    name={recordingQuestionId === question.id ? "stop" : "mic"} 
-                    size={20} 
-                    color="#ffffff" 
-                  />
-                  <Text style={styles.recordButtonText}>
-                    {recordingQuestionId === question.id ? 'Recording...' : 'Record Answer'}
-                  </Text>
-                </TouchableOpacity>
-              </View>
-            </View>
-          ))
+          <FlatList
+            data={followUpQuestions}
+            renderItem={renderQuestion}
+            keyExtractor={(item) => item.id}
+            contentContainerStyle={styles.questionList}
+          />
         )}
       </ScrollView>
     </View>
@@ -187,7 +182,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     lineHeight: 20,
   },
-  questionCard: {
+  questionContainer: {
     backgroundColor: '#ffffff',
     borderRadius: 16,
     padding: 20,
@@ -196,14 +191,6 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 8,
     elevation: 4,
-  },
-  questionHeader: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    marginBottom: 16,
-  },
-  questionInfo: {
-    flex: 1,
   },
   questionText: {
     ...fontStyles.body,
@@ -215,28 +202,36 @@ const styles = StyleSheet.create({
     ...fontStyles.caption,
     color: '#64748b',
   },
-  deleteButton: {
-    padding: 4,
-    marginLeft: 8,
-  },
-  actionButtons: {
+  questionActions: {
     flexDirection: 'row',
-    justifyContent: 'flex-end',
+    justifyContent: 'space-between',
+    marginTop: 16,
   },
-  recordButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
+  actionButton: {
     backgroundColor: colors.accent,
     paddingHorizontal: 16,
     paddingVertical: 10,
     borderRadius: 12,
   },
-  recordingButton: {
-    backgroundColor: '#ef4444',
-  },
-  recordButtonText: {
+  actionButtonText: {
     ...fontStyles.bodyMedium,
     color: '#ffffff',
-    marginLeft: 8,
+  },
+  answeredButton: {
+    backgroundColor: '#d1fae5', // A light green for answered
+  },
+  answeredButtonText: {
+    color: '#065f46', // Darker green for answered
+  },
+  deleteButton: {
+    backgroundColor: '#ef4444', // A red for delete
+  },
+  deleteButtonText: {
+    ...fontStyles.bodyMedium,
+    color: '#ffffff',
+  },
+  questionList: {
+    paddingHorizontal: 20,
+    paddingBottom: 20,
   },
 }); 

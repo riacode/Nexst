@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, FlatList, StyleSheet, Platform, TouchableOpacity, TextInput, Alert, Modal} from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { Ionicons } from '@expo/vector-icons';
@@ -11,6 +11,8 @@ import FeatureTutorial from '../components/FeatureTutorial';
 import { featureTutorials } from '../utils/onboardingContent';
 import SharedBackground from '../components/SharedBackground';
 import { colors, gradients } from '../utils/colors';
+import { DateUtils } from '../utils/dateUtils';
+import { Appointment } from '../types/recommendations';
 
 interface Appointment {
     id: string;
@@ -174,6 +176,44 @@ export default function AppointmentsScreen({ navigation }: any) {
       <Text style={styles.appScheduledDate}>
         {item.date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
       </Text>
+    </TouchableOpacity>
+  );
+
+  const renderAppointment = ({ item }: { item: Appointment }) => (
+    <TouchableOpacity
+      style={styles.appointmentCard}
+      onPress={() => navigation.navigate('AppointmentDetail', { appointment: item })}
+    >
+      <View style={styles.appointmentHeader}>
+        <Text style={styles.appointmentTitle}>{item.title}</Text>
+        <View style={styles.appointmentStatus}>
+          <Text style={styles.appointmentStatusText}>
+            {item.isCompleted ? 'Completed' : 'Upcoming'}
+          </Text>
+        </View>
+      </View>
+      
+      <Text style={styles.appointmentDate}>
+        {DateUtils.formatDate(item.date)}
+      </Text>
+      
+      <Text style={styles.appointmentDescription}>{item.description}</Text>
+      
+      <View style={styles.appointmentActions}>
+        <TouchableOpacity
+          style={styles.actionButton}
+          onPress={() => handleCompleteAppointment(item.id)}
+        >
+          <Text style={styles.actionButtonText}>Mark Complete</Text>
+        </TouchableOpacity>
+        
+        <TouchableOpacity
+          style={[styles.actionButton, styles.deleteButton]}
+          onPress={() => handleDeleteAppointment(item.id)}
+        >
+          <Text style={styles.deleteButtonText}>Delete</Text>
+        </TouchableOpacity>
+      </View>
     </TouchableOpacity>
   );
 
@@ -548,9 +588,80 @@ const styles = StyleSheet.create({
     bottom: 20,
   },
   recordButtonInner: {
-    width: '100%',
-    height: '100%',
-    justifyContent: 'center',
+    flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
+  },
+  appointmentCard: {
+    backgroundColor: '#ffffff',
+    borderRadius: 16,
+    padding: 20,
+    marginBottom: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  appointmentHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  appointmentTitle: {
+    ...fontStyles.heading,
+    color: colors.text,
+    flex: 1,
+  },
+  appointmentStatus: {
+    backgroundColor: colors.accent,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 20,
+  },
+  appointmentStatusText: {
+    ...fontStyles.caption,
+    color: '#ffffff',
+    fontWeight: '600',
+  },
+  appointmentDate: {
+    ...fontStyles.bodyMedium,
+    color: colors.textSecondary,
+    marginBottom: 12,
+  },
+  appointmentDescription: {
+    ...fontStyles.body,
+    color: colors.text,
+    marginBottom: 16,
+    lineHeight: 20,
+  },
+  appointmentActions: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  actionButton: {
+    backgroundColor: colors.accent,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 12,
+    flex: 1,
+    marginRight: 8,
+  },
+  actionButtonText: {
+    ...fontStyles.bodyMedium,
+    color: '#ffffff',
+    textAlign: 'center',
+    fontWeight: '600',
+  },
+  deleteButton: {
+    backgroundColor: '#ef4444',
+    marginRight: 0,
+  },
+  deleteButtonText: {
+    ...fontStyles.bodyMedium,
+    color: '#ffffff',
+    textAlign: 'center',
+    fontWeight: '600',
   },
 });
